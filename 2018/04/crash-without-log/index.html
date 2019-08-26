@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"搜索","hits_empty":"未找到与「 ${query} 」相关的内容","hits_stats":"找到 ${hits} 条相关条目，用时: ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="最近有几个 Bug 报了崩溃问题，但是奇怪的是 Log 中没有 FATAL EXCEPTION 相关的堆栈信息，经过查找，找到以下一句记录： 102-06 17:26:30.246   815   989 I ActivityManager: Killing 27917:com.xxx.weather/u0a83 (adj 800): crash  这个问题分成两个部分来解析，一是查看这个 cra">
+<meta name="keywords" content="Android,坑">
+<meta property="og:type" content="article">
+<meta property="og:title" content="诡异的崩溃：UncaughtExceptionHandler 与 RxJava 并发错误">
+<meta property="og:url" content="http://yoursite.com/2018/04/crash-without-log/index.html">
+<meta property="og:site_name" content="Mupceet">
+<meta property="og:description" content="最近有几个 Bug 报了崩溃问题，但是奇怪的是 Log 中没有 FATAL EXCEPTION 相关的堆栈信息，经过查找，找到以下一句记录： 102-06 17:26:30.246   815   989 I ActivityManager: Killing 27917:com.xxx.weather/u0a83 (adj 800): crash  这个问题分成两个部分来解析，一是查看这个 cra">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-04-12T15:43:11.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="诡异的崩溃：UncaughtExceptionHandler 与 RxJava 并发错误">
+<meta name="twitter:description" content="最近有几个 Bug 报了崩溃问题，但是奇怪的是 Log 中没有 FATAL EXCEPTION 相关的堆栈信息，经过查找，找到以下一句记录： 102-06 17:26:30.246   815   989 I ActivityManager: Killing 27917:com.xxx.weather/u0a83 (adj 800): crash  这个问题分成两个部分来解析，一是查看这个 cra">
+  <link rel="canonical" href="http://yoursite.com/2018/04/crash-without-log/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>诡异的崩溃：UncaughtExceptionHandler 与 RxJava 并发错误 | Mupceet</title>
+  <meta name="generator" content="Hexo 3.9.0">
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Mupceet</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Don't Repeat Yourself</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/04/crash-without-log/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Mupceet">
+      <meta itemprop="description" content="君子坦荡荡 小人长戚戚">
+      <meta itemprop="image" content="/images/avatar_me.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Mupceet">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">诡异的崩溃：UncaughtExceptionHandler 与 RxJava 并发错误
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2018-04-12 23:20:33 / 修改时间：23:43:11" itemprop="dateCreated datePublished" datetime="2018-04-12T23:20:33+08:00">2018-04-12</time>
+            </span>
+          
+            
+
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/技术向/" itemprop="url" rel="index"><span itemprop="name">技术向</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Disqus：</span>
+    
+    <a title="disqus" href="/2018/04/crash-without-log/#comments" itemprop="discussionUrl"><span class="post-comments-count disqus-comment-count" data-disqus-identifier="2018/04/crash-without-log/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>最近有几个 Bug 报了崩溃问题，但是奇怪的是 Log 中没有 <code>FATAL EXCEPTION</code> 相关的堆栈信息，经过查找，找到以下一句记录：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">02-06 17:26:30.246   815   989 I ActivityManager: Killing 27917:com.xxx.weather/u0a83 (adj 800): crash</span><br></pre></td></tr></table></figure>
+
+<p>这个问题分成两个部分来解析，一是查看这个 crash Log 是如何打印出来的， 一是为什么没有打印出 crash 的堆栈信息。</p>
+<h2 id="Crash-Log-来龙去脉"><a href="#Crash-Log-来龙去脉" class="headerlink" title="Crash Log 来龙去脉"></a>Crash Log 来龙去脉</h2><p>从源码中搜索查看该 Log 在哪里打印，进行原因回溯。</p>
+<p>在源码索引中搜索 <code>\&quot;Killing</code>，从搜索结果中很容易定位到该 Log 所在的文件：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ProcessRecord.java</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">kill</span><span class="params">(String reason, <span class="keyword">boolean</span> noisy)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!killedByAm) &#123;</span><br><span class="line">        Trace.traceBegin(Trace.TRACE_TAG_ACTIVITY_MANAGER, <span class="string">"kill"</span>);</span><br><span class="line">        <span class="keyword">if</span> (noisy) &#123;</span><br><span class="line">            Slog.i(TAG, <span class="string">"Killing "</span> + toShortString() + <span class="string">" (adj "</span> + setAdj + <span class="string">"): "</span> + reason);</span><br><span class="line">        &#125;</span><br><span class="line">        EventLog.writeEvent(EventLogTags.AM_KILL, userId, pid, processName, setAdj, reason);</span><br><span class="line">        Process.killProcessQuiet(pid);</span><br><span class="line">        ActivityManagerService.killProcessGroup(uid, pid);</span><br><span class="line">        <span class="keyword">if</span> (!persistent) &#123;</span><br><span class="line">            killed = <span class="keyword">true</span>;</span><br><span class="line">            killedByAm = <span class="keyword">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        Trace.traceEnd(Trace.TRACE_TAG_ACTIVITY_MANAGER);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<a id="more"></a>
+
+<p>根据打印的结果，可以看出调用该方法应该调用的是 <code>kill(&quot;crash&quot;, true)</code>，查看该方法的调用关系，可以定位到：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ActivityManagerService#removeProcessLocked</span><br><span class="line">AppErrors#handleAppCrashInActivityController</span><br></pre></td></tr></table></figure>
+
+<p>好吧……调用的情况还是有点多，但这两个方法实际上都被以下这个方法所调用：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// AppErrors.java</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">crashApplicationInner</span><span class="params">(ProcessRecord r, ApplicationErrorReport.CrashInfo crashInfo,</span></span></span><br><span class="line"><span class="function"><span class="params">        <span class="keyword">int</span> callingPid, <span class="keyword">int</span> callingUid)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 省略</span></span><br><span class="line">    <span class="keyword">synchronized</span> (mService) &#123;</span><br><span class="line">        <span class="comment">/**</span></span><br><span class="line"><span class="comment">         * If crash is handled by instance of &#123;<span class="doctag">@link</span> android.app.IActivityController&#125;,</span></span><br><span class="line"><span class="comment">         * finish now and don't show the app error dialog.</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">         <span class="comment">// AppErrors#handleAppCrashInActivityController 在这里被调用，根据注释可以发现不是这里打的Log</span></span><br><span class="line">        <span class="keyword">if</span> (handleAppCrashInActivityController(r, crashInfo, shortMsg, longMsg, stackTrace,</span><br><span class="line">                timeMillis, callingPid, callingUid)) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 省略</span></span><br><span class="line">    <span class="keyword">synchronized</span> (mService) &#123;</span><br><span class="line">        <span class="keyword">if</span> (res == AppErrorDialog.MUTE) &#123;</span><br><span class="line">            stopReportingCrashesLocked(r);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (res == AppErrorDialog.RESTART) &#123;</span><br><span class="line">            mService.removeProcessLocked(r, <span class="keyword">false</span>, <span class="keyword">true</span>, <span class="string">"crash"</span>);</span><br><span class="line">            <span class="keyword">if</span> (task != <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    mService.startActivityFromRecents(task.taskId,</span><br><span class="line">                            ActivityOptions.makeBasic().toBundle());</span><br><span class="line">                &#125; <span class="keyword">catch</span> (IllegalArgumentException e) &#123;</span><br><span class="line">                    <span class="comment">// Hmm, that didn't work, app might have crashed before creating a</span></span><br><span class="line">                    <span class="comment">// recents entry. Let's see if we have a safe-to-restart intent.</span></span><br><span class="line">                    <span class="keyword">final</span> Set&lt;String&gt; cats = task.intent.getCategories();</span><br><span class="line">                    <span class="keyword">if</span> (cats != <span class="keyword">null</span> &amp;&amp; cats.contains(Intent.CATEGORY_LAUNCHER)) &#123;</span><br><span class="line">                        mService.startActivityInPackage(task.mCallingUid,</span><br><span class="line">                                task.mCallingPackage, task.intent, <span class="keyword">null</span>, <span class="keyword">null</span>, <span class="keyword">null</span>, <span class="number">0</span>, <span class="number">0</span>,</span><br><span class="line">                                ActivityOptions.makeBasic().toBundle(), task.userId, <span class="keyword">null</span>,</span><br><span class="line">                                <span class="string">"AppErrors"</span>);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 最终可以看到，系统在这里打印了该 Log</span></span><br><span class="line">        <span class="comment">// mService.removeProcessLocked(r, false, false, "crash");</span></span><br><span class="line">        <span class="keyword">if</span> (res == AppErrorDialog.FORCE_QUIT) &#123;</span><br><span class="line">            <span class="keyword">long</span> orig = Binder.clearCallingIdentity();</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="comment">// Kill it with fire!</span></span><br><span class="line">                mService.mStackSupervisor.handleAppCrashLocked(r);</span><br><span class="line">                <span class="keyword">if</span> (!r.persistent) &#123;</span><br><span class="line">                    mService.removeProcessLocked(r, <span class="keyword">false</span>, <span class="keyword">false</span>, <span class="string">"crash"</span>);</span><br><span class="line">                    mService.mStackSupervisor.resumeFocusedStackTopActivityLocked();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">                Binder.restoreCallingIdentity(orig);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (res == AppErrorDialog.FORCE_QUIT_AND_REPORT) &#123;</span><br><span class="line">            appErrorIntent = createAppErrorIntentLocked(r, timeMillis, crashInfo);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (r != <span class="keyword">null</span> &amp;&amp; !r.isolated &amp;&amp; res != AppErrorDialog.RESTART) &#123;</span><br><span class="line">            <span class="comment">// XXX Can't keep track of crash time for isolated processes,</span></span><br><span class="line">            <span class="comment">// since they don't have a persistent identity.</span></span><br><span class="line">            mProcessCrashTimes.put(r.info.processName, r.uid,</span><br><span class="line">                    SystemClock.uptimeMillis());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">	<span class="comment">// 省略</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>继续向上查看调用关系：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">crashApplicationInner &lt;-- crashApplication &lt;-- handleApplicationCrashInner &lt;-- handleApplicationCrash</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ActivityManagerService.java</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleApplicationCrash</span><span class="params">(IBinder app,</span></span></span><br><span class="line"><span class="function"><span class="params">        ApplicationErrorReport.ParcelableCrashInfo crashInfo)</span> </span>&#123;</span><br><span class="line">    ProcessRecord r = findAppProcess(app, <span class="string">"Crash"</span>);</span><br><span class="line">    <span class="keyword">final</span> String processName = app == <span class="keyword">null</span> ? <span class="string">"system_server"</span></span><br><span class="line">            : (r == <span class="keyword">null</span> ? <span class="string">"unknown"</span> : r.processName);</span><br><span class="line">    handleApplicationCrashInner(<span class="string">"crash"</span>, r, processName, crashInfo);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">handleApplicationCrashInner</span><span class="params">(String eventType, ProcessRecord r, String processName,</span></span></span><br><span class="line"><span class="function"><span class="params">        ApplicationErrorReport.CrashInfo crashInfo)</span> </span>&#123;</span><br><span class="line">    EventLog.writeEvent(EventLogTags.AM_CRASH, Binder.getCallingPid(),</span><br><span class="line">            UserHandle.getUserId(Binder.getCallingUid()), processName,</span><br><span class="line">            r == <span class="keyword">null</span> ? -<span class="number">1</span> : r.info.flags,</span><br><span class="line">            crashInfo.exceptionClassName,</span><br><span class="line">            crashInfo.exceptionMessage,</span><br><span class="line">            crashInfo.throwFileName,</span><br><span class="line">            crashInfo.throwLineNumber);</span><br><span class="line">    addErrorToDropBox(eventType, r, processName, <span class="keyword">null</span>, <span class="keyword">null</span>, <span class="keyword">null</span>, <span class="keyword">null</span>, <span class="keyword">null</span>, crashInfo);</span><br><span class="line">    mAppErrors.crashApplication(r, crashInfo);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果你使用的是 <code>SDK</code> 查看的源码，到这里就无法跳转到其调用了，如果是使用 <code>AOSP</code> 源码查看的话还是可以的，没关系，转用源码索引去查查。可以定位到</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">handleApplicationCrash &lt;-- KillApplicationHandler</span><br></pre></td></tr></table></figure>
+
+<p>具体如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">KillApplicationHandler</span> <span class="keyword">implements</span> <span class="title">Thread</span>.<span class="title">UncaughtExceptionHandler</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">uncaughtException</span><span class="params">(Thread t, Throwable e)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 省略</span></span><br><span class="line">        <span class="comment">// Bring up crash dialog, wait for it to be dismissed</span></span><br><span class="line">        ActivityManager.getService().handleApplicationCrash(</span><br><span class="line">            mApplicationObject, <span class="keyword">new</span> ApplicationErrorReport.ParcelableCrashInfo(e));</span><br><span class="line">        <span class="comment">// 省略</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">LoggingHandler</span> <span class="keyword">implements</span> <span class="title">Thread</span>.<span class="title">UncaughtExceptionHandler</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">uncaughtException</span><span class="params">(Thread t, Throwable e)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// Don't re-enter if KillApplicationHandler has already run</span></span><br><span class="line">        <span class="keyword">if</span> (mCrashing) <span class="keyword">return</span>;</span><br><span class="line">        <span class="keyword">if</span> (mApplicationObject == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="comment">// The "FATAL EXCEPTION" string is still used on Android even though</span></span><br><span class="line">            <span class="comment">// apps can set a custom UncaughtExceptionHandler that renders uncaught</span></span><br><span class="line">            <span class="comment">// exceptions non-fatal.</span></span><br><span class="line">            Clog_e(TAG, <span class="string">"*** FATAL EXCEPTION IN SYSTEM PROCESS: "</span> + t.getName(), e);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            StringBuilder message = <span class="keyword">new</span> StringBuilder();</span><br><span class="line">            <span class="comment">// The "FATAL EXCEPTION" string is still used on Android even though</span></span><br><span class="line">            <span class="comment">// apps can set a custom UncaughtExceptionHandler that renders uncaught</span></span><br><span class="line">            <span class="comment">// exceptions non-fatal.</span></span><br><span class="line">            message.append(<span class="string">"FATAL EXCEPTION: "</span>).append(t.getName()).append(<span class="string">"\n"</span>);</span><br><span class="line">            <span class="keyword">final</span> String processName = ActivityThread.currentProcessName();</span><br><span class="line">            <span class="keyword">if</span> (processName != <span class="keyword">null</span>) &#123;</span><br><span class="line">                message.append(<span class="string">"Process: "</span>).append(processName).append(<span class="string">", "</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            message.append(<span class="string">"PID: "</span>).append(Process.myPid());</span><br><span class="line">            Clog_e(TAG, message.toString(), e);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这两个 <code>UncaughtExceptionHandler</code> 的调用如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">commonInit</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 省略</span></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    * set handlers; these apply to all threads in the VM. Apps can replace</span></span><br><span class="line"><span class="comment">    * the default handler, but not the pre handler.</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    Thread.setUncaughtExceptionPreHandler(<span class="keyword">new</span> LoggingHandler());</span><br><span class="line">    Thread.setDefaultUncaughtExceptionHandler(<span class="keyword">new</span> KillApplicationHandler());</span><br><span class="line">    <span class="comment">// 省略</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>系统在应用初始化的时候，给应用的主线程设置了两个 <code>UncaughtExceptionHandler</code>，其中 <code>LoggingHandler</code> 用来打印异常的 Log，也就是熟悉的崩溃异常 Log：“FATAL EXCEPTION:”开头的 Log；另一个 <code>KillApplicationHandler</code> 用来处理崩溃，通过这个进入 <code>AMS</code> 的异常处理流程，然后弹框，最后打印了一句开头的那一句 Crash 的 Log。</p>
+<p><code>Killing 27917:com.xxx.weather/u0a83 (adj 800): crash</code></p>
+<p>从名字也可以看出，一个 <code>UncaughtException</code> 会先由 <code>UncaughtExceptionPreHandler</code> 处理再由 <code>DefaultUncaughtExceptionHandler</code> 处理。如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Thread.java</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">dispatchUncaughtException</span><span class="params">(Throwable e)</span> </span>&#123;</span><br><span class="line">    Thread.UncaughtExceptionHandler initialUeh =</span><br><span class="line">            Thread.getUncaughtExceptionPreHandler();</span><br><span class="line">    <span class="keyword">if</span> (initialUeh != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            initialUeh.uncaughtException(<span class="keyword">this</span>, e);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (RuntimeException | Error ignored) &#123;</span><br><span class="line">            <span class="comment">// Throwables thrown by the initial handler are ignored</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    getUncaughtExceptionHandler().uncaughtException(<span class="keyword">this</span>, e);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里说明一下，<code>KillApplicationHandler</code> 是从 <code>API 26</code> 开始才有的，它将原先的 <code>API 25</code> 中的 <code>UncaughtExceptionHandler</code> 拆分成 <code>LoggingHandler</code> 和 <code>KillApplicationHandler</code> 两部分了，分工更明确。不少三方服务 <code>SDK</code> 都自定义了 <code>DefaultUncaughtExceptionHandler</code> 来拦截意外的异常进行记录、上报分析，所以将两者拆分能保留打印 <code>Log</code> 的功能，给开发者更好的调试体验。</p>
+<p>看到这里，基本已经理清了这一条 Log 的来龙去脉了。</p>
+<h2 id="Crash-的堆栈信息消失"><a href="#Crash-的堆栈信息消失" class="headerlink" title="Crash 的堆栈信息消失"></a>Crash 的堆栈信息消失</h2><p>经过以上的分析，这个问题就比较明确了。应用崩溃了，并且打印了相应的 Kill Log，所以异常被 <code>KillApplicationHandler</code> 进行了处理，但是又没有打印出 <code>FATAL EXCEPTION</code>，则说明异常没有被 <code>LoggingHandler</code> 进行处理，那么真相只有一个：这个异常不是真正的未捕获的异常。</p>
+<p>具体而言，就是这个异常虽然造成了应用崩溃，但是它并不是应用没有处理的异常，实际上它是由应用自己 Catch 了之后主动调用系统的 <code>UncaughtExceptionHandler</code> 处理的。</p>
+<p>查看日志可以看到以下内容：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">W/System.err: io.reactivex.exceptions.UndeliverableException: java.util.concurrent.ExecutionException: com.android.volley.NoConnectionError: java.net.UnknownHostException: Unable to resolve host &quot;api.accuweather.com&quot;: No address associated with hostname</span><br><span class="line">W/System.err:     at io.reactivex.plugins.RxJavaPlugins.onError(RxJavaPlugins.java:349)</span><br><span class="line">W/System.err:     at io.reactivex.internal.operators.observable.ObservableCreate$CreateEmitter.onError(ObservableCreate.java:74)</span><br><span class="line">W/System.err:     at com.xxx.weather.data.http.RxVolleyRequest$5.subscribe(RxVolleyRequest.java:154)</span><br><span class="line">W/System.err:     at io.reactivex.internal.operators.observable.ObservableCreate.subscribeActual(ObservableCreate.java:40)</span><br><span class="line">W/System.err:     at io.reactivex.Observable.subscribe(Observable.java:10955)</span><br><span class="line">W/System.err:     at io.reactivex.internal.operators.observable.ObservableSubscribeOn$SubscribeTask.run(ObservableSubscribeOn.java:96)</span><br><span class="line">W/System.err:     at io.reactivex.Scheduler$DisposeTask.run(Scheduler.java:452)</span><br><span class="line">W/System.err:     at io.reactivex.internal.schedulers.ScheduledRunnable.run(ScheduledRunnable.java:61)</span><br><span class="line">W/System.err:     at io.reactivex.internal.schedulers.ScheduledRunnable.call(ScheduledRunnable.java:52)</span><br><span class="line">W/System.err:     at java.util.concurrent.FutureTask.run(FutureTask.java:266)</span><br><span class="line">W/System.err:     at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:301)</span><br><span class="line">W/System.err:     at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1162)</span><br><span class="line">W/System.err:     at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:636)</span><br><span class="line">W/System.err:     at java.lang.Thread.run(Thread.java:764)</span><br></pre></td></tr></table></figure>
+
+<p>这种 <code>System.err</code> 大家应该都熟悉，它是 <code>ex.printStackTrace()</code> 打印出来的，也就是应用内部 Catch 了异常之后常见的打印堆栈的操作。</p>
+<p>去查看 <code>RxJavaPlugins</code> 如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">onError</span><span class="params">(@NonNull Throwable error)</span> </span>&#123;</span><br><span class="line">    Consumer&lt;? <span class="keyword">super</span> Throwable&gt; f = errorHandler;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (error == <span class="keyword">null</span>) &#123;</span><br><span class="line">        error = <span class="keyword">new</span> NullPointerException(<span class="string">"onError called with null. Null values are generally not allowed in 2.x operators and sources."</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (!isBug(error)) &#123;</span><br><span class="line">            error = <span class="keyword">new</span> UndeliverableException(error);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (f != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            f.accept(error);</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">            <span class="comment">// Exceptions.throwIfFatal(e); TODO decide</span></span><br><span class="line">            e.printStackTrace(); <span class="comment">// NOPMD</span></span><br><span class="line">            uncaught(e);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    error.printStackTrace(); <span class="comment">// NOPMD</span></span><br><span class="line">    uncaught(error);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">uncaught</span><span class="params">(@NonNull Throwable error)</span> </span>&#123;</span><br><span class="line">    Thread currentThread = Thread.currentThread();</span><br><span class="line">    UncaughtExceptionHandler handler = currentThread.getUncaughtExceptionHandler();</span><br><span class="line">    handler.uncaughtException(currentThread, error);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，如果 <code>RxJavaPlugins</code> 没有设置 <code>errorHandler</code>，那么，<code>RxJava</code> 就会打印堆栈，然后将该异常交给 <code>UncaughtExceptionHandler</code> 来处理。这就是测试提交 Log 上显示了应用崩溃，但应用并没有打印 <code>FATAL EXCEPTION</code> 的原因。</p>
+<h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><h3 id="RxJavaPlugins-setErrorHandler"><a href="#RxJavaPlugins-setErrorHandler" class="headerlink" title="RxJavaPlugins.setErrorHandler"></a>RxJavaPlugins.setErrorHandler</h3><p>经过以上分析，如果我们设置了 <code>errorHandler</code>，那么这个异常就可以由应用进行处理，应用就不会崩溃了。恰好，它提供了设置的方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">setErrorHandler</span><span class="params">(@Nullable Consumer&lt;? <span class="keyword">super</span> Throwable&gt; handler)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (lockdown) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Plugins can't be changed anymore"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    errorHandler = handler;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>因此第一种解决方案就是设置该 <code>errorHandler</code>。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> &#123;</span><br><span class="line">    RxJavaPlugins.setErrorHandler(<span class="keyword">new</span> Consumer&lt;Throwable&gt;() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">accept</span><span class="params">(Throwable throwable)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">            Log.e(TAG, <span class="string">"UncaughtException: accept"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>使用静态代码块实现类加载时进行一次设置。</p>
+<p>但这种方式只是避免了应用的崩溃，实际上，这个错误情况出现的根本原因没有解决。</p>
+<h3 id="synchronized"><a href="#synchronized" class="headerlink" title="synchronized"></a>synchronized</h3><p>再往上查看 <code>ObservableCreate$CreateEmitter.onError</code> 方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onError</span><span class="params">(Throwable t)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!tryOnError(t)) &#123;</span><br><span class="line">        RxJavaPlugins.onError(t);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">tryOnError</span><span class="params">(Throwable t)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (t == <span class="keyword">null</span>) &#123;</span><br><span class="line">        t = <span class="keyword">new</span> NullPointerException(<span class="string">"onError called with null. Null values are generally not allowed in 2.x operators and sources."</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (!isDisposed()) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            observer.onError(t);</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            dispose();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，它会调用 <code>RxJavaPlugins.onError</code> 的条件为当前的订阅关系已经被解除。</p>
+<p>以下为项目中代码，可以看到在调用 <code>onError</code> 前已经对订阅关系进行了判断。（并没有什么卵用……）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> Observable&lt;List&lt;ConditionBean&gt;&gt; getConditions(<span class="keyword">final</span> String cityKey) &#123;</span><br><span class="line">    <span class="keyword">return</span> Observable.create(<span class="keyword">new</span> ObservableOnSubscribe&lt;List&lt;ConditionBean&gt;&gt;() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">subscribe</span><span class="params">(ObservableEmitter&lt;List&lt;ConditionBean&gt;&gt; e)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> (!e.isDisposed()) &#123;</span><br><span class="line">                    e.onNext(conditionRequest(cityKey));</span><br><span class="line">                    e.onComplete();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">                Log.e(TAG, <span class="string">"getConditions weather failed"</span>);</span><br><span class="line">                Log.e(<span class="string">"XXX"</span>, <span class="string">"getConditions"</span>);</span><br><span class="line">                <span class="keyword">if</span> (!e.isDisposed()) &#123;</span><br><span class="line">                    Log.e(<span class="string">"XXX"</span>, <span class="string">"getConditions start"</span>);</span><br><span class="line">                    e.onError(ex);什么意思呢，</span><br><span class="line">                    Log.e(<span class="string">"XXX"</span>, <span class="string">"getConditions end"</span>);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;).subscribeOn(Schedulers.io());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Observable</span><br><span class="line">        .zip(RxVolleyRequest.getConditions(key),</span><br><span class="line">                RxVolleyRequest.getHourlyWeathers(key),</span><br><span class="line">                RxVolleyRequest.getDailyWeathers(key),</span><br><span class="line">                (conditionBeans, hourlyWeatherBeans, dailyForecastBeans) -&gt; &#123;</span><br><span class="line">                    <span class="comment">// 省略</span></span><br><span class="line">                &#125;)</span><br><span class="line">        .subscribe(mWeatherDisposable);</span><br></pre></td></tr></table></figure>
+
+<p>在加入 <code>errorHandler</code> 后查看 Log，可以看到 zip 的 3 个请求几乎同时进入了 <code>e.onError</code> 方法，而订阅者实际上是同一个，导致某一个的 <code>tryOnError</code> 判断为已取消订阅，导致应用崩溃。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">04-12 13:58:46.341 E/Weather/XXX: getConditions</span><br><span class="line">04-12 13:58:46.341 E/Weather/XXX: getHourlyWeathers</span><br><span class="line">04-12 13:58:46.341 E/Weather/XXX: getConditions start</span><br><span class="line">04-12 13:58:46.341 E/Weather/XXX: getHourlyWeathers start</span><br><span class="line">04-12 13:58:46.341 E/Weather/XXX: getConditions end</span><br><span class="line">04-12 13:58:46.341 E/Weather/XXX: getDailyWeathers</span><br><span class="line">04-12 13:58:46.341 E/Weather/XXX: getDailyWeathers start</span><br><span class="line">04-12 13:58:46.343 E/Weather/XXX: getDailyWeathers end</span><br><span class="line">04-12 13:58:46.343 E/Weather/XXX: UncaughtException: accept</span><br><span class="line">04-12 13:58:46.343 E/Weather/XXX: getHourlyWeathers end</span><br></pre></td></tr></table></figure>
+
+<p>通过以上流程的梳理，可以说该问题根本原因是一个由于多个网络请求线程同时返回错误的并发问题。</p>
+<p>因此，解决方案就是解决并发问题。这个不用多说，如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">synchronized</span> (RxVolleyRequest.class) &#123;</span><br><span class="line">    Log.e(<span class="string">"XXX"</span>, <span class="string">"getConditions"</span>);</span><br><span class="line">    <span class="keyword">if</span> (!e.isDisposed()) &#123;</span><br><span class="line">        Log.e(<span class="string">"XXX"</span>, <span class="string">"getConditions start"</span>);</span><br><span class="line">        e.onError(ex);</span><br><span class="line">        Log.e(<span class="string">"XXX"</span>, <span class="string">"getConditions end"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这时再看看 Log 输出：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">04-12 13:56:49.709 E/Weather/XXX: getDailyWeathers</span><br><span class="line">04-12 13:56:49.709 E/Weather/XXX: getDailyWeathers start</span><br><span class="line">04-12 13:56:49.711 E/Weather/XXX: getDailyWeathers end</span><br><span class="line">04-12 13:56:49.712 E/Weather/XXX: getHourlyWeathers</span><br><span class="line">04-12 13:56:49.712 E/Weather/XXX: getConditions</span><br><span class="line"></span><br><span class="line">04-12 13:56:54.476 E/Weather/XXX: getConditions</span><br><span class="line">04-12 13:56:54.476 E/Weather/XXX: getConditions start</span><br><span class="line">04-12 13:56:54.479 E/Weather/XXX: getConditions end</span><br><span class="line">04-12 13:56:54.479 E/Weather/XXX: getHourlyWeathers</span><br><span class="line">04-12 13:56:54.479 E/Weather/XXX: getDailyWeathers</span><br></pre></td></tr></table></figure>
+
+<p>这样就从根本上解决了这个疑难问题。当然，这里要注意是否有线程阻塞的问题，项目里的相关代码不会发生主线程阻塞，所以最终解决方案就是如上所示。</p>
+<h2 id="其他说明"><a href="#其他说明" class="headerlink" title="其他说明"></a>其他说明</h2><h3 id="Crash：偶现到必现"><a href="#Crash：偶现到必现" class="headerlink" title="Crash：偶现到必现"></a>Crash：偶现到必现</h3><p>发现该问题过程没有上文说得那样轻松，原因在于测试提的 Bug 为一个偶现 Bug，一开始也没有很好的思路。后来在看代码时，我将觉得没什么作用的 Catch 的异常打印堆栈的语句删除，这才发现这个问题几乎是必现的。改动如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 原来的版本</span></span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="comment">// 省略</span></span><br><span class="line">&#125; <span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">    Log.e(TAG, <span class="string">"getConditions weather failed"</span>);</span><br><span class="line">    ex.printStackTrace();</span><br><span class="line">    <span class="keyword">if</span> (!e.isDisposed()) &#123;</span><br><span class="line">        e.onError(ex);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 新thsg</span></span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="comment">// 省略</span></span><br><span class="line">&#125; <span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">    Log.e(TAG, <span class="string">"getConditions weather failed"</span>);</span><br><span class="line">    <span class="keyword">if</span> (!e.isDisposed()) &#123;</span><br><span class="line">        e.onError(ex);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>现在回过头看，是因为 <code>ex.printStackTrace()</code> 是一个相对耗时的操作，导致上述的并发竞争条件不容易出现，而去除之后就大概率可以出现了。</p>
+<h3 id="onError-onComplete-顺序"><a href="#onError-onComplete-顺序" class="headerlink" title="onError/onComplete 顺序"></a>onError/onComplete 顺序</h3><p>学习 <code>RxJava</code> 过程中大家可能看到过这样的说明：</p>
+<ol>
+<li><code>onError</code> 和 <code>onComplete</code> 是互斥的，订阅者只会接收到其中一个。</li>
+<li>尽管如此，上游仍然可以先调用 <code>onError</code> 再调用 <code>onComplete</code>，只是下游收不到 <code>onComplete</code> 而已；</li>
+<li>但上游不能先调用 <code>onComplete</code> 再调用 <code>onError</code>，否则应用会崩溃。</li>
+</ol>
+<p>这一说法相信通过上面的源码可以看出一点原因来，这里再梳理一下。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onError</span><span class="params">(Throwable t)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!tryOnError(t)) &#123;</span><br><span class="line">        RxJavaPlugins.onError(t);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">tryOnError</span><span class="params">(Throwable t)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (t == <span class="keyword">null</span>) &#123;</span><br><span class="line">        t = <span class="keyword">new</span> NullPointerException(<span class="string">"onError called with null. Null values are generally not allowed in 2.x operators and sources."</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (!isDisposed()) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            observer.onError(t);</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            dispose();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onComplete</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!isDisposed()) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            observer.onComplete();</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            dispose();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到 <code>onError</code> 和 <code>onComplete</code> 都会取消订阅关系，这也就是说法 1 的原因。<br>说法 2 是因为虽然 <code>onError</code> 把订阅关系取消了，但再调用 <code>onComplete</code> 只是不执行操作而已，所以不会导致崩溃。<br>说法 3 则是因为 <code>onComplete</code> 把订阅关系取消后，再调用 <code>onError</code> 则会将异常抛到 <code>RxJavaPlugins</code> 来处理，而如上文所说，它的默认将这个异常交给应用默认的 <code>UncaughtExceptionHandler</code> 来处理，也就是导致应用崩溃。</p>
+<h2 id="感想"><a href="#感想" class="headerlink" title="感想"></a>感想</h2><p>分析的过程中要大胆假设，代码就在那里，不会欺骗你。我在分析过程中，分析到系统打印出 Kill Log 但没有打印 FATAL EXCEPTION Log 时，就差点分析不下去了，一方面是对相关的 <code>UncaughtExceptionHandler</code> 不了解，另一方面是没想到为什么一个奇怪的异常交给应用处理后怎么只打印了其中一部分 Log。没有假设就没办法求证，浪费了不少时间。</p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/Android/" rel="tag"># Android</a>
+            
+              <a href="/tags/坑/" rel="tag"># 坑</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2018/04/monkey-test-options/" rel="next" title="Monkey：参数说明">
+                  <i class="fa fa-chevron-left"></i> Monkey：参数说明
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2018/07/emoji-distinguish&filter/" rel="prev" title="Emoji 识别与过滤">
+                  Emoji 识别与过滤 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+    </div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc" data-target="post-toc-wrap">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Crash-Log-来龙去脉"><span class="nav-number">1.</span> <span class="nav-text">Crash Log 来龙去脉</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Crash-的堆栈信息消失"><span class="nav-number">2.</span> <span class="nav-text">Crash 的堆栈信息消失</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#解决方案"><span class="nav-number">3.</span> <span class="nav-text">解决方案</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#RxJavaPlugins-setErrorHandler"><span class="nav-number">3.1.</span> <span class="nav-text">RxJavaPlugins.setErrorHandler</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#synchronized"><span class="nav-number">3.2.</span> <span class="nav-text">synchronized</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#其他说明"><span class="nav-number">4.</span> <span class="nav-text">其他说明</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Crash：偶现到必现"><span class="nav-number">4.1.</span> <span class="nav-text">Crash：偶现到必现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#onError-onComplete-顺序"><span class="nav-number">4.2.</span> <span class="nav-text">onError/onComplete 顺序</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#感想"><span class="nav-number">5.</span> <span class="nav-text">感想</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/avatar_me.png"
+      alt="Mupceet">
+  <p class="site-author-name" itemprop="name">Mupceet</p>
+  <div class="site-description" itemprop="description">君子坦荡荡 小人长戚戚</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">25</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      友情链接
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://dxinl.github.io/" title="https://dxinl.github.io/" rel="noopener" target="_blank">Write down & Think hard</a>
+        </li>
+      
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Mupceet</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.3.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.3.0"></script><script src="/js/motion.js?v=7.3.0"></script>
+<script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://Mupceet.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  function disqus_config() {
+    this.page.url = "http://yoursite.com/2018/04/crash-without-log/";
+    this.page.identifier = "2018/04/crash-without-log/";
+    this.page.title = '诡异的崩溃：UncaughtExceptionHandler 与 RxJava 并发错误';};
+  function loadComments() {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: disqus_config
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://Mupceet.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  }
+    (function() {
+      var offsetTop = document.getElementById('comments').offsetTop - window.innerHeight;
+      if (offsetTop <= 0) {
+        // load directly when there's no a scrollbar
+        window.addEventListener('load', loadComments, false);
+      } else {
+        var disqus_scroll = () => {
+          // offsetTop may changes because of manually resizing browser window or lazy loading images.
+          var offsetTop = document.getElementById('comments').offsetTop - window.innerHeight;
+          var scrollTop = window.scrollY;
+
+          // pre-load comments a bit? (margin or anything else)
+          if (offsetTop - scrollTop < 60) {
+            window.removeEventListener('scroll', disqus_scroll);
+            loadComments();
+          }
+        };
+        window.addEventListener('scroll', disqus_scroll);
+      }
+    })();
+  
+</script>
+
+</body>
+</html>

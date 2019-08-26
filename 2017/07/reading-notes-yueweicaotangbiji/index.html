@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"搜索","hits_empty":"未找到与「 ${query} 」相关的内容","hits_stats":"找到 ${hits} 条相关条目，用时: ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="上次买书，加了一本《阅微草堂笔记》凑单，此书为纪昀晚年所作的笔记小说集，其实都是篇幅极其短小的随笔杂记。  每脱稿一卷，即被亲朋好友竞相传抄刻印，在上层社会广为流传，一时竟享有同曹雪芹的《红楼梦》、蒲松龄的《聊斋志异》并行海内的盛誉  对于此话，个人觉得有点夸张了，当然我水平不高就不多加评论。此文章主要为摘录阅读之时有所感触的的篇章，以飨读者。">
+<meta name="keywords" content="杂谈">
+<meta property="og:type" content="article">
+<meta property="og:title" content="《阅微草堂笔记》摘录">
+<meta property="og:url" content="http://yoursite.com/2017/07/reading-notes-yueweicaotangbiji/index.html">
+<meta property="og:site_name" content="Mupceet">
+<meta property="og:description" content="上次买书，加了一本《阅微草堂笔记》凑单，此书为纪昀晚年所作的笔记小说集，其实都是篇幅极其短小的随笔杂记。  每脱稿一卷，即被亲朋好友竞相传抄刻印，在上层社会广为流传，一时竟享有同曹雪芹的《红楼梦》、蒲松龄的《聊斋志异》并行海内的盛誉  对于此话，个人觉得有点夸张了，当然我水平不高就不多加评论。此文章主要为摘录阅读之时有所感触的的篇章，以飨读者。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-01-20T17:39:09.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="《阅微草堂笔记》摘录">
+<meta name="twitter:description" content="上次买书，加了一本《阅微草堂笔记》凑单，此书为纪昀晚年所作的笔记小说集，其实都是篇幅极其短小的随笔杂记。  每脱稿一卷，即被亲朋好友竞相传抄刻印，在上层社会广为流传，一时竟享有同曹雪芹的《红楼梦》、蒲松龄的《聊斋志异》并行海内的盛誉  对于此话，个人觉得有点夸张了，当然我水平不高就不多加评论。此文章主要为摘录阅读之时有所感触的的篇章，以飨读者。">
+  <link rel="canonical" href="http://yoursite.com/2017/07/reading-notes-yueweicaotangbiji/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>《阅微草堂笔记》摘录 | Mupceet</title>
+  <meta name="generator" content="Hexo 3.9.0">
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Mupceet</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Don't Repeat Yourself</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/07/reading-notes-yueweicaotangbiji/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Mupceet">
+      <meta itemprop="description" content="君子坦荡荡 小人长戚戚">
+      <meta itemprop="image" content="/images/avatar_me.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Mupceet">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">《阅微草堂笔记》摘录
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2017-07-23 12:42:33" itemprop="dateCreated datePublished" datetime="2017-07-23T12:42:33+08:00">2017-07-23</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2018-01-21 01:39:09" itemprop="dateModified" datetime="2018-01-21T01:39:09+08:00">2018-01-21</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/读书笔记/" itemprop="url" rel="index"><span itemprop="name">读书笔记</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Disqus：</span>
+    
+    <a title="disqus" href="/2017/07/reading-notes-yueweicaotangbiji/#comments" itemprop="discussionUrl"><span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/07/reading-notes-yueweicaotangbiji/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>上次买书，加了一本《阅微草堂笔记》凑单，此书为纪昀晚年所作的笔记小说集，其实都是篇幅极其短小的随笔杂记。</p>
+<blockquote>
+<p>每脱稿一卷，即被亲朋好友竞相传抄刻印，在上层社会广为流传，一时竟享有同曹雪芹的《红楼梦》、蒲松龄的《聊斋志异》并行海内的盛誉</p>
+</blockquote>
+<p>对于此话，个人觉得有点夸张了，当然我水平不高就不多加评论。此文章主要为摘录阅读之时有所感触的的篇章，以飨读者。</p>
+<a id="more"></a>
+
+<h2 id="冥府论功"><a href="#冥府论功" class="headerlink" title="冥府论功"></a>冥府论功</h2><blockquote>
+<p>北村郑苏仙，一日梦至冥府，见闫罗王方录囚。有邻村一媪至殿前，王改容拱手，赐以杯茗，命冥吏速送生善处。郑私叩冥吏曰：此农家老妇，有何功德？冥吏曰：是媪一生无利己损人心。夫利己之心，虽贤士大夫或不免，然利己者必损人，种种机械因是而生，种种冤愆因是而造，甚至贻臭万年，流毒四诲，皆此一念为害也。此一村妇而能自制其私心，读书讲学之儒对之多愧色矣。何怪王之加礼乎？郑素有心计，闻之惕然而寤。郑又言此媪未至以前，有一官公服昂然入，自称所至但饮一杯水，今无愧鬼神。王哂曰：设官以治民，下至驿丞闸官，皆有利弊之当理，但不要钱即为好官，植木偶于堂，并水不饮，不更胜公乎？官又辩曰：某虽无功亦无罪。王曰：公一身处处求自全，某狱某狱避嫌疑而不言，非负民乎？某事某事畏烦重而不举，非负国乎？三载考绩之谓何，无功即有罪矣。官大踧踖，锋棱顿减。王徐顾笑曰：怪公盛气耳，平心而论，要是三四等好官，来生尚不失冠带。促命即送转轮王。观此二事，知人心微暧，鬼神皆得而窥。虽贤者一念之私，亦不免于责备。相在尔室，其信然乎。</p>
+</blockquote>
+<p>“无功即有罪”这五个字可以说非常深刻了。在其位就要谋其政，尸位素餐就是罪人。作为普通市民，见义勇为则可以论功，但做为警察，除暴安良就是职责所在。在一个团队当中，每个人同样应该承担起自己的责任来，进一步的，要想论功则要将事情做到最好。</p>
+<h2 id="城隍之误"><a href="#城隍之误" class="headerlink" title="城隍之误"></a>城隍之误</h2><blockquote>
+<p>献县老儒韩生，性刚正，动必遵礼，一乡推祭酒。一日得寒疾，恍惚间，一鬼立前曰：城隍神唤。韩念数尽当死，拒亦无益，乃随去。至一官署，神检籍曰：以姓同，误矣。杖其鬼二十，使送还。韩意不平，上请曰：人命至重，神奈何遣愦愦之鬼，致有误拘。倘不检出，不竟枉死耶？聪明正直之谓何！神笑曰：谓汝倔强，今果然。夫天行不能无岁差，况鬼神乎？误而即觉，是谓聪明；觉而不回护，是谓正直，汝何足以知之。念汝言行无玷，姑贷汝。后勿如是躁妄也。霍然而苏。韩章美云。</p>
+</blockquote>
+<p>世上没有不犯错的人，但能犯错立刻发现错误，而且不为自己做辩解，就可以称得上是一个正直聪明的人了。可是想想，这样的人是不多的，大多数人犯错了第一反应就是推卸责任。可见要达到这样的水平是需要修炼的。</p>
+<h2 id="鬼藏药方"><a href="#鬼藏药方" class="headerlink" title="鬼藏药方"></a>鬼藏药方</h2><blockquote>
+<p>内阁学士永公讳宁，婴疾，颇委顿。延医诊视，未遽愈，改延一医，索前医所用药帖，弗得。公以为小婢误置他处，责使搜索，云不得且笞汝。方倚枕憩息，恍惚有人跪灯下曰：公勿笞婢，此药帖小人所藏。小人即公为臬司时平反得生之囚也。问：藏药帖何意，曰：医家同类皆相忌，务改前医之方，以见所长。公所服药不误，特初试一剂，力尚未至耳。使后医见方，必相反以立异，则公殆矣。所以小人阴窃之。公方昏闷，亦未思及其为鬼。稍顷始悟，悚然汗下，乃称前方已失，不复记忆，请后医别疏方。视所用药，则仍前医方也。因连进数剂，病霍然如失。公镇乌鲁木齐日，亲为余言之，曰：此鬼可谓谙悉世情矣。</p>
+</blockquote>
+<p>同行相轻是普遍现象，要警惕那些一上来就推翻原来方案的人，这样的人不一定是真的厉害。而能够对于原来方案进行评估指出优缺点并提出改进措施的才是有真本事的人。事实上，技术上的专家也是这样子的，往往能够指出你现在的不足，提出有效的建议。如果一个人只会提出自己的方案而对原来的方案无法进行评估的人我们当然是不会将他当成专家的。</p>
+<h2 id="名分之争"><a href="#名分之争" class="headerlink" title="名分之争"></a>名分之争</h2><blockquote>
+<p>吴侍读颉云言，癸丑一前辈偶忘其姓，似是王言敷先生，忆不甚真也。尝僦居海丰寺街，宅后破屋三楹，云有鬼，不可居，然不出为祟，但偶闻音响而已。一夕，屋中有诟谇声，伏墙隅听之，乃两妻争坐位，一称先来，一称年长，哓哓然不止。前辈不觉太息曰：死尚不休耶？再听之遂寂。夫妻妾同居，隐忍相安者，十或一焉；欢然相得者，千百或一焉。以尚有名分相摄也，至于两妻并立，则从来无一相得者，亦从来无一相安者，无名分以摄之，则两不相下，固其所矣。又何怪于嚣争哉。</p>
+</blockquote>
+<p>一个团队中每个人的职责应当清晰，否则名正言顺无从说起。名分是不必要的吗？我看未必，名分实际上代表了你的职责，但是也不要被名分所累，有了好的想法，就算不在职责范围之内也可以提出来，只不过需要更全面的评审罢了。有更大的能力也就可以争取相应的名分让团队进一步的提升效率。</p>
+<h2 id="知书达理"><a href="#知书达理" class="headerlink" title="知书达理"></a>知书达理</h2><blockquote>
+<p>姚安公在滇时，幕友言署中香橼树下，月夜有红裳女子靓妆立。见人则冉冉没土中。众议发视之，姚安公携卮酒浇树下，自祝之曰：汝见人则隐，是无意于为祟也，又何必屡现汝形，自取暴骨之祸。自是不复出。又有书斋甚轩敞，久无人居，舅氏安公五章，时相从在滇。偶夏日裸寝其内，梦一人揖而言曰：与君虽幽明异路。然眷属居此，亦有男女之别。君奈何不以礼自处。矍然醒，遂不敢再往。姚安公尝曰：树下之鬼可谕之以理，书斋之魅能以理喻人。此郡僻处万山中，风俗质朴，浑沌未凿，故异类亦淳良如是也。</p>
+</blockquote>
+<p>凡事要讲理，要遵从客观规律，有理有据。这既是对他人的评判也是对自身的要求，要拥有赤子之心，听取他人的意见加以改进。要做到这一点，不能闭门造车，需要多学习，知书才能达理。</p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/杂谈/" rel="tag"># 杂谈</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2017/07/android-performance-smooth-ui/" rel="next" title="Android 性能优化——UI 优化指南">
+                  <i class="fa fa-chevron-left"></i> Android 性能优化——UI 优化指南
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2017/07/recyclerview-drag-multi-select-1/" rel="prev" title="RecyclerView 拖动/滑动多选的实现（1）">
+                  RecyclerView 拖动/滑动多选的实现（1） <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+    </div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc" data-target="post-toc-wrap">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#冥府论功"><span class="nav-number">1.</span> <span class="nav-text">冥府论功</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#城隍之误"><span class="nav-number">2.</span> <span class="nav-text">城隍之误</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#鬼藏药方"><span class="nav-number">3.</span> <span class="nav-text">鬼藏药方</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#名分之争"><span class="nav-number">4.</span> <span class="nav-text">名分之争</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#知书达理"><span class="nav-number">5.</span> <span class="nav-text">知书达理</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/avatar_me.png"
+      alt="Mupceet">
+  <p class="site-author-name" itemprop="name">Mupceet</p>
+  <div class="site-description" itemprop="description">君子坦荡荡 小人长戚戚</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">25</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      友情链接
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://dxinl.github.io/" title="https://dxinl.github.io/" rel="noopener" target="_blank">Write down & Think hard</a>
+        </li>
+      
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Mupceet</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.3.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.3.0"></script><script src="/js/motion.js?v=7.3.0"></script>
+<script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://Mupceet.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  function disqus_config() {
+    this.page.url = "http://yoursite.com/2017/07/reading-notes-yueweicaotangbiji/";
+    this.page.identifier = "2017/07/reading-notes-yueweicaotangbiji/";
+    this.page.title = '《阅微草堂笔记》摘录';};
+  function loadComments() {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: disqus_config
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://Mupceet.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  }
+    (function() {
+      var offsetTop = document.getElementById('comments').offsetTop - window.innerHeight;
+      if (offsetTop <= 0) {
+        // load directly when there's no a scrollbar
+        window.addEventListener('load', loadComments, false);
+      } else {
+        var disqus_scroll = () => {
+          // offsetTop may changes because of manually resizing browser window or lazy loading images.
+          var offsetTop = document.getElementById('comments').offsetTop - window.innerHeight;
+          var scrollTop = window.scrollY;
+
+          // pre-load comments a bit? (margin or anything else)
+          if (offsetTop - scrollTop < 60) {
+            window.removeEventListener('scroll', disqus_scroll);
+            loadComments();
+          }
+        };
+        window.addEventListener('scroll', disqus_scroll);
+      }
+    })();
+  
+</script>
+
+</body>
+</html>

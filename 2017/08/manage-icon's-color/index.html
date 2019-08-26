@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"搜索","hits_empty":"未找到与「 ${query} 」相关的内容","hits_stats":"找到 ${hits} 条相关条目，用时: ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="应用的图标可以分成两类，一类是小图标，一般带 ic 前缀，另一类就是相对比较大的。大图不用说，一般是 UI 给的什么样子就用什么样子的，对于小图，可能修改的时候只涉及到颜色的改变。如果改个颜色就让 UI 重新切图，这是没有必要的，白白浪费了沟通的成本。 一般来说，涉及到风格变化，如果是采用改变 icon 的颜色的方式，以下管理方法是合适的。 Toobar 溢出菜单颜色1&amp;lt;item name=">
+<meta name="keywords" content="Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="图标颜色管理">
+<meta property="og:url" content="http://yoursite.com/2017/08/manage-icon's-color/index.html">
+<meta property="og:site_name" content="Mupceet">
+<meta property="og:description" content="应用的图标可以分成两类，一类是小图标，一般带 ic 前缀，另一类就是相对比较大的。大图不用说，一般是 UI 给的什么样子就用什么样子的，对于小图，可能修改的时候只涉及到颜色的改变。如果改个颜色就让 UI 重新切图，这是没有必要的，白白浪费了沟通的成本。 一般来说，涉及到风格变化，如果是采用改变 icon 的颜色的方式，以下管理方法是合适的。 Toobar 溢出菜单颜色1&amp;lt;item name=">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/2946447-7002c0c714914082.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:updated_time" content="2018-01-20T17:39:09.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="图标颜色管理">
+<meta name="twitter:description" content="应用的图标可以分成两类，一类是小图标，一般带 ic 前缀，另一类就是相对比较大的。大图不用说，一般是 UI 给的什么样子就用什么样子的，对于小图，可能修改的时候只涉及到颜色的改变。如果改个颜色就让 UI 重新切图，这是没有必要的，白白浪费了沟通的成本。 一般来说，涉及到风格变化，如果是采用改变 icon 的颜色的方式，以下管理方法是合适的。 Toobar 溢出菜单颜色1&amp;lt;item name=">
+<meta name="twitter:image" content="http://upload-images.jianshu.io/upload_images/2946447-7002c0c714914082.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+  <link rel="canonical" href="http://yoursite.com/2017/08/manage-icon's-color/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>图标颜色管理 | Mupceet</title>
+  <meta name="generator" content="Hexo 3.9.0">
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Mupceet</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Don't Repeat Yourself</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/08/manage-icon's-color/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Mupceet">
+      <meta itemprop="description" content="君子坦荡荡 小人长戚戚">
+      <meta itemprop="image" content="/images/avatar_me.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Mupceet">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">图标颜色管理
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2017-08-13 20:18:33" itemprop="dateCreated datePublished" datetime="2017-08-13T20:18:33+08:00">2017-08-13</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2018-01-21 01:39:09" itemprop="dateModified" datetime="2018-01-21T01:39:09+08:00">2018-01-21</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/小技巧/" itemprop="url" rel="index"><span itemprop="name">小技巧</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Disqus：</span>
+    
+    <a title="disqus" href="/2017/08/manage-icon's-color/#comments" itemprop="discussionUrl"><span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/08/manage-icon's-color/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>应用的图标可以分成两类，一类是小图标，一般带 ic 前缀，另一类就是相对比较大的。大图不用说，一般是 UI 给的什么样子就用什么样子的，对于小图，可能修改的时候只涉及到颜色的改变。如果改个颜色就让 UI 重新切图，这是没有必要的，白白浪费了沟通的成本。</p>
+<p>一般来说，涉及到风格变化，如果是采用改变 icon 的颜色的方式，以下管理方法是合适的。</p>
+<h2 id="Toobar-溢出菜单颜色"><a href="#Toobar-溢出菜单颜色" class="headerlink" title="Toobar 溢出菜单颜色"></a>Toobar 溢出菜单颜色</h2><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">item</span> <span class="attr">name</span>=<span class="string">"android:textColorSecondary"</span>&gt;</span>@color/color_clock_accent<span class="tag">&lt;/<span class="name">item</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>改变这个属性就可以改变那三个点的颜色。</p>
+<a id="more"></a>
+
+<h2 id="封装图片资源"><a href="#封装图片资源" class="headerlink" title="封装图片资源"></a>封装图片资源</h2><h3 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h3><p>返回图标：ic_arrow_back_24dp.png</p>
+<p><img src="http://upload-images.jianshu.io/upload_images/2946447-7002c0c714914082.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="back.png"></p>
+<p>需要改变成蓝色、后续可能改变成黄色（这里是个例子）</p>
+<p>使用的时候，对其进行封装：<br>drawable 下创建 ic_arrow_back_24dp.xml(这个名字就是你在布局当中引入图片时想取的名字)</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">bitmap</span> <span class="attr">xmlns:android</span>=<span class="string">"http://schemas.android.com/apk/res/android"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:src</span>=<span class="string">"@drawable/ic_arrow_back_24dp"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:autoMirrored</span>=<span class="string">"true"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:tint</span>=<span class="string">"@color/actionbar_icon_color"</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="解析"><a href="#解析" class="headerlink" title="解析"></a>解析</h3><p>可以看到，这里有几个属性经常用到。</p>
+<ul>
+<li><code>src</code> 表示你引用的图片</li>
+<li><code>autoMirrored</code> 表示在 RTL 布局下是否要镜像。在Google MD 规范中，有的需要镜像，有的不用，比如放大镜、打勾就不镜像。</li>
+<li><code>tint</code> 表示你对该图片进行怎么样的着色，也就是在这里可以在 UI 要求改变颜色的时候在这里进行修改</li>
+</ul>
+<p>这种管理方式带来的灵活性如下：</p>
+<h3 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h3><ul>
+<li>在布局中不需要修改引用图片的名字，因为直接引用的名字是在 drawable 文件夹下的 xml 文件名。</li>
+<li>修改颜色直接修改 tint 引用的颜色即可。</li>
+</ul>
+<h2 id="同一图标不同颜色"><a href="#同一图标不同颜色" class="headerlink" title="同一图标不同颜色"></a>同一图标不同颜色</h2><p>如果同一个图片在多个地方使用，可以在代码里面改变颜色：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 这里要注意 mutate() 一下</span></span><br><span class="line">Drawable iconCreateNewGroup = DrawableCompat.wrap(getResources().</span><br><span class="line">                getDrawable(R.drawable.tp_ic_add_white_24dp)).mutate();</span><br><span class="line">DrawableCompat.setTintList(iconCreateNewGroup,ColorStateList.valueOf(Color.GRAY));</span><br><span class="line">createNewGroup.setImageDrawable(iconCreateNewGroup);</span><br></pre></td></tr></table></figure>
+
+<p>不同界面使用了同一个图片，但颜色不同，通过 <code>DrawableCompat.setTintList()</code> 方法可以改变图片的颜色。<br>但要注意从 res 获取图片的时候需要 <code>mutate()</code> 一下。我们先看一下这个函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Make this drawable mutable. This operation cannot be reversed. A mutable</span></span><br><span class="line"><span class="comment"> * drawable is guaranteed to not share its state with any other drawable.</span></span><br><span class="line"><span class="comment"> * This is especially useful when you need to modify properties of drawables</span></span><br><span class="line"><span class="comment"> * loaded from resources. By default, all drawables instances loaded from</span></span><br><span class="line"><span class="comment"> * the same resource share a common state; if you modify the state of one</span></span><br><span class="line"><span class="comment"> * instance, all the other instances will receive the same modification.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * Calling this method on a mutable Drawable will have no effect.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> This drawable.</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@see</span> ConstantState</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@see</span> #getConstantState()</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="meta">@NonNull</span> <span class="function">Drawable <span class="title">mutate</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到注释里写得很清楚，默认情况下，不同地方从 res 加载的同一个图片它们共享状态，如果你修改了其中一个的状态，那其他的也会相应体现出来。</p>
+<p>有时引用同一图片改变状态是为了减少资源的重复，这时候就要注意调用 mutate() 方法，让它是可变的，相互之间的状态不互相影响。</p>
+<h3 id="管理-color-xml"><a href="#管理-color-xml" class="headerlink" title="管理 color.xml"></a>管理 color.xml</h3><p>这里需要补充一下对于 color.xml 中的颜色的管理。</p>
+<p>如果是一个独立的 App，通常一个具有审美的 UI 来说，使用的颜色种类是非常有限的。因此采用以下组织方式：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">resources</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!--Rom2.1新增--&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">color</span> <span class="attr">name</span>=<span class="string">"color_clock_accent"</span>&gt;</span>#FF9400<span class="tag">&lt;/<span class="name">color</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">color</span> <span class="attr">name</span>=<span class="string">"color_alert_primary"</span>&gt;</span>#F7B314<span class="tag">&lt;/<span class="name">color</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">color</span> <span class="attr">name</span>=<span class="string">"color_alert_snooze"</span>&gt;</span>#007AFF<span class="tag">&lt;/<span class="name">color</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">color</span> <span class="attr">name</span>=<span class="string">"color_alert_close"</span>&gt;</span>#FF5B5C<span class="tag">&lt;/<span class="name">color</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">color</span> <span class="attr">name</span>=<span class="string">"color_float_button_start"</span>&gt;</span>#FFB319<span class="tag">&lt;/<span class="name">color</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!--Rom2.1新增--&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">color</span> <span class="attr">name</span>=<span class="string">"transparent"</span>&gt;</span>#00000000<span class="tag">&lt;/<span class="name">color</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">color</span> <span class="attr">name</span>=<span class="string">"black"</span>&gt;</span>#000000<span class="tag">&lt;/<span class="name">color</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">color</span> <span class="attr">name</span>=<span class="string">"black_10"</span>&gt;</span>#19000000<span class="tag">&lt;/<span class="name">color</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">color</span> <span class="attr">name</span>=<span class="string">"black_12"</span>&gt;</span>#1f000000<span class="tag">&lt;/<span class="name">color</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">color</span> <span class="attr">name</span>=<span class="string">"black_20"</span>&gt;</span>#33000000<span class="tag">&lt;/<span class="name">color</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">color</span> <span class="attr">name</span>=<span class="string">"black_25"</span>&gt;</span>#40000000<span class="tag">&lt;/<span class="name">color</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">resources</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>即所谓的调色板模式，这样子修改起来比较不容易重复定义，重复定义带来的后果就是修改容易遗漏。不要采用以下方式：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">resources</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">color</span> <span class="attr">name</span>=<span class="string">"button_foreground"</span>&gt;</span>#FFFFFF<span class="tag">&lt;/<span class="name">color</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">color</span> <span class="attr">name</span>=<span class="string">"button_background"</span>&gt;</span>#2A91BD<span class="tag">&lt;/<span class="name">color</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">color</span> <span class="attr">name</span>=<span class="string">"comment_background_inactive"</span>&gt;</span>#5F5F5F<span class="tag">&lt;/<span class="name">color</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">color</span> <span class="attr">name</span>=<span class="string">"comment_background_active"</span>&gt;</span>#939393<span class="tag">&lt;/<span class="name">color</span>&gt;</span></span><br><span class="line">      <span class="comment">&lt;!-- 这种定义一般会看到特别特别长的 color.xml 文件 --&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">resources</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>这种与具体 button 相关的，甚至是不同 button 还是不同的颜色的，应该在 <code>style</code> 里面进行定义。</p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/Android/" rel="tag"># Android</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2017/07/recyclerview-drag-multi-select-3/" rel="next" title="RecyclerView 拖动/滑动多选的实现（3）">
+                  <i class="fa fa-chevron-left"></i> RecyclerView 拖动/滑动多选的实现（3）
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2018/01/deepin-first-experience/" rel="prev" title="Deepin 初体验">
+                  Deepin 初体验 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+    </div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc" data-target="post-toc-wrap">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Toobar-溢出菜单颜色"><span class="nav-number">1.</span> <span class="nav-text">Toobar 溢出菜单颜色</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#封装图片资源"><span class="nav-number">2.</span> <span class="nav-text">封装图片资源</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#例子"><span class="nav-number">2.1.</span> <span class="nav-text">例子</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#解析"><span class="nav-number">2.2.</span> <span class="nav-text">解析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#优点"><span class="nav-number">2.3.</span> <span class="nav-text">优点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#同一图标不同颜色"><span class="nav-number">3.</span> <span class="nav-text">同一图标不同颜色</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#管理-color-xml"><span class="nav-number">3.1.</span> <span class="nav-text">管理 color.xml</span></a></li></ol></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/avatar_me.png"
+      alt="Mupceet">
+  <p class="site-author-name" itemprop="name">Mupceet</p>
+  <div class="site-description" itemprop="description">君子坦荡荡 小人长戚戚</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">25</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      友情链接
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://dxinl.github.io/" title="https://dxinl.github.io/" rel="noopener" target="_blank">Write down & Think hard</a>
+        </li>
+      
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Mupceet</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.3.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.3.0"></script><script src="/js/motion.js?v=7.3.0"></script>
+<script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://Mupceet.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  function disqus_config() {
+    this.page.url = "http://yoursite.com/2017/08/manage-icon's-color/";
+    this.page.identifier = "2017/08/manage-icon's-color/";
+    this.page.title = '图标颜色管理';};
+  function loadComments() {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: disqus_config
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://Mupceet.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  }
+    (function() {
+      var offsetTop = document.getElementById('comments').offsetTop - window.innerHeight;
+      if (offsetTop <= 0) {
+        // load directly when there's no a scrollbar
+        window.addEventListener('load', loadComments, false);
+      } else {
+        var disqus_scroll = () => {
+          // offsetTop may changes because of manually resizing browser window or lazy loading images.
+          var offsetTop = document.getElementById('comments').offsetTop - window.innerHeight;
+          var scrollTop = window.scrollY;
+
+          // pre-load comments a bit? (margin or anything else)
+          if (offsetTop - scrollTop < 60) {
+            window.removeEventListener('scroll', disqus_scroll);
+            loadComments();
+          }
+        };
+        window.addEventListener('scroll', disqus_scroll);
+      }
+    })();
+  
+</script>
+
+</body>
+</html>

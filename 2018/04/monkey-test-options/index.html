@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"搜索","hits_empty":"未找到与「 ${query} 」相关的内容","hits_stats":"找到 ${hits} 条相关条目，用时: ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="本文旨在简单介绍说明 Monkey 及其参数，内容不一定完全正确，本文将随着实践及源码阅读深入而更新。  Monkey Test 是一个 Android 系统内置的工具，用来进行稳定性测试。它通过向系统注入伪随机的用户事件流（如点击、触摸、手势以及系统级的事件）来进行压力测试。  Monkey 在 Android 系统中的存放路径是：/system/framework/monkey.jar Mo">
+<meta name="keywords" content="Android,Test">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Monkey：参数说明">
+<meta property="og:url" content="http://yoursite.com/2018/04/monkey-test-options/index.html">
+<meta property="og:site_name" content="Mupceet">
+<meta property="og:description" content="本文旨在简单介绍说明 Monkey 及其参数，内容不一定完全正确，本文将随着实践及源码阅读深入而更新。  Monkey Test 是一个 Android 系统内置的工具，用来进行稳定性测试。它通过向系统注入伪随机的用户事件流（如点击、触摸、手势以及系统级的事件）来进行压力测试。  Monkey 在 Android 系统中的存放路径是：/system/framework/monkey.jar Mo">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-04-07T06:54:34.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Monkey：参数说明">
+<meta name="twitter:description" content="本文旨在简单介绍说明 Monkey 及其参数，内容不一定完全正确，本文将随着实践及源码阅读深入而更新。  Monkey Test 是一个 Android 系统内置的工具，用来进行稳定性测试。它通过向系统注入伪随机的用户事件流（如点击、触摸、手势以及系统级的事件）来进行压力测试。  Monkey 在 Android 系统中的存放路径是：/system/framework/monkey.jar Mo">
+  <link rel="canonical" href="http://yoursite.com/2018/04/monkey-test-options/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Monkey：参数说明 | Mupceet</title>
+  <meta name="generator" content="Hexo 3.9.0">
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Mupceet</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Don't Repeat Yourself</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/04/monkey-test-options/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Mupceet">
+      <meta itemprop="description" content="君子坦荡荡 小人长戚戚">
+      <meta itemprop="image" content="/images/avatar_me.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Mupceet">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">Monkey：参数说明
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2018-04-07 09:19:33 / 修改时间：14:54:34" itemprop="dateCreated datePublished" datetime="2018-04-07T09:19:33+08:00">2018-04-07</time>
+            </span>
+          
+            
+
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/技术向/" itemprop="url" rel="index"><span itemprop="name">技术向</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Disqus：</span>
+    
+    <a title="disqus" href="/2018/04/monkey-test-options/#comments" itemprop="discussionUrl"><span class="post-comments-count disqus-comment-count" data-disqus-identifier="2018/04/monkey-test-options/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>本文旨在简单介绍说明 Monkey 及其参数，内容不一定完全正确，本文将随着实践及源码阅读深入而更新。</p>
+</blockquote>
+<p>Monkey Test 是一个 Android 系统内置的工具，用来进行稳定性测试。它通过向系统注入伪随机的用户事件流（如点击、触摸、手势以及系统级的事件）来进行压力测试。</p>
+<ul>
+<li>Monkey 在 Android 系统中的存放路径是：/system/framework/monkey.jar</li>
+<li>Monkey 命令脚本在 Android 系统中的存放路径是：/system/bin/monkey</li>
+<li>Monkey 源码在 aosp/development/cmds/monkey</li>
+</ul>
+<h2 id="基本使用"><a href="#基本使用" class="headerlink" title="基本使用"></a>基本使用</h2><p>Monkey 运行在 Android 设备上，所以要使用设备上的 shell 来启动。</p>
+<p><code>adb shell monkey [options] &lt;event-count&gt;</code></p>
+<p>一个典型的命令如下所示：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">adb shell monkey -p com.android.contacts --throttle 500 --ignore-crashes --ignore-timeouts --ignore-security-exceptions -- ignore-native-crashes --monitor-native-crashes --kill-process-after-error -v -v -v 1200</span><br></pre></td></tr></table></figure>
+
+<a id="more"></a>
+
+<h2 id="Monkey-参数"><a href="#Monkey-参数" class="headerlink" title="Monkey 参数"></a>Monkey 参数</h2><p>Monkey 有很多选项，可以分为四个主要类别：General，Events，Constraints，Debugging。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ adb shell monkey -h</span><br><span class="line">  bash arg: -h</span><br><span class="line">args: [-h]</span><br><span class="line"> arg: &quot;-h&quot;</span><br><span class="line">usage: monkey [-p ALLOWED_PACKAGE [-p ALLOWED_PACKAGE] ...]</span><br><span class="line">              [-c MAIN_CATEGORY [-c MAIN_CATEGORY] ...]</span><br><span class="line">              [--ignore-crashes] [--ignore-timeouts]</span><br><span class="line">              [--ignore-security-exceptions]</span><br><span class="line">              [--monitor-native-crashes] [--ignore-native-crashes]</span><br><span class="line">              [--kill-process-after-error] [--hprof]</span><br><span class="line">              [--match-description TEXT]</span><br><span class="line">              [--pct-touch PERCENT] [--pct-motion PERCENT]</span><br><span class="line">              [--pct-trackball PERCENT] [--pct-syskeys PERCENT]</span><br><span class="line">              [--pct-nav PERCENT] [--pct-majornav PERCENT]</span><br><span class="line">              [--pct-appswitch PERCENT] [--pct-flip PERCENT]</span><br><span class="line">              [--pct-anyevent PERCENT] [--pct-pinchzoom PERCENT]</span><br><span class="line">              [--pct-permission PERCENT]</span><br><span class="line">              [--pkg-blacklist-file PACKAGE_BLACKLIST_FILE]</span><br><span class="line">              [--pkg-whitelist-file PACKAGE_WHITELIST_FILE]</span><br><span class="line">              [--wait-dbg] [--dbg-no-events]</span><br><span class="line">              [--setup scriptfile] [-f scriptfile [-f scriptfile] ...]</span><br><span class="line">              [--port port]</span><br><span class="line">              [-s SEED] [-v [-v] ...]</span><br><span class="line">              [--throttle MILLISEC] [--randomize-throttle]</span><br><span class="line">              [--profile-wait MILLISEC]</span><br><span class="line">              [--device-sleep-time MILLISEC]</span><br><span class="line">              [--randomize-script]</span><br><span class="line">              [--script-log]</span><br><span class="line">              [--bugreport]</span><br><span class="line">              [--periodic-bugreport]</span><br><span class="line">              [--permission-target-system]</span><br><span class="line">              COUNT</span><br></pre></td></tr></table></figure>
+
+<h3 id="General：基础参数"><a href="#General：基础参数" class="headerlink" title="General：基础参数"></a>General：基础参数</h3><table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>-h</td>
+<td>help 命令</td>
+</tr>
+<tr>
+<td>-v [-v] …</td>
+<td>命令行中的每个 -v 都会增加详细级别。</td>
+</tr>
+</tbody></table>
+<p>-v 分为三个级别，详细说明如下：</p>
+<ul>
+<li>级别0（默认值）：除了启动通知，测试完成和最终结果之外，几乎不提供其他信息。</li>
+<li>级别1：提供更多详细信息，例如发送给 Activity 的每个事件信息。</li>
+<li>级别2：提供更详细的设置信息，例如选中或未选中的 Activity 信息。</li>
+</ul>
+<p>由于 Monkey 的结果通常使用脚本进行信息分析与提取，所以最常使用 <code>-v -v -v</code> 来收集详细的信息。</p>
+<h3 id="Constraints：操作限制"><a href="#Constraints：操作限制" class="headerlink" title="Constraints：操作限制"></a>Constraints：操作限制</h3><p>如果只测试一个 App，可以指定只访问对应的包名。测试多个 App，可以多次指定或通过文件指定包名。</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>-p ALLOWED_PACKAGE [-p  ALLOWED_PACKAGE] …</td>
+<td>白名单：指定 Monkey 可以访问的包名，如果不指定默认可以访问所有的包。</td>
+</tr>
+<tr>
+<td>–pkg-blacklist-file PACKAGE_BLACKLIST_FILE</td>
+<td>黑名单：通过文件来指定不可以访问的包名</td>
+</tr>
+<tr>
+<td>–pkg-whitelist-file PACKAGE_WHITELIST_FILE</td>
+<td>白名单：通过文件来指定可以访问的包名</td>
+</tr>
+<tr>
+<td>–permission-target-system</td>
+<td>指定是否可以启动系统的应用，默认情况下不启动非白名单中的系统应用</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>Note：黑名单跟白名单只能设置一个，不能同时使用。</p>
+</blockquote>
+<p>从源码中可以看到判断能否启动某个 Package 与黑白名单及能否启动系统应用选项相关：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">shouldTargetPackage</span><span class="params">(PackageInfo info)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// target if permitted by white listing / black listing rules</span></span><br><span class="line">    <span class="keyword">if</span> (MonkeyUtils.getPackageFilter().checkEnteringPackage(info.packageName)) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (mTargetSystemPackages</span><br><span class="line">            <span class="comment">// not explicitly black listed</span></span><br><span class="line">            &amp;&amp; !MonkeyUtils.getPackageFilter().isPackageInvalid(info.packageName)</span><br><span class="line">            <span class="comment">// is a system app</span></span><br><span class="line">            &amp;&amp; (info.applicationInfo.flags &amp; ApplicationInfo.FLAG_SYSTEM) != <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>要记住 Monkey 运行在设备上，所以黑白名单的文件需要放置到设备上，例如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">com.android.contacts</span><br><span class="line">com.android.dialer</span><br><span class="line">com.android.launcher</span><br></pre></td></tr></table></figure>
+
+<p>具体包名列表可从设备上读取，存成如上格式的文件后， push 到设备上：<code>/sdcard/whitelist.txt</code></p>
+<p>Monkey 启动时会开启可访问的包名的某个 Activity，具体来说，是启动 -c 参数指定的 category 的 Activity。一般不设置，即启动桌面图标对应启动的 Activity。</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>-c MAIN_CATEGORY [-c MAIN_CATEGORY] …</td>
+<td>category类别，如不手动指定，Monkey 会选择启动 Intent.CATEGORY_LAUNCHER 和  Intent.CATEGORY_MONKEY 的 Activity 为初始 Activity。</td>
+</tr>
+</tbody></table>
+<h3 id="Events：事件参数"><a href="#Events：事件参数" class="headerlink" title="Events：事件参数"></a>Events：事件参数</h3><p>Monkey 的可重复性体现在其事件流的生成取决于设置的种子数。</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>-s SEED</td>
+<td>伪随机数的种子值。 如果使用相同的种子运行，每次的事件序列都是相同的。</td>
+</tr>
+<tr>
+<td>–throttle MILLISEC</td>
+<td>事件之间的时延，默认为 0 ，即尽快地产生事件</td>
+</tr>
+<tr>
+<td>–randomize-throttle</td>
+<td>事件之间的时延随机为 [0,  throttle  设置值]</td>
+</tr>
+</tbody></table>
+<p>为了模拟真实用户的操作频率，Monkey 测试时需要控制事件之间的时间，如果间隔时间太短则与实际操作相差太大。但为了提高应用的稳定性，必要时还是要考虑快速操作导致的问题。 另外，在低端手机上，由于系统响应慢，反映出来的真实用户的操作也确实可能存在间隔短的情况。</p>
+<blockquote>
+<p>Note：一般间隔时间取 300ms ~ 500ms</p>
+</blockquote>
+<p>另外，事件参数中有一系列以 –pct 开头的控制每种事件百分比的参数，当测试不同类型 APP 时可以针对性地调整百分比。</p>
+<blockquote>
+<p>Note：–pct 数值后不用加百分号 %</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>–pct-touch PERCENT</td>
+<td>百分比，点击事件</td>
+</tr>
+<tr>
+<td>–pct-motion PERCENT</td>
+<td>百分比，直线滑动事件</td>
+</tr>
+<tr>
+<td>–pct-trackball PERCENT</td>
+<td>百分比，曲线滑动事件</td>
+</tr>
+<tr>
+<td>–pct-nav PERCENT</td>
+<td>百分比，导航事件：上下左右；一般设备没有该事件</td>
+</tr>
+<tr>
+<td>–pct-majornav PERCENT</td>
+<td>百分比，导航事件：返回、确认、菜单；一般设备没有该事件</td>
+</tr>
+<tr>
+<td>–pct-syskeys PERCENT</td>
+<td>百分比，导航栏：Home、Back、音量键等</td>
+</tr>
+<tr>
+<td>–pct-appswitch PERCENT</td>
+<td>百分比，各Activity的启动比率，启动得越多，越容易覆盖更多的Activity</td>
+</tr>
+<tr>
+<td>–pct-flip PERCENT</td>
+<td>百分比，不清楚，模拟器适用的事件</td>
+</tr>
+<tr>
+<td>–pct-permission PERCENT</td>
+<td>百分比，权限事件</td>
+</tr>
+<tr>
+<td>–pct-anyevent PERCENT</td>
+<td>百分比，其他一些不常用的事件，各种按键之类的</td>
+</tr>
+<tr>
+<td>–pct-pinchzoom PERCENT</td>
+<td>百分比，多点手势缩放</td>
+</tr>
+</tbody></table>
+<p>源码中可以查看到默认的事件百分比：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">mFactors[FACTOR_TOUCH] = <span class="number">15.0f</span>;</span><br><span class="line">mFactors[FACTOR_MOTION] = <span class="number">10.0f</span>;</span><br><span class="line">mFactors[FACTOR_TRACKBALL] = <span class="number">15.0f</span>;</span><br><span class="line"><span class="comment">// Adjust the values if we want to enable rotation by default.</span></span><br><span class="line">mFactors[FACTOR_ROTATION] = <span class="number">0.0f</span>;</span><br><span class="line">mFactors[FACTOR_NAV] = <span class="number">25.0f</span>;</span><br><span class="line">mFactors[FACTOR_MAJORNAV] = <span class="number">15.0f</span>;</span><br><span class="line">mFactors[FACTOR_SYSOPS] = <span class="number">2.0f</span>;</span><br><span class="line">mFactors[FACTOR_APPSWITCH] = <span class="number">2.0f</span>;</span><br><span class="line">mFactors[FACTOR_FLIP] = <span class="number">1.0f</span>;</span><br><span class="line"><span class="comment">// disbale permission by default</span></span><br><span class="line">mFactors[FACTOR_PERMISSION] = <span class="number">0.0f</span>;</span><br><span class="line">mFactors[FACTOR_ANYTHING] = <span class="number">13.0f</span>;</span><br><span class="line">mFactors[FACTOR_PINCHZOOM] = <span class="number">2.0f</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Debugging：调试选项"><a href="#Debugging：调试选项" class="headerlink" title="Debugging：调试选项"></a>Debugging：调试选项</h3><table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>–dbg-no-events</td>
+<td>使用此参数时 Monkey 会启动待测应用，但不发送任何事件，建议与 -v，-p，-throttle 一起使用来观测  Activity 之间的跳转</td>
+</tr>
+<tr>
+<td>–wait-dbg</td>
+<td>Monkey 停止执行，等待 Debugger 连接</td>
+</tr>
+<tr>
+<td>–hprof</td>
+<td>使用此参数时会在 Monkey 启动前后生成内存的快照，在设备的 /data/misc 目录下生成一个 hprof 文件。</td>
+</tr>
+<tr>
+<td>–port port</td>
+<td>分配一个 TCP 端口给 Monkey，可用于远程调试</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>–ignore-crashes</td>
+<td>通常，当应用程序崩溃或遇到任何类型的未处理的异常时，Monkey 将停止。 如果指定此选项，Monkey  将继续向系统发送事件。</td>
+</tr>
+<tr>
+<td>–ignore-timeouts</td>
+<td>通常，当应用程序遇到任何类型的超时错误（如 ANR）时，Monkey 将停止。 如果指定此选项，Monkey  将继续向系统发送事件。</td>
+</tr>
+<tr>
+<td>–ignore-security-exceptions</td>
+<td>通常，当应用程序遇到任何类型的权限错误时，Monkey 将停止，例如，如果它尝试启动需要某些权限的活动。  如果指定此选项，Monkey 将继续向系统发送事件。</td>
+</tr>
+<tr>
+<td>–ignore-native-crashes</td>
+<td>通常，当应用程序崩溃或遇到任何类型的未处理的异常时，Monkey 将停止。 如果指定此选项，Monkey  将继续向系统发送事件。</td>
+</tr>
+<tr>
+<td>–monitor-native-crashes</td>
+<td>设置该选项来监控系统的 Native 层错误。如果设置了 kill-process-after-error  ，那么在发生错误时系统就会停止运行。</td>
+</tr>
+<tr>
+<td>–kill-process-after-error</td>
+<td>一般情况下，Monkey 发生了某个错误将停止，而出问题的应用会留在系统上继续执行，设置该选项它会通知系统停止发生错误的过程。</td>
+</tr>
+<tr>
+<td>–bugreport</td>
+<td>将上报任何时候发生的 Crash</td>
+</tr>
+<tr>
+<td>–periodic-bugreport</td>
+<td>生成报告的周期</td>
+</tr>
+<tr>
+<td>–match-description TEXT</td>
+<td>仅报告与描述匹配的信息</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>–setup scriptfile</td>
+<td>脚本指定用户的操作事件</td>
+</tr>
+<tr>
+<td>-f scriptfile [-f scriptfile] …</td>
+<td>多个脚本指定用户的操作事件</td>
+</tr>
+<tr>
+<td>–profile-wait MILLISEC</td>
+<td>使用脚本运行事件时的间隔时间</td>
+</tr>
+<tr>
+<td>–device-sleep-time MILLISEC</td>
+<td>使用脚本运行事件时的设备空闲的时间</td>
+</tr>
+<tr>
+<td>–randomize-script</td>
+<td>随机执行多个脚本来输入事件</td>
+</tr>
+<tr>
+<td>–script-log</td>
+<td>（这个参数从源码中看没具体的作用）</td>
+</tr>
+</tbody></table>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><ul>
+<li><a href="https://developer.android.com/studio/test/monkey.html" target="_blank" rel="noopener">UI/Application Exerciser Monkey</a></li>
+<li><a href="http://www.cnblogs.com/yajing-zh/p/4340795.html" target="_blank" rel="noopener">android自动化测试之Monkey–从参数讲解、脚本制作到实战技巧</a></li>
+<li><a href="https://www.jianshu.com/p/b1aa68f09de1" target="_blank" rel="noopener">Monkey学习过程与个人见解_参数</a></li>
+<li><a href="https://www.jianshu.com/p/2df7b1c3b0e9" target="_blank" rel="noopener">Monkey学习过程与个人见解_报告分析</a></li>
+<li><a href="https://blog.csdn.net/tobetheender/article/details/53448949" target="_blank" rel="noopener">Android稳定性测试– Monkey源码分析</a></li>
+<li><a href="https://blog.csdn.net/tobetheender/article/details/54693874" target="_blank" rel="noopener">Android稳定性测试– Monkey二次开发</a></li>
+<li><a href="http://blog.sina.com.cn/s/blog_e03267d30102wk0b.html" target="_blank" rel="noopener">Android自动化测试之monkey工具使用(一)</a></li>
+<li><a href="http://www.cnblogs.com/wfh1988/archive/2010/11/16/1878224.html" target="_blank" rel="noopener">Android monkey 资料</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/Android/" rel="tag"># Android</a>
+            
+              <a href="/tags/Test/" rel="tag"># Test</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2018/04/introduce-android-memory-management/" rel="next" title="Android 内存管理机制（入门）">
+                  <i class="fa fa-chevron-left"></i> Android 内存管理机制（入门）
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2018/04/crash-without-log/" rel="prev" title="诡异的崩溃：UncaughtExceptionHandler 与 RxJava 并发错误">
+                  诡异的崩溃：UncaughtExceptionHandler 与 RxJava 并发错误 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+    </div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc" data-target="post-toc-wrap">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#基本使用"><span class="nav-number">1.</span> <span class="nav-text">基本使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Monkey-参数"><span class="nav-number">2.</span> <span class="nav-text">Monkey 参数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#General：基础参数"><span class="nav-number">2.1.</span> <span class="nav-text">General：基础参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Constraints：操作限制"><span class="nav-number">2.2.</span> <span class="nav-text">Constraints：操作限制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Events：事件参数"><span class="nav-number">2.3.</span> <span class="nav-text">Events：事件参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Debugging：调试选项"><span class="nav-number">2.4.</span> <span class="nav-text">Debugging：调试选项</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考链接"><span class="nav-number">3.</span> <span class="nav-text">参考链接</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/avatar_me.png"
+      alt="Mupceet">
+  <p class="site-author-name" itemprop="name">Mupceet</p>
+  <div class="site-description" itemprop="description">君子坦荡荡 小人长戚戚</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">25</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      友情链接
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://dxinl.github.io/" title="https://dxinl.github.io/" rel="noopener" target="_blank">Write down & Think hard</a>
+        </li>
+      
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Mupceet</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.3.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.3.0"></script><script src="/js/motion.js?v=7.3.0"></script>
+<script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://Mupceet.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  function disqus_config() {
+    this.page.url = "http://yoursite.com/2018/04/monkey-test-options/";
+    this.page.identifier = "2018/04/monkey-test-options/";
+    this.page.title = 'Monkey：参数说明';};
+  function loadComments() {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: disqus_config
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://Mupceet.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  }
+    (function() {
+      var offsetTop = document.getElementById('comments').offsetTop - window.innerHeight;
+      if (offsetTop <= 0) {
+        // load directly when there's no a scrollbar
+        window.addEventListener('load', loadComments, false);
+      } else {
+        var disqus_scroll = () => {
+          // offsetTop may changes because of manually resizing browser window or lazy loading images.
+          var offsetTop = document.getElementById('comments').offsetTop - window.innerHeight;
+          var scrollTop = window.scrollY;
+
+          // pre-load comments a bit? (margin or anything else)
+          if (offsetTop - scrollTop < 60) {
+            window.removeEventListener('scroll', disqus_scroll);
+            loadComments();
+          }
+        };
+        window.addEventListener('scroll', disqus_scroll);
+      }
+    })();
+  
+</script>
+
+</body>
+</html>

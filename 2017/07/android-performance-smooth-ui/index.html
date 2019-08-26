@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"搜索","hits_empty":"未找到与「 ${query} 」相关的内容","hits_stats":"找到 ${hits} 条相关条目，用时: ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="请保持淡定，分析代码，记住：性能很重要。  人是一种视觉动物，如果你的应用长得不美，下场自不必多说，但这可是 UI 设计师的专属工作呀。作为工程师，对于视觉的体验上自然是从 UI 的性能优化入手了，从启动速度到应用 UI 优化，都是工程师讨好用户的手段。本文作为一份优化指南将帮助你优化你的应用的渲染性能，主要从两个方面入手：减少过度绘制，优化视图层级，内容包括了问题原因的阐述、问题的检测以及问题">
+<meta name="keywords" content="Android,性能优化">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android 性能优化——UI 优化指南">
+<meta property="og:url" content="http://yoursite.com/2017/07/android-performance-smooth-ui/index.html">
+<meta property="og:site_name" content="Mupceet">
+<meta property="og:description" content="请保持淡定，分析代码，记住：性能很重要。  人是一种视觉动物，如果你的应用长得不美，下场自不必多说，但这可是 UI 设计师的专属工作呀。作为工程师，对于视觉的体验上自然是从 UI 的性能优化入手了，从启动速度到应用 UI 优化，都是工程师讨好用户的手段。本文作为一份优化指南将帮助你优化你的应用的渲染性能，主要从两个方面入手：减少过度绘制，优化视图层级，内容包括了问题原因的阐述、问题的检测以及问题">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/2946447-843ec9de1c4127da.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/2946447-6d31186378969706.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/260">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/2946447-15a01300022c0fee.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/2946447-0bbd0856441b38ff.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/800">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/2946447-993b613ebde857ae.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/2946447-f37d8fb4be64fc2b.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/520">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/2946447-db9b16a344cc1665.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/260">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/2946447-e5a8558e0451975f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/260">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/2946447-30016276b177c735.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/260">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/2946447-0b8e5d105e3fc66a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/260">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/2946447-0b23a1a283eb06c2.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/2946447-892b0b81ba604d34.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/2946447-01c6d79a0f928633.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/2946447-d9f63b6282e1df4b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/2946447-1f0ceb9f4cef4daf.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/2946447-8b01d5d448d2c808.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/780">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/2946447-a03907d74dfef56f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/2946447-21fb15affbfb21f5.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:updated_time" content="2017-07-08T16:13:33.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android 性能优化——UI 优化指南">
+<meta name="twitter:description" content="请保持淡定，分析代码，记住：性能很重要。  人是一种视觉动物，如果你的应用长得不美，下场自不必多说，但这可是 UI 设计师的专属工作呀。作为工程师，对于视觉的体验上自然是从 UI 的性能优化入手了，从启动速度到应用 UI 优化，都是工程师讨好用户的手段。本文作为一份优化指南将帮助你优化你的应用的渲染性能，主要从两个方面入手：减少过度绘制，优化视图层级，内容包括了问题原因的阐述、问题的检测以及问题">
+<meta name="twitter:image" content="http://upload-images.jianshu.io/upload_images/2946447-843ec9de1c4127da.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+  <link rel="canonical" href="http://yoursite.com/2017/07/android-performance-smooth-ui/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Android 性能优化——UI 优化指南 | Mupceet</title>
+  <meta name="generator" content="Hexo 3.9.0">
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Mupceet</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Don't Repeat Yourself</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/07/android-performance-smooth-ui/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Mupceet">
+      <meta itemprop="description" content="君子坦荡荡 小人长戚戚">
+      <meta itemprop="image" content="/images/avatar_me.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Mupceet">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">Android 性能优化——UI 优化指南
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2017-07-06 21:27:33" itemprop="dateCreated datePublished" datetime="2017-07-06T21:27:33+08:00">2017-07-06</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2017-07-09 00:13:33" itemprop="dateModified" datetime="2017-07-09T00:13:33+08:00">2017-07-09</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/技术向/" itemprop="url" rel="index"><span itemprop="name">技术向</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Disqus：</span>
+    
+    <a title="disqus" href="/2017/07/android-performance-smooth-ui/#comments" itemprop="discussionUrl"><span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/07/android-performance-smooth-ui/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>请保持淡定，分析代码，记住：性能很重要。</p>
+</blockquote>
+<p>人是一种视觉动物，如果你的应用长得不美，下场自不必多说，但这可是 UI 设计师的专属工作呀。作为工程师，对于视觉的体验上自然是从 UI 的性能优化入手了，从启动速度到应用 UI 优化，都是工程师讨好用户的手段。本文作为一份优化指南将帮助你优化你的应用的渲染性能，主要从两个方面入手：减少过度绘制，优化视图层级，内容包括了问题原因的阐述、问题的检测以及问题的解决方案。</p>
+<h2 id="减少过度绘制"><a href="#减少过度绘制" class="headerlink" title="减少过度绘制"></a>减少过度绘制</h2><p>过度绘制（Overdraw）是指应用在渲染一帧的时间内对屏幕某个像素进行多次绘制。应用应该尽可能避免过度绘制，因为让 GPU 去绘制用户不可见的内容完全是一种浪费。</p>
+<a id="more"></a>
+
+<h3 id="为什么会过度绘制"><a href="#为什么会过度绘制" class="headerlink" title="为什么会过度绘制"></a>为什么会过度绘制</h3><p>例如，在多层次的重叠的 UI 结构中，上层的 UI 遮挡了下层的 UI，系统是从后往前进行绘制（<a href="https://en.wikipedia.org/wiki/Painter%27s_algorithm" target="_blank" rel="noopener">painter’s algorithm</a>），被遮挡的部分仍然会被绘制。为什么系统不直接绘制需要表现的 UI 而是从后往前绘制呢？系统采用此绘制算法是为了能给半透明的对象如阴影添加合适的透明度。</p>
+<p>一般情况下，UI 元素由 XML 布局及自定义控件中定义。因此导致过度绘制的主要原因为：</p>
+<ul>
+<li>XML 布局 → 控件重叠；多次设置了背景</li>
+<li>自定义 View → <code>onDraw()</code> 方法中同一个区域被多次绘制</li>
+</ul>
+<h3 id="诊断过度绘制"><a href="#诊断过度绘制" class="headerlink" title="诊断过度绘制"></a>诊断过度绘制</h3><h4 id="初步查看"><a href="#初步查看" class="headerlink" title="初步查看"></a>初步查看</h4><p>在设置中的开发者选项提供了过度绘制检测工具，此工具能够展示页面上哪些区域出现了不必要的过度绘制，可以直观查看应用当前页面是否存在过度绘制的现象，并且可以直观对比优化前后的显示效果。</p>
+<p>按照以下步骤开启：</p>
+<ol>
+<li>点击设置中的<strong>开发者选项</strong></li>
+<li>点击<strong>调试 GPU 过度绘制</strong></li>
+<li>弹出框中选择<strong>显示过度绘制区域</strong></li>
+</ol>
+<p>这时可以看到页面出现了不同颜色的色块。不同的颜色代表不同程度的过度绘制：</p>
+<p><img src="http://upload-images.jianshu.io/upload_images/2946447-843ec9de1c4127da.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="过度绘制区域颜色输出"></p>
+<table>
+<thead>
+<tr>
+<th>颜色</th>
+<th align="center">Overdraw 倍数</th>
+<th align="center">像素点绘制次数</th>
+<th align="center">可接受区域大小</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>无色</td>
+<td align="center">0 倍</td>
+<td align="center">1</td>
+<td align="center">全部</td>
+</tr>
+<tr>
+<td>蓝色</td>
+<td align="center">1 倍</td>
+<td align="center">2</td>
+<td align="center">大片</td>
+</tr>
+<tr>
+<td>绿色</td>
+<td align="center">2 倍</td>
+<td align="center">3</td>
+<td align="center">中等</td>
+</tr>
+<tr>
+<td>粉色</td>
+<td align="center">3 倍</td>
+<td align="center">4</td>
+<td align="center">小于 1/4</td>
+</tr>
+<tr>
+<td>红色</td>
+<td align="center">4 倍</td>
+<td align="center">5</td>
+<td align="center">避免红色</td>
+</tr>
+</tbody></table>
+<p>过度绘制的优化目标是使得显示区域的过度绘制色块大部分为无色或者为蓝色，当然这个是比较理想的效果，不大面积出现红色即可视为达到目标了。</p>
+<p>以天气应用为例，开启显示过度绘制区域后显示如下：</p>
+<p><img src="http://upload-images.jianshu.io/upload_images/2946447-6d31186378969706.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/260" alt="天气应用过度绘制"></p>
+<p>可以看到列表区域存在红色程度的过度绘制的情况。</p>
+<h4 id="详细定位"><a href="#详细定位" class="headerlink" title="详细定位"></a>详细定位</h4><p>通过初步查看，看到了存在过度绘制的区域，但是这时候还不知道过度绘制的区域是由哪几层重叠形成的，这时候我们可以借助工具进一步定位。</p>
+<p>最简便的方法便是借助常用的 Hierarchy View 工具进行分析。</p>
+<ol>
+<li><p>打开 Android Studio 的 Tools → Android → Android Device Monitor</p>
+</li>
+<li><p>打开 Hierarchy View</p>
+<p><img src="http://upload-images.jianshu.io/upload_images/2946447-15a01300022c0fee.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="Hierarchy View"></p>
+</li>
+<li><p>Windows 窗口中选择相应的 Activity</p>
+<p><img src="http://upload-images.jianshu.io/upload_images/2946447-0bbd0856441b38ff.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/800" alt="Activity Tree View"></p>
+</li>
+<li><p>使用图片中圆圈标注的功能：Capture the window layers as a Photoshop document 将当前界面导出为一个带图层信息的 Photoshop 的文件</p>
+<p><img src="http://upload-images.jianshu.io/upload_images/2946447-993b613ebde857ae.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="导出.psd文件"></p>
+</li>
+<li><p>使用 GIMP 软件（Ubuntu）打开该 .psd 文件查看图层信息</p>
+<p><img src="http://upload-images.jianshu.io/upload_images/2946447-f37d8fb4be64fc2b.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/520" alt="psd.jpg"></p>
+<p>可以看到城市列表的背景部分被设置了两次。查看代码，发现是给列表每一项的layout都设置了背景，但是由于该列表的内容都会填充满该项的位置，故可以去掉该背景。</p>
+</li>
+</ol>
+<h3 id="修复过度绘制"><a href="#修复过度绘制" class="headerlink" title="修复过度绘制"></a>修复过度绘制</h3><p>通过工具进行定位，找到了需要优化的页面，如上原因所述，过度绘制的成因分为两个方面，因此修复过度绘制分别从两方面着手。</p>
+<h4 id="XML-布局优化"><a href="#XML-布局优化" class="headerlink" title="XML 布局优化"></a>XML 布局优化</h4><h5 id="去除不必要的背景"><a href="#去除不必要的背景" class="headerlink" title="去除不必要的背景"></a>去除不必要的背景</h5><p>首先要做的就是去除不必要的背景，多个有背景的布局控件放在一起就有可能导致过度绘制。</p>
+<p>被上层视图背景覆盖下的内容可能永远都不会被用户看到，当子视图具有背景覆盖了父视图，特别是它们如果使用了相同的背景色时你将很不容易发现，这就需要上面的检测工具来定位过度绘制区域是由哪些层级的元素所覆盖形成的。一般的，优化布局移除背景可以总结为以下几点：</p>
+<ul>
+<li>移除 XML 中不必要的背景，或根据条件设置</li>
+<li>移除 Window 默认的背景</li>
+<li>按需显示占位图片</li>
+</ul>
+<p>其中，第二点指的是使用Android的自带的主题时，往往设置了一个默认的背景，这个背景由DecorView持有。当 App 的布局拥有另外的全局背景的时候，这个主题带的背景就是多余的，因此可以移除：</p>
+<ul>
+<li><p>可以在Style里添加：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">item</span> <span class="attr">name</span>=<span class="string">"android:windowBackground"</span>&gt;</span>@null<span class="tag">&lt;/<span class="name">item</span>&gt;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>或者在 Activity 的 <code>onCreate</code> 方法中添加：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">(Bundle savedInstanceState)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">    getwindow().setBackgroundDrawable(<span class="keyword">null</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<p>举个去除背景的例子，便签应用优化前，存在一层不必要的过度绘制。</p>
+<p><img src="http://upload-images.jianshu.io/upload_images/2946447-db9b16a344cc1665.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/260" alt="未去除背景前">  </p>
+<p>通过以上导出图层的方法进行查看后发现子视图 id/sv_note_editor  和 ﻿id/statusBarBackground 重复设置了背景。此处可以去除子 View  的背景，去除之后查看过度绘制情况，可以发现应用减少了一层过度绘制。</p>
+<p><img src="http://upload-images.jianshu.io/upload_images/2946447-e5a8558e0451975f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/260" alt="去除背景后"></p>
+<h5 id="减少透明元素"><a href="#减少透明元素" class="headerlink" title="减少透明元素"></a>减少透明元素</h5><p>在屏幕上显示透明的像素，称为 α 渲染，该情况也是导致过度绘制的一个关键因素。与标准的过度绘制不同，标准的过度绘制中是在上面绘制不透明的像素来完全覆盖已绘制的像素，而一个透明的对象必须要多层次绘制才能实现透明效果。如下图所示，每个有悬浮按钮控件的页面上可以看到一坨过度绘制。</p>
+<p><img src="http://upload-images.jianshu.io/upload_images/2946447-30016276b177c735.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/260" alt="悬浮按钮：带阴影"></p>
+<p>事实上，透明动画，渐隐效果和阴影效果等视觉效果都涉及到了某种程度的透明，而这很有可能会导致过度绘制，因此通过减少渲染透明对象的数量可以减少过度绘制。例如，你可能会通过给一个字体颜色为黑色的 TextView 设置一个透明度来得到一个灰色的文本，可以替换成直接绘制灰色的文本，这样能得到同样的效果，但是性能更好。</p>
+<h5 id="减少视图的层级"><a href="#减少视图的层级" class="headerlink" title="减少视图的层级"></a>减少视图的层级</h5><p>现在的设计的布局在每个视图对象都不透明的情况下，可能在屏幕上已经发生了重叠，如果是因为这种情况产生了过度绘制，可以通过优化视图层次结构来提高性能，以减少重叠的 UI 对象的数量。具体的减少视图层级的分析后文会继续提到。</p>
+<h4 id="自定义-View-优化"><a href="#自定义-View-优化" class="headerlink" title="自定义 View 优化"></a>自定义 View 优化</h4><p>在自定义 View 中的 <code>onDraw</code> 方法通过两个常用的方法来避免卡片式重叠（矩形式重叠）导致的过度绘制。关于以下这两个方法的使用，在你需要使用的时候上网查一下例子就知道了。</p>
+<h5 id="快速判断是否需要绘制"><a href="#快速判断是否需要绘制" class="headerlink" title="快速判断是否需要绘制"></a>快速判断是否需要绘制</h5><p>在绘制一个区域之前，首先通过 <code>canvas.quickReject()</code> 方法判断该区域是否不和 Canvas 的剪切域（指定绘制区域）相交。返回 true 表示该区域与指定绘制区域不相交，这时直接绘制无须 GPU 的计算与渲染即不产生过度绘制；返回 false 即表示该区域与指定绘制区域相交了，这时可以指定自己的绘制区域为与原先剪切域 diff 的区域：<code>canvas.clipRect(rectF, Region.Op.DIFFERENCE)</code>。</p>
+<h5 id="指定绘制区域"><a href="#指定绘制区域" class="headerlink" title="指定绘制区域"></a>指定绘制区域</h5><p>每个绘制单元都有自己的绘制区域，绘制前，<code>canvas.clipRect(Region.Op.INTERSECT)</code> 帮助系统识别那些可见的区域。这个方法可以指定一块矩形区域，只有在这个区域内才会被绘制，其他的区域会被忽视。这个API 可以很好的帮助那些有多组重叠组件的自定义View来控制显示的区域。同时 clipRect 方法还可以帮助节约 CPU 与 GPU 资源，在clipRect区域之外的绘制指令都不会被执行，那些部分内容在矩形区域内的组件，仍然会得到绘制。</p>
+<p>通过以上几项措施，可以有效修复过度绘制。当然，正如前文所述，完全消除过度绘制是一种理想化，业务中不可避免地需要对控件进行复用、封装，很容易在不知不觉中产生过度绘制，对此情况只要保持警惕，时刻检查，选择合适的手段，就能最大可能地避免严重的过度绘制现象。例如在 ListView 中每个 ItemView 如果相当复杂，就可以实现成一个自定义 View，通过指定绘制区域和重写 <code>requestLayout</code>、<code>onSizeChanged</code> 等措施来优化，可以使得滑动更加流畅。</p>
+<h2 id="优化视图层级"><a href="#优化视图层级" class="headerlink" title="优化视图层级"></a>优化视图层级</h2><p>视图绘制过程包括一个测量（Measure）和布局（Layout）的过程。测量部分决定了 View 的大小：尺寸和边界；布局部分决定了 View 在屏幕上的位置。</p>
+<p>大多数时候，每个 View 在这两个过程的消耗都很少，不会影响到性能。然而，当应用添加或者移除一些 View 对象的时候，例如当一个 Recyclerview 重用条目的时候，这个消耗会变大。另外当一个 View 对象是自适应时消耗也会更高，例如，一个 wrapcontent 的 TextView 对象调用了 <code>setText()</code>  方法时候，它需求重新计算尺寸。如果上述情况消耗时间过长，就会导致一帧无法在规定的 16ms 中完成绘制，那么这些帧就会被丢弃，用户就可能觉得卡顿。</p>
+<p>但是因为 UI 操作只能在主线程中执行，你不能将它们移到子线程中去执行，所以最好还是对视图进行优化，减少它们的时间消耗。</p>
+<p>以下先介绍两种会影响绘制性能的问题。</p>
+<h3 id="绘制性能"><a href="#绘制性能" class="headerlink" title="绘制性能"></a>绘制性能</h3><h4 id="复杂度：不同布局与深度"><a href="#复杂度：不同布局与深度" class="headerlink" title="复杂度：不同布局与深度"></a>复杂度：不同布局与深度</h4><p>在 Android 系统中绘制源码是在 ViewRootImp 类的 performTraversals() 方法中 ，可以看到 Measure 和 Layout 都是通过以深度优先的递归来完成的，需要遍历子层级的 View，因此，层级越深，元素越多，耗时也就越长，特别在层级太深时，每增加一层会增加更多的耗时。</p>
+<p>常见的绘制耗时长的布局的特点就是视图层级深，进行了多层的嵌套。每一层嵌套都给布局增加了消耗，因此解决问题的根本办法就是使视图层级变得扁平。举个例子，使用 RelativeLayout 进行的布局与嵌套的无权重的 LinearLayout 效果相同，由于 RelativeLayout 有下文提到的 Double Taxation 现象，所以 LinearLayout 布局的性能更好，但如果此时深度很深，就要考虑增加层级是否是正确的。</p>
+<h4 id="Double-Taxation"><a href="#Double-Taxation" class="headerlink" title="Double Taxation"></a>Double Taxation</h4><p>通常情况下，布局或者测量的过程只需要进行一次，这个过程一般都很快。然而，在一些复杂的布局情况下，可能需要多次遍历层次结构的各个部分，这些部分需要经过多次测量才能最终定位。这种需要执行超过一次的布局和测量的迭代叫做Double Taxation。以下是不同的布局的 Double Taxation 现象：</p>
+<h5 id="RelativeLayout"><a href="#RelativeLayout" class="headerlink" title="RelativeLayout"></a>RelativeLayout</h5><p>当使用 RelativeLayout 时候，它需要根据一个 View 的位置来确定另一个 View 的位置：</p>
+<ol>
+<li>执行第一次布局-测量的过程，在这个过程中，根据每个子 View 的需求计算它们的位置和尺寸</li>
+<li>通过这些数据，再结合这些 View 对象的权重，确定它们的合适的位置</li>
+<li>执行第二次的布局过程来最终确定这些视图的位置</li>
+</ol>
+<p>也就是说 RelativeLayout 布局一定会做两次测量。</p>
+<h5 id="LinearLayout"><a href="#LinearLayout" class="headerlink" title="LinearLayout"></a>LinearLayout</h5><p>LinearLayout 如果为横向布局时候，需要执行两次布局-测量过程。在竖向布局时候，如果添加了  measureWithLargestChild 属性，也有可能会需要执行两次的布局-绘制过程，因为在这种情况下，Framework 可能需要执行两次流程来确定对象的合适尺寸。</p>
+<h5 id="GridLayout"><a href="#GridLayout" class="headerlink" title="GridLayout"></a>GridLayout</h5><p>GridLayout 也允许相对放置 View，它通常是通过预处理子 View 之间的位置关系来避免双倍消耗。然而，当它使用 Weight 或者 Gravity 属性时，就会失去预处理的优势，如果再包含有 RelativeLayout 的话，此时可能就要更多次的布局测量流程。</p>
+<p>事实上，多次的布局-测量流程即 Double Taxation 本身并不一定是负担。但是 Double Taxation 发生在以下布局层级中就要注意了：</p>
+<ul>
+<li>布局的根元素</li>
+<li>有一个深层级的结构</li>
+<li>有很多实例填充在屏幕上，类似 ListView 中的子条目</li>
+</ul>
+<p>在以上情况中就要尽可能地避免出现 Double Taxation 现象。</p>
+<p>通过以上两点，可以看出选择 RelativeLayout 还是 LinearLayout 并不是绝对的，本身层级太深的话就推荐使用 RelativeLayout 减少布局本身的层次，否则使用性能更好的 LinearLayout 更合适。</p>
+<h5 id="ConstraintLayout"><a href="#ConstraintLayout" class="headerlink" title="ConstraintLayout"></a>ConstraintLayout</h5><p>当然，如果应用面向 7.0 开发，可以使用 ConstraintLayout 代替 RelativeLayout，可以避免本节描述的许多问题。ConstraintLayout 提供了与 RelativeLayout 相似的布局控制功能，但是性能更好。因为它与普通的布局不同，就是它使用自己的 constraint-solving 系统来解决视图之间的关系。</p>
+<h3 id="诊断绘制性能"><a href="#诊断绘制性能" class="headerlink" title="诊断绘制性能"></a>诊断绘制性能</h3><h4 id="初步查看-1"><a href="#初步查看-1" class="headerlink" title="初步查看"></a>初步查看</h4><h5 id="Profile-GPU-rendering"><a href="#Profile-GPU-rendering" class="headerlink" title="Profile GPU rendering"></a>Profile GPU rendering</h5><p>与过度绘制的诊断类似，在设置中的开发者选项提供了 GPU 呈现模式分析（Profile GPU rendering）工具，此工具能够展示绘制一帧时，布局-测量流程花费了多少时间。</p>
+<p>按照以下步骤开启：</p>
+<ol>
+<li>点击设置中的<strong>开发者选项</strong></li>
+<li>点击<strong>GPU 呈现模式分析</strong></li>
+<li>弹出框中选择<strong>在屏幕上显示为条形图</strong></li>
+</ol>
+<p>这时可以看到页面出现了条形图。每一条条形图代表每一帧的绘制情况，条形图上的不同的颜色代表绘制的不同过程：</p>
+<p><img src="http://upload-images.jianshu.io/upload_images/2946447-0b8e5d105e3fc66a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/260" alt="Profile GPU rendering"></p>
+<p>可以看到屏幕上有一条绿线，条形图在绿线之下代表该帧的绘制时间在 16ms 之内，如果一个应用的大部分条形图都超过了绿线，那么该应用给用户的感受就是明显的卡顿感。</p>
+<p>条形图的颜色在不同的系统版本上是不一样的，在 6.0 及更高的版本有 8 种颜色，在 4.0 (API level 14) 到  5.0 (API level 21) 之间只有 4 种颜色。用<a href="https://developer.android.google.cn/studio/profile/dev-options-rendering.html" target="_blank" rel="noopener">表格来描述一下</a>：</p>
+<p><img src="http://upload-images.jianshu.io/upload_images/2946447-0b23a1a283eb06c2.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="6.0以上条形图"></p>
+<p><img src="http://upload-images.jianshu.io/upload_images/2946447-892b0b81ba604d34.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="4.0 and 5.0 条形图.jpg"></p>
+<p>具体的颜色的含义这里就不详细说了，只需要关注是否超过了绿线以及是否是绘制的测量、布局流程耗时占比很大。GPU Profile 工具可以很简便地帮助你找到渲染有问题的页面。</p>
+<h5 id="Systrace"><a href="#Systrace" class="headerlink" title="Systrace"></a>Systrace</h5><p>Systrace 是 Android 4.1 及以上版本提供的性能数据采样和分析工具。它可以帮助开发者收集 Android 关键子系统（如：surfaceflinger、WindowManagerService 等 Framework 部分关键模块、服务， View 系统）的运行信息，从而帮助开发者更直观地分析系统瓶颈，改进性能。</p>
+<p>Systrace 的功能包括跟踪系统的 I/O 操作、内核工作队列、 CPU 负载等，很好收集分析 UI 显示性能的数据。 Systrace 工具可以跟踪、收集、检查定时信息，可以很直观地查看 CPU 周期消耗的具体时间，显示每个线程和进程的跟踪信息，使用了不同的颜色来突出问题的严重性，并提供了解决这些问题的一些建议。</p>
+<p>使用方法：</p>
+<ol>
+<li>收集 trace 数据（具体可查看：<a href="https://developer.android.google.cn/studio/profile/systrace-walkthru.html" target="_blank" rel="noopener">Systrace Walkthrough</a>）<br><img src="http://upload-images.jianshu.io/upload_images/2946447-01c6d79a0f928633.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="Steps for starting Systrace"><br><img src="http://upload-images.jianshu.io/upload_images/2946447-d9f63b6282e1df4b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="Steps for creating a trace.png"></li>
+</ol>
+<p>收集 trace 数据还可以通过命令行的方式，使用命令行配置好后多次使用可以快速得到数据，不用每次手动点击去收集。</p>
+<figure class="highlight console"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">cd</span> android-sdk/platform-tools/systrace</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> python systrace.py --time=10 -o mynewtrace.html <span class="built_in">sched</span> gfx view wm</span></span><br></pre></td></tr></table></figure>
+
+<p>关于命令行的参数及配置请查看：<a href="https://developer.android.google.cn/studio/profile/systrace-commandline.html" target="_blank" rel="noopener">Systrace command reference</a><br>2. 使用 Chrome 打开 trace.html 文件，使用 WASD 进行缩放、移动查看<br><img src="http://upload-images.jianshu.io/upload_images/2946447-1f0ceb9f4cef4daf.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="Clicking the Alert button to the right reveals the alert tab.png"></p>
+<p>与 UI 性能相关主要是右上角的 Alerts 选项以及对应的 Frame 数据，Alerts 选项中将列出渲染时间超时的帧，选中该 Alert 可以看到窗口下方展示了该 Frame 问题的详细数据描述以及相关的建议，并且会定位出对应的 Frame 行的对应位置。</p>
+<p>Frame 行上有圆圈，如果是绿色的，表示该帧渲染满足性能要求，即在 16ms 内渲染完毕，如果是黄色、红色则代表渲染时间超过了 16ms。使用 W 键放大后可以看到系统在这一帧中具体做了什么。具体的相关的信息分析可从网上查找经验总结博客。</p>
+<blockquote>
+<p>注意：由于 Systrace 是以系统的角度返回一些信息，并不能定位到具体的耗时的方法，要进一步获取 CPU 被占用的原因，就需要使用另一个分析工具 Traceview。</p>
+</blockquote>
+<p>刚才说到 Systrace 收集展示的是系统的信息，实际上在 4.3 之后，可以通过插入代码的方式，在 Systrace 里显示想要查看的 API 的耗时以及调用关系。举个例子：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyAdapter</span> <span class="keyword">extends</span> <span class="title">RecyclerView</span>.<span class="title">Adapter</span>&lt;<span class="title">MyViewHolder</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> MyViewHolder <span class="title">onCreateViewHolder</span><span class="params">(ViewGroup parent, <span class="keyword">int</span> viewType)</span> </span>&#123;</span><br><span class="line">        Trace.beginSection(<span class="string">"MyAdapter.onCreateViewHolder"</span>);</span><br><span class="line">        MyViewHolder myViewHolder;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            myViewHolder = MyViewHolder.newInstance(parent);</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            Trace.endSection();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> myViewHolder;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">   <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onBindViewHolder</span><span class="params">(MyViewHolder holder, <span class="keyword">int</span> position)</span> </span>&#123;</span><br><span class="line">        Trace.beginSection(<span class="string">"MyAdapter.onBindViewHolder"</span>);</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                Trace.beginSection(<span class="string">"MyAdapter.queryDatabase"</span>);</span><br><span class="line">                RowItem rowItem = queryDatabase(position);</span><br><span class="line">                mDataset.add(rowItem);</span><br><span class="line">            &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">                Trace.endSection();</span><br><span class="line">            &#125;</span><br><span class="line">            holder.bind(mDataset.get(position));</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            Trace.endSection();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">…</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过 Trace.beginSection 和 Trace.endSection 来追踪应用的代码片段，有两个需要注意的地方：</p>
+<ol>
+<li>这两个 API 需要放在同一个线程里</li>
+<li>这两个 API 需要成对出现，而且每一个 endSection 都只会与最近的 beginSection 对应</li>
+</ol>
+<p>更多关于 Systrace 的信息请查看 <a href="https://developer.android.google.cn/studio/profile/systrace.html" target="_blank" rel="noopener">Analyzing UI Performance with Systrace</a> 。</p>
+<p>这样子通过查看 Systrace 就可以查看到应用的页面是否存在渲染问题，并且可以初步定位到问题的原因所在，然后可以通过插入代码增加 trace 的方式去分析例如 ListView 中的 getView 方法的耗时，相对于打 Log 的方式会更加地直观方便查看耗时数据。</p>
+<h4 id="详细定位-1"><a href="#详细定位-1" class="headerlink" title="详细定位"></a>详细定位</h4><h5 id="Hierarchy-View"><a href="#Hierarchy-View" class="headerlink" title="Hierarchy View"></a>Hierarchy View</h5><p>上文提到Android Studio 的Hierarchy Viewer有着强大的视图调试功能 ，它使用图形化来表现视图的结构。它呈现的视图可以用来分析由Double Taxation引起的性能问题。它也可以很容易定位到因为深层嵌套或者嵌套了大量子类的布局导致布局-测量流程非常耗时引起的性能问题。</p>
+<p>这里介绍它的另一个功能：Profile Node。<br><img src="http://upload-images.jianshu.io/upload_images/2946447-8b01d5d448d2c808.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/780" alt="profile node"></p>
+<p>选择上图中红框圈中的最后一个图标：obtain layout times for tree rooted as selected node，可以获得布局-测量流程所消耗的相对时间信息。如下图所示，需要注意的是，图中的圆圈的颜色是与同级的视图相比较得出的，与 Systrace 中颜色的含义有所不同。<br><img src="http://upload-images.jianshu.io/upload_images/2946447-a03907d74dfef56f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="profile node result"></p>
+<h5 id="Lint"><a href="#Lint" class="headerlink" title="Lint"></a>Lint</h5><p>Lint 扫描通过静态扫描检查代码的方式，能够发现在代码中潜在的问题，同时给出问题的原因和在代码中的位置，并给出相应的优化建议。</p>
+<p>Lint 的功能非常强大，开发者应该深入学习使用方法，可进行配置检查选项甚至自定义检查规则。扫描规则和缺陷级别的配置在 File → Settings → Inspections → Android Lint。这里我们只关注 Performance 规则。</p>
+<p><img src="http://upload-images.jianshu.io/upload_images/2946447-21fb15affbfb21f5.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="Lint Performance"></p>
+<p>共有 29 项规则，默认选中 27 项，举些例子：</p>
+<ol>
+<li>Layout has too many views：表示控件太多，默认超过 80 个控件会提示该问题</li>
+<li>Layout hierarchy is too deep：表示层级太深，默认超过 10 层会提示该问题</li>
+<li>Useless parent layout：表示无用的父布局，应该移除避免加深布局层级</li>
+<li>Node can be replaced by a TextView with compound drawables：表示可优化的布局，即一个 ImageView 和一个 TextView 线程布局可以使用 CompoundDrawable 的 TextView 代替</li>
+</ol>
+<p>一般通过 Lint 扫描都会扫描出代码中存在性能问题，但是对于具体的问题是否要解决是要衡量一下的，不是说每一个提示都需要去解决。</p>
+<h3 id="优化布局层级"><a href="#优化布局层级" class="headerlink" title="优化布局层级"></a>优化布局层级</h3><h4 id="布局复用"><a href="#布局复用" class="headerlink" title="布局复用"></a>布局复用</h4><p>可重用布局这项功能特别强大，它可以使你创建那些复杂的可重用布局，一个相同的布局可以在很多页面使用。比方说，可以用来创建一个含有 yes 和 no 按钮的容器或者一个含有 progressBar 及一个文本框的容器。虽然说你可以通过自定义 View 的方式来实现更为复杂的 UI 组件，但是重用布局的方法更简便一些，修改起来不会有遗漏。Android 的布局复用通过 include 标签来实现。</p>
+<ol>
+<li><p>创建一个可重用的布局<br>如果你已经知道哪一个布局需要重用，那么就创建一个新的 xml 文件用来定义这个布局。下面就定义了一个 ActionBar 的布局文件，众所周知，ActionBar 是会在每个 Activity 中统一出现的：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">FrameLayout</span> <span class="attr">xmlns:android</span>=<span class="string">"http://schemas.android.com/apk/res/android"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_width</span>=<span class="string">”match_parent”</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_height</span>=<span class="string">"wrap_content"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:background</span>=<span class="string">"@color/titlebar_bg"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">ImageView</span> <span class="attr">android:layout_width</span>=<span class="string">"wrap_content"</span></span></span><br><span class="line"><span class="tag">               <span class="attr">android:layout_height</span>=<span class="string">"wrap_content"</span></span></span><br><span class="line"><span class="tag">               <span class="attr">android:src</span>=<span class="string">"@drawable/gafricalogo"</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">FrameLayout</span>&gt;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>使用 include 标签<br>在希望添加重用布局的布局内，添加 include 标签。下面的例子就是将上面的布局加入到了当前的布局中：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">LinearLayout</span> <span class="attr">xmlns:android</span>=<span class="string">"http://schemas.android.com/apk/res/android"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:orientation</span>=<span class="string">"vertical"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_width</span>=<span class="string">”match_parent”</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_height</span>=<span class="string">”match_parent”</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:background</span>=<span class="string">"@color/app_bg"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:gravity</span>=<span class="string">"center_horizontal"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">include</span> <span class="attr">layout</span>=<span class="string">"@layout/titlebar"</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">TextView</span> <span class="attr">android:layout_width</span>=<span class="string">”match_parent”</span></span></span><br><span class="line"><span class="tag">              <span class="attr">android:layout_height</span>=<span class="string">"wrap_content"</span></span></span><br><span class="line"><span class="tag">              <span class="attr">android:text</span>=<span class="string">"@string/hello"</span></span></span><br><span class="line"><span class="tag">              <span class="attr">android:padding</span>=<span class="string">"10dp"</span> /&gt;</span>    ...</span><br><span class="line"><span class="tag">&lt;/<span class="name">LinearLayout</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+</li>
+</ol>
+<p>你也可以重写布局的参数，但只仅限于以 <code>android:layout_*</code> 开头的布局参数。就像下面这样：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">include</span> <span class="attr">android:id</span>=<span class="string">”@+id/news_title”</span></span></span><br><span class="line"><span class="tag">         <span class="attr">android:layout_width</span>=<span class="string">”match_parent”</span></span></span><br><span class="line"><span class="tag">         <span class="attr">android:layout_height</span>=<span class="string">”match_parent”</span></span></span><br><span class="line"><span class="tag">         <span class="attr">layout</span>=<span class="string">”@layout/title”/</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>如果你要重写 include 标签指定布局的布局属性，那么必须重写 android:layout_height 及 android:layout_width 这两个属性，以便使其它属性的作用生效。</p>
+<h4 id="减少层级"><a href="#减少层级" class="headerlink" title="减少层级"></a>减少层级</h4><p>使用 Hierarchy View 查找 UI 布局不合理的地方主要关注两个问题：</p>
+<ol>
+<li>冗余的父布局。<br>在视图树上可以定位此问题，也就是看到一长串的没有分支的布局就要注意了，是不是有的布局：没有背景绘制、没有大小限制，这种布局就是无用的父布局，如果是在布局文件里不小心写出了这样的父布局，使用 Lint 工具可以直接提示你。一般来说引入此问题的原因是使用了 include 标签，使用此标签很容易导致不注意的情况下多了一个无用的父布局。对于该问题，可以通过 merge 标签合并来减少UI层级。</li>
+<li>LinearLayout 带来过深的层级<br>同样的，看到一长串的没有分支的布局时可以看一下是不是使用 LinearLayout 嵌套布局了，如果有此类问题，可以使用 RelativeLayout 来代替 LinearLayout。但正如上面所说，它们的相互替代的效果是需要衡量的，可以使用 profile node 来检测前后的效果。</li>
+</ol>
+<h5 id="RelativeLayout、LinearLayout、ConstraintLayout"><a href="#RelativeLayout、LinearLayout、ConstraintLayout" class="headerlink" title="RelativeLayout、LinearLayout、ConstraintLayout"></a>RelativeLayout、LinearLayout、ConstraintLayout</h5><p>正如上面所说，使用不同的布局可以达到相同的效果，但最终由于层级与测量流程的不同，哪种布局下的性能最好是需要修改后再测量考虑的。但有几个原则是可以遵循的。</p>
+<ol>
+<li>能使用 ConstraintLayout 就使用它，不能的话尽量使用 RelativeLayout 和 LinearLayout</li>
+<li>在布局层级相同的情况下，使用 LinearLayout</li>
+<li>在层级过深时，使用 RelativeLayout 使界面扁平化</li>
+</ol>
+<h5 id="合理使用-merge"><a href="#合理使用-merge" class="headerlink" title="合理使用 merge"></a>合理使用 merge</h5><p>在将一个布局内嵌进另一个布局时，merge 标签可以帮助消除冗余的 View 容器。举个例子，如果你的主布局是一个垂直的 LinearLayout，在它的内部含有两个 View，并且这两个 View 需要在多个布局中重用，那么重用这两个 View 的布局需要有一个 root View。然而，使用单独的 LinearLayout 作为这个 root View 会导致在一个垂直的 LinearLayout 中又嵌了一个垂直的 LinearLayout。其实这个内嵌的 LinearLayout 并不是我们真正想要的，此外它还会降低UI性能。</p>
+<p>为了避免出现这种冗杂的 View 容器，你可以使用 merge 标签作为这两个 View 的 root View：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">merge</span> <span class="attr">xmlns:android</span>=<span class="string">"http://schemas.android.com/apk/res/android"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">Button</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:layout_width</span>=<span class="string">"fill_parent"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:layout_height</span>=<span class="string">"wrap_content"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:text</span>=<span class="string">"@string/add"</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">Button</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:layout_width</span>=<span class="string">"fill_parent"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:layout_height</span>=<span class="string">"wrap_content"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:text</span>=<span class="string">"@string/delete"</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">merge</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>那么现在再使用这个布局的时候，系统会自动忽略 merge 标签，并会将两个 Button View 直接加入到布局 &lt; include/&gt; 标签所指定的位置。</p>
+<blockquote>
+<p>注意：如果 Merge 代替的布局元素为 LinearLayout，在自定义布局代码中要将 LinearLayout 的属性添加到引用上，如垂直、水平布局、背景色等。Merge 不是哪里都可以用的，显然它只能在 xml 文件的根元素上，而且还要注意以下两点：</p>
+</blockquote>
+<ol>
+<li>使用 Merge 来加载一个布局时，必须指定一个 ViewGroup 作为其父元素，并且要设置加载的 attachToRoot 参数为 true（参照 inflate(int, ViewGroup, Boolean)）；</li>
+<li>不能在 ViewStub 中使用 Merge 标签，原因就是 ViewStub 的 inflate 方法中根本没有 attachToRoot 的设置。</li>
+</ol>
+<p>这里讲了如何减少层级，那么多少层才是合理的呢?从 Lint 的检查配置上来看，超过 10 层才会报警，所以我们可以认为超过 15 层就必须重视开始准备优化，再多层就是一定要修改的了。</p>
+<h4 id="提高绘制速度"><a href="#提高绘制速度" class="headerlink" title="提高绘制速度"></a>提高绘制速度</h4><p>上文提到绘制需要进行布局与测量，并且层级越深，元素越多，耗时也就越长。在实践中，有时候我们的布局文件中存在很多只在特定情况下才会使用到的 View。针对这些 View，很多时候我们会使用设置可见性的方式来确保只在需要时才会显示。</p>
+<p>但是设置为 Gone 并不能解决性能问题，绘制流程中还是会测试和解析这些布局的。在 inflate 布局文件的时候，依然会去创建 GONE 属性的实例，初始化对象。我们知道创建对象以及测量-布局流程耗费很高，如果创建大量当前不需要显示的 View 对象，会很大程度上增加启动时间。对于减少内存使用来说，设置可见性也没有任何用处。</p>
+<p>在上述情况下，推迟资源加载是非常重要的解决手段，通过“在需要时才去加载”的方式来降低内存使用和加快绘制速度。Android 提供了 ViewStub 控件来解决这个场景，我们可以通过声明 ViewStub 来实现推迟 View 加载。ViewStub 是一个轻量级的 View，它的构造函数简单、成员变量很少，对象创建时间更短。而且它的尺寸为0，并且不会绘制任何东西。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onMeasure</span><span class="params">(<span class="keyword">int</span> widthMeasureSpec, <span class="keyword">int</span> heightMeasureSpec)</span> </span>&#123;</span><br><span class="line">    setMeasuredDimension(<span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">draw</span><span class="params">(Canvas canvas)</span> </span>&#123;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">dispatchDraw</span><span class="params">(Canvas canvas)</span> </span>&#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>ViewStub 在布局文件中的使用与其他的 View 一致，只是需要增加 layout 属性：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">ViewStub</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:id</span>=<span class="string">"@+id/ll_draw"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_width</span>=<span class="string">"@dimen/drawer_width"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_height</span>=<span class="string">"match_parent"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_gravity</span>=<span class="string">"start"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout</span>=<span class="string">"@layout/stub_activity_main_drawer"</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>当需要使用到 ViewStub 对应的 Views 时，只需要调用 ViewStub#inflate() 方法或将其可见性设置为 VISIBLE 即可。需要注意的是，ViewStub#inflate() 只能调用一次，因为 inflate 之后，ViewStub 会被对应的 Views 替换，ViewStub 会从原来的 Parent 中被移除，如果再次调用 ViewStub 就会抛出异常。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ViewStub stub = (ViewStub) findViewById(R.id.ll_draw);</span><br><span class="line">View drawer = stub.inflate();</span><br></pre></td></tr></table></figure>
+
+<h2 id="布局原则总结"><a href="#布局原则总结" class="headerlink" title="布局原则总结"></a>布局原则总结</h2><p>通过以上的分析过程，可以得出一些通用的准则，在 Android UI 布局过程中，遵守这些惯用、有效的布局原则，可以制作出高效且复用性高的 UI。</p>
+<ol>
+<li>尽量多使用 ConstraintLayout、RelativeLayout、LinearLayout<ul>
+<li>尽量使用 ConstraintLayout</li>
+<li>在布局层级相同的情况下，使用 LinearLayout 代替 RelativeLayout</li>
+<li>在布局复杂或层级过深时，使用 RelativeLayout 代替 LinearLayout 使界面层级扁平化</li>
+</ul>
+</li>
+<li>将可复用的组件抽取出来并通过 include 标签使用</li>
+<li>使用 merge 减少布局的嵌套层级</li>
+<li>使用 ViewStub 加载一些不常用的布局</li>
+<li>尽可能少用 layout_weight</li>
+<li>去除不必要的背景，减少过度绘制<ul>
+<li>有多层背景重叠的，保留最上层。或者可以统一的使用一个大的背景</li>
+<li>对于 Selector 当背景的，可以将 normal 状态的 color 设置为 @android:color/transparent</li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p>参考文章：</p>
+</blockquote>
+<ul>
+<li><a href="https://developer.android.google.cn/topic/performance/rendering/overdraw.html" target="_blank" rel="noopener">Reducing Overdraw</a></li>
+<li><a href="https://developer.android.google.cn/studio/profile/dev-options-overdraw.html" target="_blank" rel="noopener">Debug GPU Overdraw Walkthrough</a></li>
+<li><a href="https://developer.android.google.cn/studio/profile/dev-options-rendering.html" target="_blank" rel="noopener">Profile GPU Rendering Walkthrough</a></li>
+<li><a href="https://developer.android.google.cn/studio/profile/systrace-walkthru.html" target="_blank" rel="noopener">Systrace Walkthrough</a></li>
+<li><a href="https://developer.android.google.cn/studio/profile/systrace.html" target="_blank" rel="noopener">Analyzing UI Performance with Systrace</a></li>
+<li>罗彧成.Android应用性能优化最佳实践.机械工业出版社,2017：12-49</li>
+<li>TMQ专项测试团队.移动App性能评测与优化,2016：71-91</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/Android/" rel="tag"># Android</a>
+            
+              <a href="/tags/性能优化/" rel="tag"># 性能优化</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2017/06/dialog-dismiss-callback/" rel="next" title="Dialog 三种退出方式的回调分析">
+                  <i class="fa fa-chevron-left"></i> Dialog 三种退出方式的回调分析
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2017/07/reading-notes-yueweicaotangbiji/" rel="prev" title="《阅微草堂笔记》摘录">
+                  《阅微草堂笔记》摘录 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+    </div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc" data-target="post-toc-wrap">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#减少过度绘制"><span class="nav-number">1.</span> <span class="nav-text">减少过度绘制</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#为什么会过度绘制"><span class="nav-number">1.1.</span> <span class="nav-text">为什么会过度绘制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#诊断过度绘制"><span class="nav-number">1.2.</span> <span class="nav-text">诊断过度绘制</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#初步查看"><span class="nav-number">1.2.1.</span> <span class="nav-text">初步查看</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#详细定位"><span class="nav-number">1.2.2.</span> <span class="nav-text">详细定位</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#修复过度绘制"><span class="nav-number">1.3.</span> <span class="nav-text">修复过度绘制</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#XML-布局优化"><span class="nav-number">1.3.1.</span> <span class="nav-text">XML 布局优化</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#去除不必要的背景"><span class="nav-number">1.3.1.1.</span> <span class="nav-text">去除不必要的背景</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#减少透明元素"><span class="nav-number">1.3.1.2.</span> <span class="nav-text">减少透明元素</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#减少视图的层级"><span class="nav-number">1.3.1.3.</span> <span class="nav-text">减少视图的层级</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#自定义-View-优化"><span class="nav-number">1.3.2.</span> <span class="nav-text">自定义 View 优化</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#快速判断是否需要绘制"><span class="nav-number">1.3.2.1.</span> <span class="nav-text">快速判断是否需要绘制</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#指定绘制区域"><span class="nav-number">1.3.2.2.</span> <span class="nav-text">指定绘制区域</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#优化视图层级"><span class="nav-number">2.</span> <span class="nav-text">优化视图层级</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#绘制性能"><span class="nav-number">2.1.</span> <span class="nav-text">绘制性能</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#复杂度：不同布局与深度"><span class="nav-number">2.1.1.</span> <span class="nav-text">复杂度：不同布局与深度</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Double-Taxation"><span class="nav-number">2.1.2.</span> <span class="nav-text">Double Taxation</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#RelativeLayout"><span class="nav-number">2.1.2.1.</span> <span class="nav-text">RelativeLayout</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#LinearLayout"><span class="nav-number">2.1.2.2.</span> <span class="nav-text">LinearLayout</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#GridLayout"><span class="nav-number">2.1.2.3.</span> <span class="nav-text">GridLayout</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#ConstraintLayout"><span class="nav-number">2.1.2.4.</span> <span class="nav-text">ConstraintLayout</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#诊断绘制性能"><span class="nav-number">2.2.</span> <span class="nav-text">诊断绘制性能</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#初步查看-1"><span class="nav-number">2.2.1.</span> <span class="nav-text">初步查看</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Profile-GPU-rendering"><span class="nav-number">2.2.1.1.</span> <span class="nav-text">Profile GPU rendering</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Systrace"><span class="nav-number">2.2.1.2.</span> <span class="nav-text">Systrace</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#详细定位-1"><span class="nav-number">2.2.2.</span> <span class="nav-text">详细定位</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Hierarchy-View"><span class="nav-number">2.2.2.1.</span> <span class="nav-text">Hierarchy View</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Lint"><span class="nav-number">2.2.2.2.</span> <span class="nav-text">Lint</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#优化布局层级"><span class="nav-number">2.3.</span> <span class="nav-text">优化布局层级</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#布局复用"><span class="nav-number">2.3.1.</span> <span class="nav-text">布局复用</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#减少层级"><span class="nav-number">2.3.2.</span> <span class="nav-text">减少层级</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#RelativeLayout、LinearLayout、ConstraintLayout"><span class="nav-number">2.3.2.1.</span> <span class="nav-text">RelativeLayout、LinearLayout、ConstraintLayout</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#合理使用-merge"><span class="nav-number">2.3.2.2.</span> <span class="nav-text">合理使用 merge</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#提高绘制速度"><span class="nav-number">2.3.3.</span> <span class="nav-text">提高绘制速度</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#布局原则总结"><span class="nav-number">3.</span> <span class="nav-text">布局原则总结</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/avatar_me.png"
+      alt="Mupceet">
+  <p class="site-author-name" itemprop="name">Mupceet</p>
+  <div class="site-description" itemprop="description">君子坦荡荡 小人长戚戚</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">25</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      友情链接
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://dxinl.github.io/" title="https://dxinl.github.io/" rel="noopener" target="_blank">Write down & Think hard</a>
+        </li>
+      
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Mupceet</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.3.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.3.0"></script><script src="/js/motion.js?v=7.3.0"></script>
+<script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://Mupceet.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  function disqus_config() {
+    this.page.url = "http://yoursite.com/2017/07/android-performance-smooth-ui/";
+    this.page.identifier = "2017/07/android-performance-smooth-ui/";
+    this.page.title = 'Android 性能优化——UI 优化指南';};
+  function loadComments() {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: disqus_config
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://Mupceet.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  }
+    (function() {
+      var offsetTop = document.getElementById('comments').offsetTop - window.innerHeight;
+      if (offsetTop <= 0) {
+        // load directly when there's no a scrollbar
+        window.addEventListener('load', loadComments, false);
+      } else {
+        var disqus_scroll = () => {
+          // offsetTop may changes because of manually resizing browser window or lazy loading images.
+          var offsetTop = document.getElementById('comments').offsetTop - window.innerHeight;
+          var scrollTop = window.scrollY;
+
+          // pre-load comments a bit? (margin or anything else)
+          if (offsetTop - scrollTop < 60) {
+            window.removeEventListener('scroll', disqus_scroll);
+            loadComments();
+          }
+        };
+        window.addEventListener('scroll', disqus_scroll);
+      }
+    })();
+  
+</script>
+
+</body>
+</html>

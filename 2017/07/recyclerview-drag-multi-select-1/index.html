@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"搜索","hits_empty":"未找到与「 ${query} 」相关的内容","hits_stats":"找到 ${hits} 条相关条目，用时: ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="为什么要做滑动多选？废话啊，当然是因为 UE 说要做啦！ 可以看到众多 ROM 的系统应用都实现了滑动多选的功能，例如三星的文件管理器，OPPO 的短信等等，不知道来源是不是 Google 相册。因为交互上与 Google 相册的策略都是一致的。 Photos 的策略这里是 Google Photos 的效果：">
+<meta name="keywords" content="Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RecyclerView 拖动&#x2F;滑动多选的实现（1）">
+<meta property="og:url" content="http://yoursite.com/2017/07/recyclerview-drag-multi-select-1/index.html">
+<meta property="og:site_name" content="Mupceet">
+<meta property="og:description" content="为什么要做滑动多选？废话啊，当然是因为 UE 说要做啦！ 可以看到众多 ROM 的系统应用都实现了滑动多选的功能，例如三星的文件管理器，OPPO 的短信等等，不知道来源是不是 Google 相册。因为交互上与 Google 相册的策略都是一致的。 Photos 的策略这里是 Google Photos 的效果：">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/2946447-c0aca7c2f26e0bd0.gif?imageMogr2/auto-orient/strip">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/2946447-c336dd4d1dbb1478.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:updated_time" content="2018-01-20T17:39:09.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="RecyclerView 拖动&#x2F;滑动多选的实现（1）">
+<meta name="twitter:description" content="为什么要做滑动多选？废话啊，当然是因为 UE 说要做啦！ 可以看到众多 ROM 的系统应用都实现了滑动多选的功能，例如三星的文件管理器，OPPO 的短信等等，不知道来源是不是 Google 相册。因为交互上与 Google 相册的策略都是一致的。 Photos 的策略这里是 Google Photos 的效果：">
+<meta name="twitter:image" content="http://upload-images.jianshu.io/upload_images/2946447-c0aca7c2f26e0bd0.gif?imageMogr2/auto-orient/strip">
+  <link rel="canonical" href="http://yoursite.com/2017/07/recyclerview-drag-multi-select-1/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>RecyclerView 拖动/滑动多选的实现（1） | Mupceet</title>
+  <meta name="generator" content="Hexo 3.9.0">
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Mupceet</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Don't Repeat Yourself</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/07/recyclerview-drag-multi-select-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Mupceet">
+      <meta itemprop="description" content="君子坦荡荡 小人长戚戚">
+      <meta itemprop="image" content="/images/avatar_me.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Mupceet">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">RecyclerView 拖动/滑动多选的实现（1）
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2017-07-29 17:12:33" itemprop="dateCreated datePublished" datetime="2017-07-29T17:12:33+08:00">2017-07-29</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2018-01-21 01:39:09" itemprop="dateModified" datetime="2018-01-21T01:39:09+08:00">2018-01-21</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/技术向/" itemprop="url" rel="index"><span itemprop="name">技术向</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Disqus：</span>
+    
+    <a title="disqus" href="/2017/07/recyclerview-drag-multi-select-1/#comments" itemprop="discussionUrl"><span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/07/recyclerview-drag-multi-select-1/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="为什么要做滑动多选？"><a href="#为什么要做滑动多选？" class="headerlink" title="为什么要做滑动多选？"></a>为什么要做滑动多选？</h2><p>废话啊，当然是因为 UE 说要做啦！</p>
+<p>可以看到众多 ROM 的系统应用都实现了滑动多选的功能，例如三星的文件管理器，OPPO 的短信等等，不知道来源是不是 Google 相册。因为交互上与 Google 相册的策略都是一致的。</p>
+<h3 id="Photos-的策略"><a href="#Photos-的策略" class="headerlink" title="Photos 的策略"></a>Photos 的策略</h3><p>这里是 Google Photos 的效果：</p>
+<p><img src="http://upload-images.jianshu.io/upload_images/2946447-c0aca7c2f26e0bd0.gif?imageMogr2/auto-orient/strip" alt="Photos"></p>
+<a id="more"></a>
+
+<p>可以看到策略为：</p>
+<ul>
+<li>长按时选择该条目，并进入多选模式</li>
+<li>往外滑动时选择滑动过的条目</li>
+<li>往回滑动时取消选择条目</li>
+<li>多选模式单击时反选</li>
+</ul>
+<p>前三条规则是不论原先条目的被选择状态是怎样的。</p>
+<h3 id="UE-的策略"><a href="#UE-的策略" class="headerlink" title="UE 的策略"></a>UE 的策略</h3><p>而根据 UE 的描述，我需要实现的多选功能中的多选可以表述为拖动多选和滑动多选两种情况，什么意思呢？见下面具体的策略。</p>
+<ul>
+<li>长按时进入拖动多选模式，即手指不放手可进行拖动选择</li>
+<li>手指抬起后，依然处于多选模式，此时叫做滑动多选，因为这时在指定的区域内滑动可选择</li>
+<li>多选模式单击时反选</li>
+</ul>
+<p>我们的应用有线性布局和网格布局的列表，在线性布局中才有两种选择模式，在网格布局中没有滑动多选模式。</p>
+<p>两种模式的选择策略是一样的：</p>
+<ul>
+<li>反选手指按下时的条目（称为第一条目）</li>
+<li>往外滑动过的条目状态与第一条目改变后的状态一致</li>
+<li>往回滑动时条目恢复原先的状态</li>
+</ul>
+<p>当然，由于要长按才进入多选模式，所以拖动选择实际上与 Photos 的拖动选择效果是一样的，只是在滑动选择中与之效果不同。先上 GitHub 找一下相关的库。</p>
+<p>首先呢，肯定是考虑基于 RecyclerView 实现的库， 因为在我们的几个应用中是使用 RecyclerView 实现了线性布局和网格布局的列表，因此搜索时找到了以下这几个库：</p>
+<ol>
+<li><a href="https://github.com/afollestad/drag-select-recyclerview" target="_blank" rel="noopener">afollestad/drag-select-recyclerview：1.1k ★ </a></li>
+<li><a href="https://github.com/MFlisar/DragSelectRecyclerView" target="_blank" rel="noopener">MFlisar/DragSelectRecyclerView：267 ★</a></li>
+<li><a href="https://github.com/weidongjian/AndroidDragSelect-SimulateGooglePhoto" target="_blank" rel="noopener">weidongjian/AndroidDragSelect-SimulateGooglePhoto：19 ★</a></li>
+</ol>
+<p>这三个库之间的关系是：</p>
+<ul>
+<li>方案一是鼻祖，而且从 Start 数量也可以看出来，让很多人受到启发，GitHub 上有基于它的自定义 RecyclerView 的想法自定义了 GridView 的实现。其选择策略与 Photos 相同，但是这个库最大的缺点就是耦合度太高，不适合集成，具体后面分析会说到；</li>
+<li>方案三就是分析了方案一的缺点之后，给出了自己的基于 <code>OnItemTouchListener</code> 的实现方案，耦合度低，可以很容易集成进现有的项目当中。而且增加了动画的设置，其最终效果：选择策略与动画效果与 Photos 几乎一致。</li>
+<li>方案二则是在方案三的基础上进行改进的，它们使用了相同的自动滚动的方案，但是选择策略更多样，更人性化，并对超出列表区域时是否自动滚动做了处理。</li>
+</ul>
+<p>接下来，我们分别对这几个库进行分析、比较，最后完成符合我们要求的滑动多选的库。</p>
+<h2 id="方案一：drag-select-recyclerview"><a href="#方案一：drag-select-recyclerview" class="headerlink" title="方案一：drag-select-recyclerview"></a>方案一：drag-select-recyclerview</h2><p>这里主要是看一下其设计的思路，所以只分析了自定义 RecyclerView 的部分，对于自定义 Adapter 的代码不做分析，只简单提一下。以下对其进行分析时会对代码顺序做出一定的调整以符合分析流程。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DragSelectRecyclerView</span> <span class="keyword">extends</span> <span class="title">RecyclerView</span> </span>&#123;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，此库是基于自定义一个 RecyclerView 的想法去实现的。在此自定义 View 中，设置滚动区；处理触摸事件使得手指在滚动区时列表自动滚动；手指滑动过程中对经过的范围进行选择处理。</p>
+<p>接下来我们逐步进行分析，在最后总结一下这个库的实现有哪些缺点。</p>
+<h3 id="滚动区的定义"><a href="#滚动区的定义" class="headerlink" title="滚动区的定义"></a>滚动区的定义</h3><p>先看一下滚动区的定义，自定义 RecyclerView 通过设置三个属性，然后进行计算确认滚动区。以下三个属性值的禁止状态用 -1 表示；</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">int</span> hotspotHeight;          <span class="comment">// 滑动热区的高度，默认为 56dp</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">int</span> hotspotOffsetTop;       <span class="comment">// 顶部的滑动热区距离控件顶部的高度，默认为 0</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">int</span> hotspotOffsetBottom;    <span class="comment">// 底部的滑动热区距离控件底部的高度，默认为 0</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">resources</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">declare-styleable</span> <span class="attr">name</span>=<span class="string">"DragSelectRecyclerView"</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!--滚动热区的高度--&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">attr</span> <span class="attr">name</span>=<span class="string">"dsrv_autoScrollHotspotHeight"</span> <span class="attr">format</span>=<span class="string">"dimension"</span>/&gt;</span></span><br><span class="line">    <span class="comment">&lt;!--是否禁止滚动--&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">attr</span> <span class="attr">name</span>=<span class="string">"dsrv_autoScrollEnabled"</span> <span class="attr">format</span>=<span class="string">"boolean"</span>/&gt;</span></span><br><span class="line">    <span class="comment">&lt;!--滚动热区上边距--&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">attr</span> <span class="attr">name</span>=<span class="string">"dsrv_autoScrollHotspot_offsetTop"</span> <span class="attr">format</span>=<span class="string">"dimension"</span>/&gt;</span></span><br><span class="line">    <span class="comment">&lt;!--滚动热区下边距--&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">attr</span> <span class="attr">name</span>=<span class="string">"dsrv_autoScrollHotspot_offsetBottom"</span> <span class="attr">format</span>=<span class="string">"dimension"</span>/&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">declare-styleable</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">resources</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>可以看到开放给 xml 设置的属性有高度、上边距、下边距，还有禁止滚动。当禁止滚动的时候将三个值置为 -1。</p>
+<p>通过以上三个属性值，在 <code>onMeasure()</code> 中确定滚动区的几个有用的坐标值：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 上滑动热区上边的上边距：坐标 = hotspotOffsetTop</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">int</span> hotspotTopBoundStart;   </span><br><span class="line"><span class="comment">// 上滑动热区下边的上边距：坐标 = hotspotOffsetTop + hotspotHeight</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">int</span> hotspotTopBoundEnd;     </span><br><span class="line"><span class="comment">// 下滑动热区上边的上边距：坐标 = (getMeasuredHeight() - hotspotHeight) - hotspotOffsetBottom</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">int</span> hotspotBottomBoundStart;</span><br><span class="line"><span class="comment">// 下滑动热区下边的上边距：坐标 = getMeasuredHeight() - hotspotOffsetBottom</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">int</span> hotspotBottomBoundEnd;</span><br></pre></td></tr></table></figure>
+
+<p>以下这张图可以直观查看这些变量的含义。</p>
+<p><img src="http://upload-images.jianshu.io/upload_images/2946447-c336dd4d1dbb1478.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="方案一滚动区"></p>
+<h3 id="如何自动滚动"><a href="#如何自动滚动" class="headerlink" title="如何自动滚动"></a>如何自动滚动</h3><p>先看一下手指滑动到滚动区域时，列表自动滚动是怎样做到的。</p>
+<p>答案就是使用一个 Handler 每 25ms post Runnable 调用滚动的方法并更新滚动速度。</p>
+<p>通过手指是在上部滚动区还是下部滚动区来决定滚动的方向，滚动的速度通过 <code>autoScrollVelocity</code> 这个变量来控制。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">int</span> autoScrollVelocity;     <span class="comment">// 自动滚动时的速度，这个速度随着与边距的距离大小而改变</span></span><br><span class="line"><span class="keyword">private</span> Runnable autoScrollRunnable =</span><br><span class="line">        <span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                <span class="keyword">if</span> (autoScrollHandler == <span class="keyword">null</span>) &#123;</span><br><span class="line">                    <span class="keyword">return</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">if</span> (inTopHotspot) &#123;<span class="comment">// 上滚动区</span></span><br><span class="line">                    scrollBy(<span class="number">0</span>, -autoScrollVelocity);</span><br><span class="line">                    autoScrollHandler.postDelayed(<span class="keyword">this</span>, AUTO_SCROLL_DELAY);</span><br><span class="line">                &#125; <span class="keyword">else</span> <span class="keyword">if</span> (inBottomHotspot) &#123; <span class="comment">// 下滚动区</span></span><br><span class="line">                    scrollBy(<span class="number">0</span>, autoScrollVelocity);</span><br><span class="line">                    autoScrollHandler.postDelayed(<span class="keyword">this</span>, AUTO_SCROLL_DELAY);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;;</span><br></pre></td></tr></table></figure>
+
+<h3 id="如何选择条目"><a href="#如何选择条目" class="headerlink" title="如何选择条目"></a>如何选择条目</h3><p>选择条目的更新主要就是通过以下 4 个变量记录手指的活动范围，在手指活动时记录、更新变量，然后对相应位置的条目进行选择操作。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">int</span> lastDraggedIndex;       <span class="comment">// 手指停下来的位置</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">int</span> initialSelection;       <span class="comment">// 手指点击开始滑动的位置</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">int</span> minReached;             <span class="comment">// 手指滑动过程中到过的最小下标</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">int</span> maxReached;             <span class="comment">// 手指滑动过程中到过的最大下标</span></span><br></pre></td></tr></table></figure>
+
+<p>以上的位置值使用 <code>RecyclerView.NO_POSITION</code> 表示初始状态，后续在需要的时候要对其进行重置。</p>
+<h4 id="记录起点"><a href="#记录起点" class="headerlink" title="记录起点"></a>记录起点</h4><p>记录起点是通过调用激活拖动多选的方法 <code>setDragSelectActive(boolean active, int initialSelection)</code> 时进行记录的，这个方法供长按条目 <code>onLongClick()</code> 时调用，主要完成的功能：</p>
+<ul>
+<li>选中长按的条目</li>
+<li>记录此次长按拖动多选的起点</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 使用一个标志位开启滑动多选的功能</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">boolean</span> dragSelectActive; <span class="comment">// 此值为真时，触摸事件的分发时才会进行处理</span></span><br><span class="line"><span class="comment">// 需要使用自定义 Adapter</span></span><br><span class="line"><span class="keyword">private</span> DragSelectRecyclerViewAdapter&lt;?&gt; adapter;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">setDragSelectActive</span><span class="params">(<span class="keyword">boolean</span> active, <span class="keyword">int</span> initialSelection)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 已经激活了直接返回</span></span><br><span class="line">    <span class="keyword">if</span> (active &amp;&amp; dragSelectActive) &#123;</span><br><span class="line">        LOG(<span class="string">"Drag selection is already active."</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    lastDraggedIndex = -<span class="number">1</span>;</span><br><span class="line">    minReached = -<span class="number">1</span>;</span><br><span class="line">    maxReached = -<span class="number">1</span>;</span><br><span class="line">    <span class="comment">// 判断点击的位置是不是可选择的（Adapter）</span></span><br><span class="line">    <span class="keyword">if</span> (!adapter.isIndexSelectable(initialSelection)) &#123;</span><br><span class="line">        dragSelectActive = <span class="keyword">false</span>;</span><br><span class="line">        <span class="keyword">this</span>.initialSelection = -<span class="number">1</span>;</span><br><span class="line">        lastDraggedIndex = -<span class="number">1</span>;</span><br><span class="line">        LOG(<span class="string">"Index %d is not selectable."</span>, initialSelection);</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 选中长按的条目（Adapter）</span></span><br><span class="line">    adapter.setSelected(initialSelection, <span class="keyword">true</span>);</span><br><span class="line">    dragSelectActive = active;</span><br><span class="line">    <span class="comment">// 记录此次拖动选择的起点</span></span><br><span class="line">    <span class="keyword">this</span>.initialSelection = initialSelection;</span><br><span class="line">    lastDraggedIndex = initialSelection;</span><br><span class="line">    <span class="keyword">if</span> (fingerListener != <span class="keyword">null</span>) &#123;</span><br><span class="line">        fingerListener.onDragSelectFingerAction(<span class="keyword">true</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    LOG(<span class="string">"Drag selection initialized, starting at index %d."</span>, initialSelection);</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="处理触摸事件"><a href="#处理触摸事件" class="headerlink" title="处理触摸事件"></a>处理触摸事件</h4><p>接下来看看如何处理具体的触摸事件，可以看到自定义的 RecyclerView 是在触摸事件的分发 <code>dispatchTouchEvent()</code>  中对手指活动事件进行处理的。手指是否进入滚动区的判断、滚动速度的设定、以及经过了哪些条目的信息的更新都在这里进行处理。</p>
+<p>主要流程为：</p>
+<ol>
+<li>只在拖动多选被激活时才进行处理</li>
+<li>处理抬起手指 <code>ACTION_UP</code> 与手指滑动 <code>ACTION_MOVE</code> 两个事件<ul>
+<li>抬起手指，重置状态，移除滚动的 Callback</li>
+<li>手指滑动时判断是在哪个区域，进行相应的处理</li>
+</ul>
+</li>
+<li>滚动时在触摸到的条目发生变化时会更新那 4 个位置信息，从而在 Adapter 中选中 initial 到 last 之间的条目，清除 min 到 max 之间除了 initial 到 last 条目之外的条目</li>
+</ol>
+<p>先看一下位于哪个区域的判断与处理部分：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">dispatchTouchEvent</span><span class="params">(MotionEvent e)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (adapter.getItemCount() == <span class="number">0</span>) <span class="keyword">return</span> <span class="keyword">super</span>.dispatchTouchEvent(e);</span><br><span class="line">    <span class="comment">// 只在拖动多选被激活时才进行处理</span></span><br><span class="line">    <span class="keyword">if</span> (dragSelectActive) &#123;</span><br><span class="line">        <span class="comment">// 获取触摸时对应的条目位置下标</span></span><br><span class="line">        <span class="keyword">final</span> <span class="keyword">int</span> itemPosition = getItemPosition(e);</span><br><span class="line">        <span class="comment">// 抬起手指，重置状态，移除滚动的 Callback</span></span><br><span class="line">        <span class="keyword">if</span> (e.getAction() == MotionEvent.ACTION_UP) &#123;</span><br><span class="line">            dragSelectActive = <span class="keyword">false</span>;</span><br><span class="line">            inTopHotspot = <span class="keyword">false</span>;</span><br><span class="line">            inBottomHotspot = <span class="keyword">false</span>;</span><br><span class="line">            autoScrollHandler.removeCallbacks(autoScrollRunnable);</span><br><span class="line">            <span class="keyword">if</span> (fingerListener != <span class="keyword">null</span>) &#123;</span><br><span class="line">                fingerListener.onDragSelectFingerAction(<span class="keyword">false</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (e.getAction() == MotionEvent.ACTION_MOVE) &#123;</span><br><span class="line">            <span class="comment">// Check for auto-scroll hotspot</span></span><br><span class="line">            <span class="keyword">if</span> (hotspotHeight &gt; -<span class="number">1</span>) &#123;</span><br><span class="line">                <span class="comment">// 滑动时判断是在哪个区域：分为三种，上部、下部、非滚动区</span></span><br><span class="line">                <span class="comment">// 以在上部为例</span></span><br><span class="line">                <span class="keyword">if</span> (e.getY() &gt;= hotspotTopBoundStart &amp;&amp; e.getY() &lt;= hotspotTopBoundEnd) &#123;</span><br><span class="line">                    inBottomHotspot = <span class="keyword">false</span>;</span><br><span class="line">                    <span class="keyword">if</span> (!inTopHotspot) &#123;</span><br><span class="line">                        <span class="comment">// 进入上部滚动区时，移除原先的Runnable，重新Post</span></span><br><span class="line">                        <span class="comment">// 原因是滚动的触发需要延迟25ms</span></span><br><span class="line">                        inTopHotspot = <span class="keyword">true</span>;</span><br><span class="line">                        LOG(<span class="string">"Now in TOP hotspot"</span>);</span><br><span class="line">                        autoScrollHandler.removeCallbacks(autoScrollRunnable);</span><br><span class="line">                        autoScrollHandler.postDelayed(autoScrollRunnable, AUTO_SCROLL_DELAY);</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="comment">// 根据手指与滚动区的边距设置滚动速度</span></span><br><span class="line">                    <span class="keyword">final</span> <span class="keyword">float</span> simulatedFactor = hotspotTopBoundEnd - hotspotTopBoundStart;</span><br><span class="line">                    <span class="keyword">final</span> <span class="keyword">float</span> simulatedY = e.getY() - hotspotTopBoundStart;</span><br><span class="line">                    autoScrollVelocity = (<span class="keyword">int</span>) (simulatedFactor - simulatedY) / <span class="number">2</span>;</span><br><span class="line"></span><br><span class="line">                    LOG(<span class="string">"Auto scroll velocity = %d"</span>, autoScrollVelocity);</span><br><span class="line">                &#125; <span class="keyword">else</span> <span class="keyword">if</span> (e.getY() &gt;= hotspotBottomBoundStart</span><br><span class="line">                    &amp;&amp; e.getY() &lt;= hotspotBottomBoundEnd) &#123;</span><br><span class="line">                    inTopHotspot = <span class="keyword">false</span>;</span><br><span class="line">                    <span class="keyword">if</span> (!inBottomHotspot) &#123;</span><br><span class="line">                        inBottomHotspot = <span class="keyword">true</span>;</span><br><span class="line">                        LOG(<span class="string">"Now in BOTTOM hotspot"</span>);</span><br><span class="line">                        autoScrollHandler.removeCallbacks(autoScrollRunnable);</span><br><span class="line">                        autoScrollHandler.postDelayed(autoScrollRunnable, AUTO_SCROLL_DELAY);</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">final</span> <span class="keyword">float</span> simulatedY = e.getY() + hotspotBottomBoundEnd;</span><br><span class="line">                    <span class="keyword">final</span> <span class="keyword">float</span> simulatedFactor = hotspotBottomBoundStart + hotspotBottomBoundEnd;</span><br><span class="line">                    autoScrollVelocity = (<span class="keyword">int</span>) (simulatedY - simulatedFactor) / <span class="number">2</span>;</span><br><span class="line"></span><br><span class="line">                    LOG(<span class="string">"Auto scroll velocity = %d"</span>, autoScrollVelocity);</span><br><span class="line">                &#125; <span class="keyword">else</span> <span class="keyword">if</span> (inTopHotspot || inBottomHotspot) &#123;</span><br><span class="line">                    LOG(<span class="string">"Left the hotspot"</span>);</span><br><span class="line">                    autoScrollHandler.removeCallbacks(autoScrollRunnable);</span><br><span class="line">                    inTopHotspot = <span class="keyword">false</span>;</span><br><span class="line">                    inBottomHotspot = <span class="keyword">false</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// ...</span></span><br><span class="line">            <span class="comment">// 省略更新手指范围的代码，放到后文</span></span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">super</span>.dispatchTouchEvent(e);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其中 <code>getItemPosition()</code> 是获取触摸时对应的条目位置的方法，这个方法主要两个功能：</p>
+<ul>
+<li>判断一下此 RecyclerView 使用的 Adapter 是不是正确继承了自定义的 Adapter</li>
+<li>前一个条件成立时，返回此时触摸事件对应的条目位置</li>
+</ul>
+<p>为什么要判断是否正确继承自定义 Adapter 呢？这是因为方案一的写法需要拿到 ViewHolder，从而才得到得位置信息。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">getItemPosition</span><span class="params">(MotionEvent e)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">final</span> View v = findChildViewUnder(e.getX(), e.getY());</span><br><span class="line">    <span class="keyword">if</span> (v == <span class="keyword">null</span>) <span class="keyword">return</span> NO_POSITION;</span><br><span class="line">    <span class="keyword">if</span> (v.getTag() == <span class="keyword">null</span> || !(v.getTag() <span class="keyword">instanceof</span> ViewHolder)) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(</span><br><span class="line">                <span class="string">"Make sure your adapter makes a call to super.onBindViewHolder(), "</span></span><br><span class="line">                + <span class="string">"and doesn't override itemView tags."</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">final</span> ViewHolder holder = (ViewHolder) v.getTag();</span><br><span class="line">    <span class="keyword">return</span> holder.getAdapterPosition();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>实际上，这里可能更多的是因为此自定义 View 调用了相应的自定义 Adapter 中的方法，所以在这里对是否使用了相应的 Adapter 进行检查，否则是没有必要的，写成如下形式即可：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">getItemPosition</span><span class="params">(MotionEvent e)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">final</span> View v = findChildViewUnder(e.getX(), e.getY());</span><br><span class="line">    <span class="keyword">if</span> (v == <span class="keyword">null</span>) <span class="keyword">return</span> NO_POSITION;</span><br><span class="line">    <span class="keyword">return</span> getChildAdapterPosition(v);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="选中滑过的条目"><a href="#选中滑过的条目" class="headerlink" title="选中滑过的条目"></a>选中滑过的条目</h4><p>以下就是上面省略的更新手指选择范围的代码。在手指滑动到新的条目时进行变量的更新，在更新选择范围之后会通过 Adapter 对条目进行选择操作。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 自动滚动时在条目发生变化时会更新那4个条目位置信息</span></span><br><span class="line"><span class="comment">// Drag selection logic</span></span><br><span class="line"><span class="keyword">if</span> (itemPosition != NO_POSITION</span><br><span class="line">  &amp;&amp; lastDraggedIndex != itemPosition) &#123;</span><br><span class="line">    lastDraggedIndex = itemPosition;</span><br><span class="line">    <span class="keyword">if</span> (minReached == -<span class="number">1</span>) &#123;</span><br><span class="line">        minReached = lastDraggedIndex;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (maxReached == -<span class="number">1</span>) &#123;</span><br><span class="line">        maxReached = lastDraggedIndex;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (lastDraggedIndex &gt; maxReached) &#123;</span><br><span class="line">        maxReached = lastDraggedIndex;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (lastDraggedIndex &lt; minReached) &#123;</span><br><span class="line">        minReached = lastDraggedIndex;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (adapter != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="comment">// 在adapter中选中 initial 到 last 的条目，清除选中 min 到 max 除了前面要选中条目之外的条目</span></span><br><span class="line">        adapter.selectRange(initialSelection, lastDraggedIndex, minReached, maxReached);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (initialSelection == lastDraggedIndex) &#123;</span><br><span class="line">        minReached = lastDraggedIndex;</span><br><span class="line">        maxReached = lastDraggedIndex;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="DragSelectRecyclerViewAdapter"><a href="#DragSelectRecyclerViewAdapter" class="headerlink" title="DragSelectRecyclerViewAdapter"></a>DragSelectRecyclerViewAdapter</h3><p>可以看到在 DragSelectRecyclerView 需要与 DragSelectRecyclerViewAdapter 搭配使用。因为需要调用 Adapter 进行选择处理。当然了，这个可以通过回调抽出来。</p>
+<p>Adapter 中需要实现、处理的是：</p>
+<h4 id="onBindViewHolder"><a href="#onBindViewHolder" class="headerlink" title="onBindViewHolder"></a>onBindViewHolder</h4><p>将 VH 通过 Tag 设置到本身的 View 上。这样在 RecyclerView 中就可以通过 VH 获得在 Adapter 中的 position。</p>
+<blockquote>
+<p>注：如上面所说，这一步不是必要的。只是通过这样可以检查是否使用了自定义的 Adapter。</p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@CallSuper</span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onBindViewHolder</span><span class="params">(VH holder, <span class="keyword">int</span> position)</span> </span>&#123;</span><br><span class="line">  holder.itemView.setTag(holder);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="选择的方法"><a href="#选择的方法" class="headerlink" title="选择的方法"></a>选择的方法</h4><p>主要有：</p>
+<ul>
+<li><code>setSelected(int index, boolean selected)</code>：设置对应条目的选择状态</li>
+<li><code>toggleSelected(int index)</code>：反选对应条目，并返回新状态</li>
+<li><code>selectRange(int from, int to, int min, int max)</code>：将 from 到 to 的位置的状态保持一致，反选另外的。</li>
+<li><code>selectAll()</code> <code>clearSelected()</code>：全选、取消选中条目</li>
+</ul>
+<h3 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h3><ul>
+<li>这种方法使用了自定义 RecyclerView 与 Adapter 并相互之间发生了耦合，使用时就需要更改原来的 RecyclerView 和 Adapter 的继承与代码，不优雅。</li>
+<li>可以看到选择范围的更新是在手指滑动时进行的，所以手指在滚动区按住不动时列表发生滚动但没有选择上，而在手指动了之后才会正确选中。</li>
+</ul>
+<p>其相互耦合的方式是导致它无法被采用的根本原因，必须考虑其他的实现方式。</p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/Android/" rel="tag"># Android</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2017/07/reading-notes-yueweicaotangbiji/" rel="next" title="《阅微草堂笔记》摘录">
+                  <i class="fa fa-chevron-left"></i> 《阅微草堂笔记》摘录
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2017/07/recyclerview-drag-multi-select-2/" rel="prev" title="RecyclerView 拖动/滑动多选的实现（2）">
+                  RecyclerView 拖动/滑动多选的实现（2） <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+    </div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc" data-target="post-toc-wrap">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么要做滑动多选？"><span class="nav-number">1.</span> <span class="nav-text">为什么要做滑动多选？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Photos-的策略"><span class="nav-number">1.1.</span> <span class="nav-text">Photos 的策略</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#UE-的策略"><span class="nav-number">1.2.</span> <span class="nav-text">UE 的策略</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#方案一：drag-select-recyclerview"><span class="nav-number">2.</span> <span class="nav-text">方案一：drag-select-recyclerview</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#滚动区的定义"><span class="nav-number">2.1.</span> <span class="nav-text">滚动区的定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#如何自动滚动"><span class="nav-number">2.2.</span> <span class="nav-text">如何自动滚动</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#如何选择条目"><span class="nav-number">2.3.</span> <span class="nav-text">如何选择条目</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#记录起点"><span class="nav-number">2.3.1.</span> <span class="nav-text">记录起点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#处理触摸事件"><span class="nav-number">2.3.2.</span> <span class="nav-text">处理触摸事件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#选中滑过的条目"><span class="nav-number">2.3.3.</span> <span class="nav-text">选中滑过的条目</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DragSelectRecyclerViewAdapter"><span class="nav-number">2.4.</span> <span class="nav-text">DragSelectRecyclerViewAdapter</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#onBindViewHolder"><span class="nav-number">2.4.1.</span> <span class="nav-text">onBindViewHolder</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#选择的方法"><span class="nav-number">2.4.2.</span> <span class="nav-text">选择的方法</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#缺点"><span class="nav-number">2.5.</span> <span class="nav-text">缺点</span></a></li></ol></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/avatar_me.png"
+      alt="Mupceet">
+  <p class="site-author-name" itemprop="name">Mupceet</p>
+  <div class="site-description" itemprop="description">君子坦荡荡 小人长戚戚</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">25</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      友情链接
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://dxinl.github.io/" title="https://dxinl.github.io/" rel="noopener" target="_blank">Write down & Think hard</a>
+        </li>
+      
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Mupceet</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.3.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.3.0"></script><script src="/js/motion.js?v=7.3.0"></script>
+<script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://Mupceet.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  function disqus_config() {
+    this.page.url = "http://yoursite.com/2017/07/recyclerview-drag-multi-select-1/";
+    this.page.identifier = "2017/07/recyclerview-drag-multi-select-1/";
+    this.page.title = 'RecyclerView 拖动/滑动多选的实现（1）';};
+  function loadComments() {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: disqus_config
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://Mupceet.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  }
+    (function() {
+      var offsetTop = document.getElementById('comments').offsetTop - window.innerHeight;
+      if (offsetTop <= 0) {
+        // load directly when there's no a scrollbar
+        window.addEventListener('load', loadComments, false);
+      } else {
+        var disqus_scroll = () => {
+          // offsetTop may changes because of manually resizing browser window or lazy loading images.
+          var offsetTop = document.getElementById('comments').offsetTop - window.innerHeight;
+          var scrollTop = window.scrollY;
+
+          // pre-load comments a bit? (margin or anything else)
+          if (offsetTop - scrollTop < 60) {
+            window.removeEventListener('scroll', disqus_scroll);
+            loadComments();
+          }
+        };
+        window.addEventListener('scroll', disqus_scroll);
+      }
+    })();
+  
+</script>
+
+</body>
+</html>

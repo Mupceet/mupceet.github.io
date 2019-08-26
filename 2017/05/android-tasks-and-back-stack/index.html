@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"搜索","hits_empty":"未找到与「 ${query} 」相关的内容","hits_stats":"找到 ${hits} 条相关条目，用时: ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="Tasks(Tasks)与返回栈(Back Stack)Tasks 的定义：执行特定作业时与用户交互的一系列 Activity。这些 Activity 按照各自的打开顺序排列在堆栈（即返回栈）中，堆栈顶部 Activity 即为可见的界面。堆栈中的 Activity 永远不会 重新排列，仅推入（push）和弹出（pop）堆栈：由当前 Activity 启动时推入堆栈；用户使用 Back 按钮退出时">
+<meta name="keywords" content="Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Activity 启动模式全解析">
+<meta property="og:url" content="http://yoursite.com/2017/05/android-tasks-and-back-stack/index.html">
+<meta property="og:site_name" content="Mupceet">
+<meta property="og:description" content="Tasks(Tasks)与返回栈(Back Stack)Tasks 的定义：执行特定作业时与用户交互的一系列 Activity。这些 Activity 按照各自的打开顺序排列在堆栈（即返回栈）中，堆栈顶部 Activity 即为可见的界面。堆栈中的 Activity 永远不会 重新排列，仅推入（push）和弹出（pop）堆栈：由当前 Activity 启动时推入堆栈；用户使用 Back 按钮退出时">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-03-28T13:28:34.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Activity 启动模式全解析">
+<meta name="twitter:description" content="Tasks(Tasks)与返回栈(Back Stack)Tasks 的定义：执行特定作业时与用户交互的一系列 Activity。这些 Activity 按照各自的打开顺序排列在堆栈（即返回栈）中，堆栈顶部 Activity 即为可见的界面。堆栈中的 Activity 永远不会 重新排列，仅推入（push）和弹出（pop）堆栈：由当前 Activity 启动时推入堆栈；用户使用 Back 按钮退出时">
+  <link rel="canonical" href="http://yoursite.com/2017/05/android-tasks-and-back-stack/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Activity 启动模式全解析 | Mupceet</title>
+  <meta name="generator" content="Hexo 3.9.0">
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Mupceet</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Don't Repeat Yourself</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/05/android-tasks-and-back-stack/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Mupceet">
+      <meta itemprop="description" content="君子坦荡荡 小人长戚戚">
+      <meta itemprop="image" content="/images/avatar_me.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Mupceet">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">Activity 启动模式全解析
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2017-05-21 20:21:33" itemprop="dateCreated datePublished" datetime="2017-05-21T20:21:33+08:00">2017-05-21</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2018-03-28 21:28:34" itemprop="dateModified" datetime="2018-03-28T21:28:34+08:00">2018-03-28</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/技术向/" itemprop="url" rel="index"><span itemprop="name">技术向</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Disqus：</span>
+    
+    <a title="disqus" href="/2017/05/android-tasks-and-back-stack/#comments" itemprop="discussionUrl"><span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/05/android-tasks-and-back-stack/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Tasks-Tasks-与返回栈-Back-Stack"><a href="#Tasks-Tasks-与返回栈-Back-Stack" class="headerlink" title="Tasks(Tasks)与返回栈(Back Stack)"></a>Tasks(Tasks)与返回栈(Back Stack)</h1><p>Tasks 的定义：执行特定作业时与用户交互的一系列 Activity。这些 Activity 按照各自的打开顺序排列在堆栈（即返回栈）中，堆栈顶部 Activity 即为可见的界面。堆栈中的 Activity <strong>永远不会</strong> 重新排列，仅推入（push）和弹出（pop）堆栈：由当前 Activity 启动时推入堆栈；用户使用 <code>Back</code> 按钮退出时弹出堆栈。当所有 Activity 均从堆栈中移除后，Tasks 即不复存在。</p>
+<p>举个例子，Contacts 应用的 PeopleActivity 可以启动 QuickContactActivity 来查看联系人信息，而 QuickContactActivity 可以通过 Intent 启动 Email 应用的编写邮件的 Activity。虽然 Activity 来自不同的应用，但是它们都被保留在相同的 Tasks 中以保持无缝的用户体验：用户按 Back 键时，会逐个回退到上一个 Activity，仿佛这些 Activity 是属于同一个应用的。</p>
+<a id="more"></a>
+
+<p>Tasks 作为一个整体而存在，简单来说就是在某个 Activity 按 Home 键之后，该 Activity 所在的 Tasks 就被移到后台，但 Tasks 的返回栈不变。切换回这个 Activity 后，按 Back 键可以发现回退到了堆栈的上一个 Activity。基于 Tasks 与其返回栈的关系，我们使用 Tasks 栈来表达其含义。</p>
+<p>Activity 和 Tasks 的默认行为总结如下：</p>
+<p>当 Activity A 启动 Activity B 时，</p>
+<ul>
+<li>Activity A 将会停止，但系统会保留其状态（例如，滚动位置和已输入表单中的文本）。</li>
+<li>创建 Activity B 的实例并向其传送 Intent，其将被推入 Activity A 的 Tasks 栈中。</li>
+</ul>
+<p>处于 Activity B 时按 Back 按钮</p>
+<ul>
+<li>当前 Activity B 会从堆栈弹出并被销毁。销毁 Activity 时，系统不会保留该 Activity 的状态。</li>
+<li>堆栈中的前一个 Activity A 恢复其状态，继续执行。</li>
+</ul>
+<p>用户通过按 Home 按钮离开 Tasks 时，</p>
+<ul>
+<li>当前 Activity 将停止且其 Tasks 会进入后台。</li>
+<li>系统将保留 Tasks 中每个 Activity 的状态。</li>
+</ul>
+<p>选择开始 Tasks 的启动器图标来恢复 Tasks，</p>
+<ul>
+<li>Tasks 将出现在前台并恢复执行堆栈顶部的 Activity。</li>
+<li>如果用户长时间离开 Tasks，则系统会清除 Tasks 栈中除根 Activity 之外的所有 Activity。当用户再次返回到 Tasks 时，仅恢复根 Activity。</li>
+</ul>
+<h1 id="管理-Tasks"><a href="#管理-Tasks" class="headerlink" title="管理 Tasks"></a>管理 Tasks</h1><p>上面提到的默认行为适用于大多数的 Activity，不需要额外的设置即可满足应用的需要。但有时候需要打破这种默认的行为，比如，打开应用的第一个 Activity A，然后用户注册经过了一个或多个 Activity，注册完成后回到第一个 Activity A，如果按照默认的行为，堆栈中将会实例化两个 Activity A，而且这两个之间还包含了注册用的 Activity，这样子在用户 Back 键想退出应用的时候，就会跳转到不想要跳转到的注册用的 Activity，这就要求回到 Activity A 时清除注册用的 Activity。或者，开发者希望用户不论在哪个 Activity 切换到后台时，再开启应用时要从应用的第一个 Activity 开始。</p>
+<p>这些不符合默认行为的操作可以通过指定 Manifest 文件中 &lt;activity&gt; 元素中的属性和传递给 startActivity() 的 Intent 中的标志来完成设置。</p>
+<blockquote>
+<p><strong>注意：</strong> 应用大多数情况下都不必改变 Activity 和 Tasks 的默认行为；如果确定必须修改默认行为，请测试使用 Back 按钮从其他 Activity 或从 Recent 界面回到该 Activity 时的行为，确认应用的行为是否有可能与用户的预期行为冲突。</p>
+</blockquote>
+<p>在清单文件中声明 Activity 时，可以指定 Activity 在启动时应该如何与 Tasks 关联。可以使用的 &lt;activity&gt; 属性有：</p>
+<ul>
+<li>launchMode</li>
+<li>taskAffinity</li>
+<li>allowTaskReparenting</li>
+<li>clearTaskOnLaunch</li>
+<li>alwaysRetainTaskState</li>
+<li>finishOnTaskLaunch</li>
+</ul>
+<p>调用 startActivity() 时，可以在 Intent 中加入一个标志，用于声明新 Activity 如何（或是否）与当前 Tasks 关联。可以使用的 Intent 标志主要有：</p>
+<ul>
+<li>FLAG_ACTIVITY_NEW_TASK</li>
+<li>FLAG_ACTIVITY_CLEAR_TOP</li>
+<li>FLAG_ACTIVITY_SINGLE_TOP</li>
+</ul>
+<p>如果 Activity A 启动 Activity B，则 Activity B 可以在其清单文件中定义它应该如何与当前 Tasks 关联，并且 Activity A 还可以请求 Activity B 应该如何与当前 Tasks 关联。如果这两个 Activity 均定义 Activity B 应该如何与 Tasks 关联，则 Activity A 的请求（如 Intent 中所定义）优先级要高于 Activity B 的请求（如其清单文件中所定义）。</p>
+<p>我们将属性分为两组：</p>
+<ol>
+<li>改变 Tasks 启动 Activity 时的默认行为<ul>
+<li>launchMode</li>
+<li>taskAffinity</li>
+<li>allowTaskReparenting</li>
+</ul>
+</li>
+<li>改变 Tasks 恢复 Activity 时的默认行为<ul>
+<li>clearTaskOnLaunch</li>
+<li>alwaysRetainTaskState</li>
+<li>finishOnTaskLaunch</li>
+</ul>
+</li>
+</ol>
+<h2 id="改变启动时的默认行为"><a href="#改变启动时的默认行为" class="headerlink" title="改变启动时的默认行为"></a>改变启动时的默认行为</h2><h3 id="launchMode-和-taskAffinity"><a href="#launchMode-和-taskAffinity" class="headerlink" title="launchMode 和 taskAffinity"></a>launchMode 和 taskAffinity</h3><p>launchMode 包括了四种属性值：<code>standard (默认模式)</code>、<code>singleTop</code>、<code>singleTask</code>、<code>singleInstance</code>。相应的，使用 <code>FLAG_ACTIVITY_SINGLE_TOP</code> 标志产生与 <code>singleTop</code> 相同的行为，而<code>FLAG_ACTIVITY_NEW_TASK</code> 与 <code>FLAG_ACTIVITY_CLEAR_TOP</code> 一般一起使用，产生与 <code>singleTask</code> 相同的行为，一般不单独使用，因为单独使用常常导致奇怪的效果。</p>
+<p>taskAffinity 指示 Activity 优先属于哪个 Tasks，即它希望进入的 Tasks，而 Tasks 的 taskAffinity 实际上等于它的根 Activity 的 taskAffinity。默认情况下，同一应用中的所有 Activity 默认使用软件包名称彼此关联。在不同应用中定义的 Activity 可以共享关联，或者可为在同一应用中定义的 Activity 分配不同的 Tasks 关联。taskAffinity 仅在两种情况下起作用：一是 Activity 的 launchMode 为 singleTask（亦即以 FLAG_ACTIVITY_NEW_TASK 的 Intent 启动的应用）；一是 Activity 将其 allowTaskReparenting 属性设置为 “true”。这两种情况分别见 singleTask/allowTaskReparenting 部分的示例与说明。</p>
+<p>以下我们将分别解释 launchMode 的行为及对其进行测试分析。测试所用的应用代码在<a href="https://github.com/Mupceet/ActivityTaskDemo" target="_blank" rel="noopener">这里</a>。</p>
+<h4 id="standard"><a href="#standard" class="headerlink" title="standard"></a>standard</h4><p>系统在启动 Activity 的 Tasks 中创建被启用的 Activity 的新实例并向其传送 Intent。Activity 可以多次实例化，而每个实例可属于不同的 Tasks 或者一个 Tasks 可以拥有多个实例。</p>
+<p>测试 1：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">MainActivity --&gt; StandardActivity --&gt; StandardActivity --&gt; StandardActivity</span><br></pre></td></tr></table></figure>
+
+<p>结果：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">************* onCreate *************</span><br><span class="line">MainActivity TaskId: 1189 HashCode:241879363</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br><span class="line">************* onCreate *************</span><br><span class="line">StandardActivity TaskId: 1189 HashCode:64163597</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br><span class="line">************* onCreate *************</span><br><span class="line">StandardActivity TaskId: 1189 HashCode:60617326</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br><span class="line">************* onCreate *************</span><br><span class="line">StandardActivity TaskId: 1189 HashCode:227576965</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br></pre></td></tr></table></figure>
+
+<p>解析：</p>
+<table>
+<thead>
+<tr>
+<th align="left">结论</th>
+<th align="left">来源</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Activity 由 A 启动则它与 A 存在于同一 Tasks 栈中</td>
+<td align="left">TaskId 相同</td>
+</tr>
+<tr>
+<td align="left">每次启动 Activity 都会创建一个新的实例</td>
+<td align="left">StandardActivity 创建时走 onCreate 方法，HashCode 不相同</td>
+</tr>
+</tbody></table>
+<h4 id="singleTop"><a href="#singleTop" class="headerlink" title="singleTop"></a>singleTop</h4><p>如果当前 Tasks 栈的栈顶为 Activity 的一个实例，则系统会通过调用该实例的 onNewIntent() 方法向其传送 Intent，而不是创建 Activity 的新实例。但如果栈顶的 Activity 并不是 Activity 的现有实例，Activity 的表现与 standard 模式相同。</p>
+<blockquote>
+<p><strong>注：</strong> 为某个 Activity 创建新实例时，用户可以按 Back 按钮返回到前一个 Activity。 但是，当 Activity 的现有实例处理新 Intent 时，则在新 Intent 到达 onNewIntent() 之前，用户无法按 Back 按钮返回到 Activity 的状态。</p>
+</blockquote>
+<p>测试 2：SingleTopActivity 启动后处于栈顶</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">MainActivity --&gt; SingleTopActivity --&gt; SingleTopActivity --&gt; SingleTopActivity</span><br></pre></td></tr></table></figure>
+
+<p>结果：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">************* onCreate *************</span><br><span class="line">MainActivity TaskId: 1190 HashCode:242719467</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br><span class="line">************* onCreate *************</span><br><span class="line">SingleTopActivity TaskId: 1190 HashCode:122301260</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br><span class="line">************* onNewIntent *************</span><br><span class="line">SingleTopActivity TaskId: 1190 HashCode:122301260</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br><span class="line">************* onNewIntent *************</span><br><span class="line">SingleTopActivity TaskId: 1190 HashCode:122301260</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br></pre></td></tr></table></figure>
+
+<p>解析：</p>
+<table>
+<thead>
+<tr>
+<th align="left">结论</th>
+<th align="left">来源</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Activity 由 A 启动则它与 A 存在于同一 Tasks 栈中</td>
+<td align="left">TaskId 相同</td>
+</tr>
+<tr>
+<td align="left">第一次启动 Activity 会创建一个实例</td>
+<td align="left">第一次启动 SingleTopActivity 时运行 onCreate 方法</td>
+</tr>
+<tr>
+<td align="left">多次启动 Activity （处于栈顶） 只会回调 onNewIntent 方法</td>
+<td align="left">启动 SingleTopActivity 后，再多次启动 SingleTopActivity，Intent 由 onNewIntent 处理，且 HashCode 相同</td>
+</tr>
+</tbody></table>
+<p>测试 3：SingleTopActivity 启动后不处于栈顶</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">MainActivity --&gt; SingleTopActivity --&gt; OtherTopActivity --&gt; SingleTopActivity</span><br></pre></td></tr></table></figure>
+
+<p>结果：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">************* onCreate *************</span><br><span class="line">MainActivity TaskId: 1191 HashCode:145258514</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br><span class="line">************* onCreate *************</span><br><span class="line">SingleTopActivity TaskId: 1191 HashCode:9399791</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br><span class="line">************* onCreate *************</span><br><span class="line">OtherTopActivity TaskId: 1191 HashCode:209949367</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br><span class="line">************* onCreate *************</span><br><span class="line">SingleTopActivity TaskId: 1191 HashCode:48271010</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br></pre></td></tr></table></figure>
+
+<p>解析：</p>
+<table>
+<thead>
+<tr>
+<th align="left">结论</th>
+<th align="left">来源</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">再次启动 Activity (不处于栈顶) 会创建一个新实例</td>
+<td align="left">第二次启动 SingleTopActivity，运行 onCreate 方法，且 HashCode 不相同</td>
+</tr>
+</tbody></table>
+<h4 id="singleTask"><a href="#singleTask" class="headerlink" title="singleTask"></a>singleTask</h4><p>系统不存在该 Tasks（taskAffinity 标识的 Tasks 名）则创建新 Tasks 并实例化 Activity 推入 Tasks 栈底。如果存在 Tasks，但没有实例，将实例化 Activity 并推入 Tasks 栈，但是，如果该 Activity 的一个实例已存在于 Tasks 中，则系统会通过调用现有实例的 onNewIntent() 方法向其传送 Intent，并且原来栈中处于 Activity 之上的被清理出栈。即 Tasks 栈中只能存在 Activity 的一个实例。</p>
+<blockquote>
+<p><strong>注：</strong> 尽管 Activity 在新 Task 中启动，但是用户按 Back 按钮仍会返回到前一个 Activity。</p>
+</blockquote>
+<p>测试 4：SingleTaskActivity 不指定 taskAffinity</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">MainActivity --&gt; SingleTaskActivity --&gt; OtherTaskActivity --&gt; SingleTaskActivity</span><br></pre></td></tr></table></figure>
+
+<p>结果：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">************* onCreate *************</span><br><span class="line">MainActivity TaskId: 1192 HashCode:160080556</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br><span class="line">************* onCreate *************</span><br><span class="line">SingleTaskActivity TaskId: 1192 HashCode:125240432</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br><span class="line">************* onCreate *************</span><br><span class="line">OtherTaskActivity TaskId: 1192 HashCode:35483478</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br><span class="line">************* onNewIntent *************</span><br><span class="line">SingleTaskActivity TaskId: 1192 HashCode:125240432</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Running activities (most recent first):</span><br><span class="line">  TaskRecord&#123;216074a #1218 A=com.mupceet.activitytaskdemo U=0 StackId=1 sz=2&#125;</span><br><span class="line">    Run #1: ActivityRecord&#123;8ca4bea u0 com.mupceet.activitytaskdemo/.SingleTaskActivity t1218&#125;</span><br><span class="line">    Run #0: ActivityRecord&#123;5a6a171 u0 com.mupceet.activitytaskdemo/.MainActivity t1218&#125;</span><br></pre></td></tr></table></figure>
+
+<p>解析：</p>
+<table>
+<thead>
+<tr>
+<th align="left">结论</th>
+<th align="left">来源</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Activity 由 A 启动则它与 A 存在于同一 Tasks 栈中</td>
+<td align="left">TaskId 相同</td>
+</tr>
+<tr>
+<td align="left">再次启动 Activity 会回调 onNewIntent 方法</td>
+<td align="left">再次启动 SingleTaskActivity，Intent 由 onNewIntent 处理，且 HashCode 相同</td>
+</tr>
+<tr>
+<td align="left">原来栈中处于 Activity 之上的被清理出栈</td>
+<td align="left">再次启动 SingleTaskActivity 后，栈中仅有两个 Activity</td>
+</tr>
+</tbody></table>
+<p>测试 5：SingleTaskActivity 指定 taskAffinity</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">MainActivity --&gt; SingleTaskActivityWithAffinity --&gt; StandardActivity</span><br></pre></td></tr></table></figure>
+
+<p>结果：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">************* onCreate *************</span><br><span class="line">MainActivity TaskId: 1200 HashCode:176168109</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br><span class="line">************* onCreate *************</span><br><span class="line">SingleTaskActivityWithAffinity TaskId: 1201 HashCode:95759438</span><br><span class="line">taskAffinity:com.mupceet.task2</span><br><span class="line">************* onCreate *************</span><br><span class="line">StandardActivity TaskId: 1201 HashCode:233514981</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br></pre></td></tr></table></figure>
+
+<p>解析：</p>
+<table>
+<thead>
+<tr>
+<th align="left">结论</th>
+<th align="left">来源</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Activity 启动到新的 Tasks 栈中</td>
+<td align="left">MainActivity 与 SingleTaskActivityWithAffinity 的 TaskId 不相同</td>
+</tr>
+<tr>
+<td align="left">Activity 启动 standard 模式的 Activity 处于同一 Tasks 栈</td>
+<td align="left">启动 StandardActivity，两者的 TaskId 相同</td>
+</tr>
+</tbody></table>
+<p>测试 6：SingleTaskActivity 和 OtherActivity 指定相同 taskAffinity</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">(TaskDemo) MainActivity --&gt; SingleTaskActivityWithAffinity --&gt; home 返回主页</span><br><span class="line">(TaskDemo2) MainActivity --&gt; OtherActivityWithAffinity</span><br></pre></td></tr></table></figure>
+
+<p>结果：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">************* onCreate *************</span><br><span class="line">MainActivity TaskId: 1202 HashCode:8042982</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br><span class="line">************* onCreate *************</span><br><span class="line">SingleTaskActivityWithAffinity TaskId: 1203 HashCode:37289106</span><br><span class="line">taskAffinity:com.mupceet.task2</span><br><span class="line"></span><br><span class="line">************* onCreate *************</span><br><span class="line">MainActivity TaskId: 1204 HashCode:241879363</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo2</span><br><span class="line">************* onCreate *************</span><br><span class="line">OtherActivityWithActivity TaskId: 1203 HashCode:186496063</span><br><span class="line">taskAffinity:com.mupceet.task2</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Running activities (most recent first):</span><br><span class="line">      TaskRecord&#123;5d38658 #1203 A=com.mupceet.task2 U=0 StackId=1 sz=2&#125;</span><br><span class="line">        Run #3: ActivityRecord&#123;f653f3 u0 com.mupceet.activitytaskdemo2/.OtherActivityWithActivity t1203&#125;</span><br><span class="line">      TaskRecord&#123;532c417 #1204 A=com.mupceet.activitytaskdemo2 U=0 StackId=1 sz=1&#125;</span><br><span class="line">        Run #2: ActivityRecord&#123;2a6ae8b u0 com.mupceet.activitytaskdemo2/.MainActivity t1204&#125;</span><br><span class="line">      TaskRecord&#123;5d38658 #1203 A=com.mupceet.task2 U=0 StackId=1 sz=2&#125;</span><br><span class="line">        Run #1: ActivityRecord&#123;6ebc71c u0 com.mupceet.activitytaskdemo/.SingleTaskActivityWithAffinity t1203&#125;</span><br><span class="line">      TaskRecord&#123;43259ed #1202 A=com.mupceet.activitytaskdemo U=0 StackId=1 sz=1&#125;</span><br><span class="line">        Run #0: ActivityRecord&#123;df97ca7 u0 com.mupceet.activitytaskdemo/.MainActivity t1202&#125;</span><br></pre></td></tr></table></figure>
+
+<p>解析：</p>
+<table>
+<thead>
+<tr>
+<th align="left">结论</th>
+<th align="left">来源</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Activity 启动到新的 Tasks 栈中</td>
+<td align="left">MainActivity 与 SingleTaskActivityWithAffinity 的 TaskId 不相同</td>
+</tr>
+<tr>
+<td align="left">具有相同 taskAffinity 的 Activity 启动后将处于同一 Tasks 栈</td>
+<td align="left">SingleTaskActivityWithAffinity 与 OtherActivityWithActivity 的 TaskId 相同</td>
+</tr>
+</tbody></table>
+<p>注意，这里有个现象需要注意，即如果存在 Tasks，但没有实例，将实例化 Activity 并推入 Tasks 栈，这个 Tasks 栈就在前台运行，此时按 Back 键得直到此 Tasks 栈清空后才会回到启动该 Activity 的那个 Tasks 栈，而不是像平常一次返回就可以返回启动 Activity。如果不明白这段话，只要将测试 6 的步骤改动一下为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">(TaskDemo) MainActivity --&gt; SingleTaskActivityWithAffinity --&gt; StandardActivity --&gt; StandardActivity --&gt; home 返回主页</span><br><span class="line">(TaskDemo2) MainActivity --&gt; OtherActivityWithAffinity</span><br></pre></td></tr></table></figure>
+
+<p>再点击几次 Back 键就知道是什么意思</p>
+<h4 id="singleInstance"><a href="#singleInstance" class="headerlink" title="singleInstance"></a>singleInstance</h4><p>与 “singleTask” 类似，但系统不会将任何其他 Activity 启动到包含该 Activity 实例的 Tasks 栈中。即该 Activity 始终是其 Tasks 栈唯一仅有的成员；由此 Activity 启动的任何 Activity 均在其他的 Tasks 中打开。</p>
+<p>测试 7：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">MainActivity--&gt; SingleInstanceActivity--&gt; MainActivity--&gt; SingleInstanceActivity</span><br></pre></td></tr></table></figure>
+
+<p>结果：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">************* onCreate *************</span><br><span class="line">MainActivity TaskId: 1194 HashCode:19028065</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br><span class="line">************* onCreate *************</span><br><span class="line">SingleInstanceActivity TaskId: 1195 HashCode:109601484</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br><span class="line">************* onCreate *************</span><br><span class="line">MainActivity TaskId: 1194 HashCode:202770375</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br><span class="line">************* onNewIntent *************</span><br><span class="line">SingleInstanceActivity TaskId: 1195 HashCode:109601484</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br></pre></td></tr></table></figure>
+
+<p>解析：</p>
+<table>
+<thead>
+<tr>
+<th align="left">结论</th>
+<th align="left">来源</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Activity 启动到新的 Tasks 栈中，即使是默认的 taskAffinity</td>
+<td align="left">MainActivity 与 SingleInstanceActivity 的 TaskId 不相同</td>
+</tr>
+<tr>
+<td align="left">除了第一次启动时创建实例，其它多次启动复用并调到前台</td>
+<td align="left">SingleInstanceActivity 的 HashCode 相同，Intent 由 onNewIntent 处理</td>
+</tr>
+<tr>
+<td align="left">启动的 Activity 运行在其他 Tasks 栈中</td>
+<td align="left">SingleInstanceActivity 与 MainActivity 的 TaskId 不相同，而且由于 MainActivity 是 standard 模式，启动时创建了新实例，栈中有两个 MainActivity 实例</td>
+</tr>
+</tbody></table>
+<p>测试 8：在测试 7 基础上改为调用 SingleTopActivity</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">MainActivity--&gt; SingleTopActivity--&gt; SingleInstanceActivity--&gt; SingleTopActivity--&gt; SingleInstanceActivity</span><br></pre></td></tr></table></figure>
+
+<p>结果：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">************* onCreate *************</span><br><span class="line">MainActivity TaskId: 1196 HashCode:141418922</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br><span class="line">************* onCreate *************</span><br><span class="line">SingleTopActivity TaskId: 1196 HashCode:74869513</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br><span class="line">************* onCreate *************</span><br><span class="line">SingleInstanceActivity TaskId: 1197 HashCode:193894545</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br><span class="line">************* onNewIntent *************</span><br><span class="line">SingleTopActivity TaskId: 1196 HashCode:74869513</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br><span class="line">************* onNewIntent *************</span><br><span class="line">SingleInstanceActivity TaskId: 1197 HashCode:193894545</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br></pre></td></tr></table></figure>
+
+<p>解析：</p>
+<table>
+<thead>
+<tr>
+<th align="left">结论</th>
+<th align="left">来源</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Activity 启动到新的 Tasks 栈中，即使用默认的 taskAffinity</td>
+<td align="left">MainActivity 与 SingleInstanceActivity 的 TaskId 不相同</td>
+</tr>
+<tr>
+<td align="left">除了第一次启动时创建实例，其它多次启动复用并调到前台</td>
+<td align="left">SingleInstanceActivity 的 HashCode 相同，Intent 由 onNewIntent 处理</td>
+</tr>
+<tr>
+<td align="left">启动的 Activity 运行在其他 Tasks 栈中</td>
+<td align="left">启动的 SingleTopActivity 的 HashCode 相同，因为 SingleTopActivity 是 singleTop 模式，启动时未创建新实例，Intent 由 onNewIntent 处理</td>
+</tr>
+</tbody></table>
+<p>测试 9：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">MainActivity--&gt; SingleInstanceActivity--&gt; StandardActivity</span><br></pre></td></tr></table></figure>
+
+<p>结果：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">************* onCreate *************</span><br><span class="line">MainActivity TaskId: 1206 HashCode:241879363</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br><span class="line">************* onCreate *************</span><br><span class="line">SingleInstanceActivity TaskId: 1209 HashCode:213193939</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br><span class="line">************* onCreate *************</span><br><span class="line">StandardActivity TaskId: 1206 HashCode:213531793</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br></pre></td></tr></table></figure>
+
+<p>解析：</p>
+<table>
+<thead>
+<tr>
+<th align="left">结论</th>
+<th align="left">来源</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Activity 启动到新的 Tasks 栈中，即使用默认的 taskAffinity</td>
+<td align="left">MainActivity 与 SingleInstanceActivity 的 TaskId 不相同</td>
+</tr>
+<tr>
+<td align="left">启动的 Activity 运行在其他 Tasks 栈中</td>
+<td align="left">SingleInstanceActivity 与 StandardActivity 的 TaskId 不相同，但由于 StandardActivity 和 MainActivity 的 taskAffinity 相同，它们存在于同一个 Tasks 栈中</td>
+</tr>
+</tbody></table>
+<p>测试 10：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">(TaskDemo) MainActivity --&gt; SingleInstanceActivity --&gt; home 返回主页</span><br><span class="line">(TaskDemo2) MainActivity --&gt; SingleInstanceActivity</span><br></pre></td></tr></table></figure>
+
+<p>结果：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">************* onCreate *************</span><br><span class="line">MainActivity TaskId: 1206 HashCode:241879363</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br><span class="line">************* onCreate *************</span><br><span class="line">SingleInstanceActivity TaskId: 1207 HashCode:64163597</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">************* onCreate *************</span><br><span class="line">MainActivity TaskId: 1208 HashCode:241879363</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo2</span><br><span class="line">************* onNewIntent *************</span><br><span class="line">SingleInstanceActivity TaskId: 1207 HashCode:64163597</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br></pre></td></tr></table></figure>
+
+<p>解析：</p>
+<table>
+<thead>
+<tr>
+<th align="left">结论</th>
+<th align="left">来源</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Activity 在系统中仅会存在一个实例</td>
+<td align="left">不同应用启动的 SingleInstanceActivity 的 TaskId 相同，HashCode 相同</td>
+</tr>
+</tbody></table>
+<h3 id="allowTaskReparenting"><a href="#allowTaskReparenting" class="headerlink" title="allowTaskReparenting"></a>allowTaskReparenting</h3><p>在这种属性情况下，Activity 在其关联的 Tasks 转到前台时，将从原先被启动时推入的 Tasks 栈移动到与其具有关联的 Tasks 栈中。</p>
+<p>测试 11：TaskDemo2 启动 TaskDemo 的 StandardActivity</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">(TaskDemo2) MainActivity --&gt; ToDemoStandard --&gt; home 返回主页</span><br><span class="line">(TaskDemo) MainActivity(打开应用)</span><br></pre></td></tr></table></figure>
+
+<p>结果：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">************* onCreate *************</span><br><span class="line">MainActivity TaskId: 1220 HashCode:241879363</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo2</span><br><span class="line">************* onCreate *************</span><br><span class="line">StandardActivity TaskId: 1220 HashCode:241879363</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo</span><br><span class="line"></span><br><span class="line">（打开 Demo 应用无输出）</span><br></pre></td></tr></table></figure>
+
+<p>打开 TaskDemo 前：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Running activities (most recent first):</span><br><span class="line">  TaskRecord&#123;f0c1e3 #1222 A=com.mupceet.activitytaskdemo2 U=0 StackId=1 sz=2&#125;</span><br><span class="line">    Run #1: ActivityRecord&#123;a32ff5f u0 com.mupceet.activitytaskdemo/.StandardActivity t1222&#125;</span><br><span class="line">    Run #0: ActivityRecord&#123;371f577 u0 com.mupceet.activitytaskdemo2/.MainActivity t1222&#125;</span><br></pre></td></tr></table></figure>
+
+<p>打开 TaskDemo 后：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Running activities (most recent first):</span><br><span class="line">  TaskRecord&#123;18af934 #1223 A=com.mupceet.activitytaskdemo U=0 StackId=1 sz=2&#125;</span><br><span class="line">    Run #1: ActivityRecord&#123;a32ff5f u0 com.mupceet.activitytaskdemo/.StandardActivity t1223&#125;</span><br><span class="line">  TaskRecord&#123;f0c1e3 #1222 A=com.mupceet.activitytaskdemo2 U=0 StackId=1 sz=1&#125;</span><br><span class="line">    Run #0: ActivityRecord&#123;371f577 u0 com.mupceet.activitytaskdemo2/.MainActivity t1222&#125;</span><br></pre></td></tr></table></figure>
+
+<p>解析：</p>
+<table>
+<thead>
+<tr>
+<th align="left">结论</th>
+<th align="left">来源</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">standard 模式的 Activity 被启动时将被推入启动的 Tasks 栈中</td>
+<td align="left">Demo2 的 MainActivity  与其启动的 Demo 的 StandardActivity 的 TaskId 相同</td>
+</tr>
+<tr>
+<td align="left">allowTaskReparenting 的 Activity 被其关联的 Tasks 启动时将被转移到关联的 Tasks 栈中</td>
+<td align="left">Demo 启动的 StandardActivity 未重新实例化，而是在 Tasks 栈中移动</td>
+</tr>
+</tbody></table>
+<h2 id="改变恢复时的默认行为"><a href="#改变恢复时的默认行为" class="headerlink" title="改变恢复时的默认行为"></a>改变恢复时的默认行为</h2><p>如上文默认行为所述，如果用户长时间离开 Tasks，则系统会清除 Tasks 栈中除根 Activity 之外的所有 Activity。当用户再次返回到 Tasks 时，仅恢复根 Activity。系统这样做的原因是，经过很长一段时间后，用户可能已经放弃之前执行的操作，返回到 Tasks 是要开始执行新的操作。要修改恢复 Activity Tasks 栈的行为可以使用以下三个属性。</p>
+<h3 id="alwaysRetainTaskState"><a href="#alwaysRetainTaskState" class="headerlink" title="alwaysRetainTaskState"></a>alwaysRetainTaskState</h3><p>如果在 Tasks 的根 Activity 中将此属性设置为 “true”，则不会发生刚才所述的默认行为。即使在很长一段时间后，Tasks 仍将所有 Activity 保留在其堆栈中。</p>
+<h3 id="clearTaskOnLaunch"><a href="#clearTaskOnLaunch" class="headerlink" title="clearTaskOnLaunch"></a>clearTaskOnLaunch</h3><p>如果在 Tasks 的根 Activity 中将此属性设置为 “true”，则每当用户离开 Tasks 然后点击图标返回时，系统都会将堆栈清除到只剩下根 Activity。即使只离开 Tasks 片刻时间，用户也始终会返回到 Tasks 的初始状态。</p>
+<p>测试 12：点击属于 TaskDemo2 的 StandardActivity 图标</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">StandardActivity --&gt; StandardActivity --&gt; StandardActivity --&gt; StandardActivity</span><br></pre></td></tr></table></figure>
+
+<p>结果：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">************* onCreate *************</span><br><span class="line">StandardActivity TaskId: 1229 HashCode:241879363</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo2</span><br><span class="line">************* onCreate *************</span><br><span class="line">StandardActivity TaskId: 1229 HashCode:235658412</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo2</span><br><span class="line">************* onCreate *************</span><br><span class="line">StandardActivity TaskId: 1229 HashCode:188962139</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo2</span><br><span class="line">************* onCreate *************</span><br><span class="line">StandardActivity TaskId: 1229 HashCode:34150381</span><br><span class="line">taskAffinity:com.mupceet.activitytaskdemo2</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Running activities (most recent first):</span><br><span class="line">  TaskRecord&#123;d2b8f13 #1229 A=com.mupceet.activitytaskdemo2 U=0 StackId=1 sz=4&#125;</span><br><span class="line">    Run #3: ActivityRecord&#123;e71827f u0 com.mupceet.activitytaskdemo2/.StandardActivity t1229&#125;</span><br><span class="line">    Run #2: ActivityRecord&#123;7a51fa1 u0 com.mupceet.activitytaskdemo2/.StandardActivity t1229&#125;</span><br><span class="line">    Run #1: ActivityRecord&#123;ef87b33 u0 com.mupceet.activitytaskdemo2/.StandardActivity t1229&#125;</span><br><span class="line">    Run #0: ActivityRecord&#123;638598e u0 com.mupceet.activitytaskdemo2/.StandardActivity t1229&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Home 回到主页后，再次点击桌面图标返回</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Running activities (most recent first):</span><br><span class="line">  TaskRecord&#123;d2b8f13 #1229 A=com.mupceet.activitytaskdemo2 U=0 StackId=1 sz=1&#125;</span><br><span class="line">    Run #0: ActivityRecord&#123;638598e u0 com.mupceet.activitytaskdemo2/.StandardActivity t1229&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到 Tasks 栈中仅剩根 Activity 了，点击一次 Back 即可退出。</p>
+<h3 id="finishOnTaskLaunch"><a href="#finishOnTaskLaunch" class="headerlink" title="finishOnTaskLaunch"></a>finishOnTaskLaunch</h3><p>该属性与 clearTaskOnLaunch 类似，但这个针对单个 Activity 而不是整个 Tasks。在 Tasks 转入后台再点击桌面图标返回时设置该属性为 “true” 的 Activity 将被销毁。</p>
+<blockquote>
+<p>参考资料：</p>
+<ul>
+<li><a href="https://developer.android.google.cn/guide/components/activities/tasks-and-back-stack.html" target="_blank" rel="noopener">Google API 指南</a></li>
+<li><a href="http://www.jianshu.com/p/b33fd8c550bf" target="_blank" rel="noopener">Android 面试题-深刻剖析 activity 启动模式(一)</a></li>
+<li><a href="http://www.jianshu.com/p/e1ea9e542112" target="_blank" rel="noopener">Android 面试题-深刻剖析 activity 启动模式(二)</a></li>
+<li><a href="http://www.jianshu.com/p/d13e3d552d4b" target="_blank" rel="noopener">Android 面试题-深刻剖析 activity 启动模式(三)</a></li>
+</ul>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/Android/" rel="tag"># Android</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2017/05/arraylist-delete-element/" rel="next" title="遍历数组删除某元素的方法">
+                  <i class="fa fa-chevron-left"></i> 遍历数组删除某元素的方法
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2017/05/ubuntu-boot-not-enough-space/" rel="prev" title="Ubuntu 提示 boot 空间不足的解决办法">
+                  Ubuntu 提示 boot 空间不足的解决办法 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+    </div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc" data-target="post-toc-wrap">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Tasks-Tasks-与返回栈-Back-Stack"><span class="nav-number">1.</span> <span class="nav-text">Tasks(Tasks)与返回栈(Back Stack)</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#管理-Tasks"><span class="nav-number">2.</span> <span class="nav-text">管理 Tasks</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#改变启动时的默认行为"><span class="nav-number">2.1.</span> <span class="nav-text">改变启动时的默认行为</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#launchMode-和-taskAffinity"><span class="nav-number">2.1.1.</span> <span class="nav-text">launchMode 和 taskAffinity</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#standard"><span class="nav-number">2.1.1.1.</span> <span class="nav-text">standard</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#singleTop"><span class="nav-number">2.1.1.2.</span> <span class="nav-text">singleTop</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#singleTask"><span class="nav-number">2.1.1.3.</span> <span class="nav-text">singleTask</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#singleInstance"><span class="nav-number">2.1.1.4.</span> <span class="nav-text">singleInstance</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#allowTaskReparenting"><span class="nav-number">2.1.2.</span> <span class="nav-text">allowTaskReparenting</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#改变恢复时的默认行为"><span class="nav-number">2.2.</span> <span class="nav-text">改变恢复时的默认行为</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#alwaysRetainTaskState"><span class="nav-number">2.2.1.</span> <span class="nav-text">alwaysRetainTaskState</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#clearTaskOnLaunch"><span class="nav-number">2.2.2.</span> <span class="nav-text">clearTaskOnLaunch</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#finishOnTaskLaunch"><span class="nav-number">2.2.3.</span> <span class="nav-text">finishOnTaskLaunch</span></a></li></ol></li></ol></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/avatar_me.png"
+      alt="Mupceet">
+  <p class="site-author-name" itemprop="name">Mupceet</p>
+  <div class="site-description" itemprop="description">君子坦荡荡 小人长戚戚</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">25</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      友情链接
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://dxinl.github.io/" title="https://dxinl.github.io/" rel="noopener" target="_blank">Write down & Think hard</a>
+        </li>
+      
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Mupceet</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.3.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.3.0"></script><script src="/js/motion.js?v=7.3.0"></script>
+<script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://Mupceet.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  function disqus_config() {
+    this.page.url = "http://yoursite.com/2017/05/android-tasks-and-back-stack/";
+    this.page.identifier = "2017/05/android-tasks-and-back-stack/";
+    this.page.title = 'Activity 启动模式全解析';};
+  function loadComments() {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: disqus_config
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://Mupceet.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  }
+    (function() {
+      var offsetTop = document.getElementById('comments').offsetTop - window.innerHeight;
+      if (offsetTop <= 0) {
+        // load directly when there's no a scrollbar
+        window.addEventListener('load', loadComments, false);
+      } else {
+        var disqus_scroll = () => {
+          // offsetTop may changes because of manually resizing browser window or lazy loading images.
+          var offsetTop = document.getElementById('comments').offsetTop - window.innerHeight;
+          var scrollTop = window.scrollY;
+
+          // pre-load comments a bit? (margin or anything else)
+          if (offsetTop - scrollTop < 60) {
+            window.removeEventListener('scroll', disqus_scroll);
+            loadComments();
+          }
+        };
+        window.addEventListener('scroll', disqus_scroll);
+      }
+    })();
+  
+</script>
+
+</body>
+</html>

@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"搜索","hits_empty":"未找到与「 ${query} 」相关的内容","hits_stats":"找到 ${hits} 条相关条目，用时: ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="这篇文章为学习了 GitChat 文章：作为面试官，如何考察工程师的软素质所做的笔记，摘要了其分享的软素质模型，该文章内容给了我比较大的启发。有兴趣的同学可以进原链接 1 元购买查看完整内容。 软素质模型最核心的是自驱力，它是一个人内在的东西，是一个人成长的源动力，自驱力好的人一定更有潜力。 其次是好奇心和学习能力，技术日新月异的今天，一个人如果不对不断变化的世界保持好奇心，且不断学习精进，很可能">
+<meta name="keywords" content="杂谈">
+<meta property="og:type" content="article">
+<meta property="og:title" content="工程师的软素质">
+<meta property="og:url" content="http://yoursite.com/2018/03/engineer's-soft-skill/index.html">
+<meta property="og:site_name" content="Mupceet">
+<meta property="og:description" content="这篇文章为学习了 GitChat 文章：作为面试官，如何考察工程师的软素质所做的笔记，摘要了其分享的软素质模型，该文章内容给了我比较大的启发。有兴趣的同学可以进原链接 1 元购买查看完整内容。 软素质模型最核心的是自驱力，它是一个人内在的东西，是一个人成长的源动力，自驱力好的人一定更有潜力。 其次是好奇心和学习能力，技术日新月异的今天，一个人如果不对不断变化的世界保持好奇心，且不断学习精进，很可能">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-03-31T15:08:47.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="工程师的软素质">
+<meta name="twitter:description" content="这篇文章为学习了 GitChat 文章：作为面试官，如何考察工程师的软素质所做的笔记，摘要了其分享的软素质模型，该文章内容给了我比较大的启发。有兴趣的同学可以进原链接 1 元购买查看完整内容。 软素质模型最核心的是自驱力，它是一个人内在的东西，是一个人成长的源动力，自驱力好的人一定更有潜力。 其次是好奇心和学习能力，技术日新月异的今天，一个人如果不对不断变化的世界保持好奇心，且不断学习精进，很可能">
+  <link rel="canonical" href="http://yoursite.com/2018/03/engineer's-soft-skill/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>工程师的软素质 | Mupceet</title>
+  <meta name="generator" content="Hexo 3.9.0">
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Mupceet</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Don't Repeat Yourself</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/03/engineer's-soft-skill/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Mupceet">
+      <meta itemprop="description" content="君子坦荡荡 小人长戚戚">
+      <meta itemprop="image" content="/images/avatar_me.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Mupceet">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">工程师的软素质
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2018-03-31 22:53:33 / 修改时间：23:08:47" itemprop="dateCreated datePublished" datetime="2018-03-31T22:53:33+08:00">2018-03-31</time>
+            </span>
+          
+            
+
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/读书笔记/" itemprop="url" rel="index"><span itemprop="name">读书笔记</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Disqus：</span>
+    
+    <a title="disqus" href="/2018/03/engineer's-soft-skill/#comments" itemprop="discussionUrl"><span class="post-comments-count disqus-comment-count" data-disqus-identifier="2018/03/engineer's-soft-skill/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>这篇文章为学习了 GitChat 文章：<a href="http://gitbook.cn/books/5a4dfb4a1225ee099fa2a7dd/index.html" target="_blank" rel="noopener">作为面试官，如何考察工程师的软素质</a>所做的笔记，摘要了其分享的软素质模型，该文章内容给了我比较大的启发。有兴趣的同学可以进原链接 1 元购买查看完整内容。</p>
+<h2 id="软素质模型"><a href="#软素质模型" class="headerlink" title="软素质模型"></a>软素质模型</h2><p>最核心的是<strong>自驱力</strong>，它是一个人内在的东西，是一个人成长的源动力，自驱力好的人一定更有潜力。</p>
+<p>其次是<strong>好奇心和学习能力</strong>，技术日新月异的今天，一个人如果不对不断变化的世界保持好奇心，且不断学习精进，很可能会跟不上节奏。你必须不停地奔跑，才能保持在原地。</p>
+<p>最后就是<strong>沟通表达能力、技术规划能力和总结复盘能力</strong>。良好的沟通表达能力不仅对个人发展有着至关重要的作用，对团队合作也大有裨益。技术规划能力强的人对问题往往理解的比较深刻，且目标感很强，更容易获得好结果。总结复盘能力能够帮助你找出自己的不足，并形成方法论去指导后面的工作。</p>
+<a id="more"></a>
+
+<h2 id="如何识别软素质（表现自己的软素质）"><a href="#如何识别软素质（表现自己的软素质）" class="headerlink" title="如何识别软素质（表现自己的软素质）"></a>如何识别软素质（表现自己的软素质）</h2><h3 id="自驱力"><a href="#自驱力" class="headerlink" title="自驱力"></a>自驱力</h3><p>自驱力主要体现在两个方面：有无目标感和是否自律。</p>
+<p>自驱力强的人做事情会有明确的目标，同时比一般人更加自律。事实上，自驱力强的人往往对自己比较狠。</p>
+<h3 id="好奇心"><a href="#好奇心" class="headerlink" title="好奇心"></a>好奇心</h3><p>分为两个方面：一是知道有什么，一是知道为什么。</p>
+<h4 id="有什么"><a href="#有什么" class="headerlink" title="有什么"></a>有什么</h4><p>就是指知道自己所从事的领域或感兴趣的领域正在发生的技术进展、技术创新有哪些。好奇心强的人往往也有比较宽的视野。</p>
+<h4 id="为什么"><a href="#为什么" class="headerlink" title="为什么"></a>为什么</h4><p>具有好奇心的人还会去了解其中的原理。</p>
+<h3 id="学习能力"><a href="#学习能力" class="headerlink" title="学习能力"></a>学习能力</h3><p>首先要有学习的意愿，其次要有行动，最后还有要有结果。</p>
+<p>要不断花时间去广泛涉猎、获取输入，可以是读书、订阅专栏或是阅读源码，并在工作中不断去实践。同时也要注重学习的效率，使用 Google、StakeOverflow 来查阅资料、阅读官方文档等。</p>
+<p>通过不断地学习，提高自己知识水平，见过这个世界才知道自己的渺小。</p>
+<h3 id="沟通表达能力"><a href="#沟通表达能力" class="headerlink" title="沟通表达能力"></a>沟通表达能力</h3><p>沟通要达到目的，正确、准确地传达信息。且每次的沟通都要有重点。表达能力在主观问题的表述上可见一斑。</p>
+<h3 id="技术规划能力"><a href="#技术规划能力" class="headerlink" title="技术规划能力"></a>技术规划能力</h3><p>规划是对未来整体性、长期性、基本性问题的思考，并结合这些思考设计全面长远的发展计划和行动方案。和计划相比，规划更加具有前瞻性、全局性、战略性和方向性。</p>
+<p>确认目标 —— 任务分解 —— 执行计划 —— 风险评估 —— 贯彻执行</p>
+<p>先梳理目前的现状，找出会影响业务的后续发展的点，由此做技术规划，对系统进行优化。</p>
+<p>优化前首先要定个小目标，也就是优化的方向，目标要遵循 SMART 原则；有了目标后，后面就是对目标进行拆解：先是对规划做系统性的描述，清楚执行者自己的位置，这里推荐用五视图法：逻辑架构、开发架构、运行架构、物理架构、数据架构，把系统的架构图画出来，画出架构图后就可以方便地对系统进行分层，也方便对任务进行明确的拆分；接下来要根据阶段性可 Check 的原则明确项目的优先级和里程碑；最后就是风险评估和执行阶段了。</p>
+<h3 id="总结复盘能力"><a href="#总结复盘能力" class="headerlink" title="总结复盘能力"></a>总结复盘能力</h3><p>对项目进行总结复盘，不论是业务项目还是技术项目，也是一项能力，复盘的目的是从或成功或失败的经历中总结可供指导后续工作的经验。总结复盘的主要内容：目标回顾、进展评估、原因分析、经验总结。</p>
+<h2 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h2><p>Done is better than Perfect.</p>
+<p>Don’t repeat yourself.</p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/杂谈/" rel="tag"># 杂谈</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2018/03/annotation&reflect-learning/" rel="next" title="自定义 ButterKnife 框架">
+                  <i class="fa fa-chevron-left"></i> 自定义 ButterKnife 框架
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2018/04/introduce-android-memory-management/" rel="prev" title="Android 内存管理机制（入门）">
+                  Android 内存管理机制（入门） <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+    </div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc" data-target="post-toc-wrap">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#软素质模型"><span class="nav-number">1.</span> <span class="nav-text">软素质模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#如何识别软素质（表现自己的软素质）"><span class="nav-number">2.</span> <span class="nav-text">如何识别软素质（表现自己的软素质）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#自驱力"><span class="nav-number">2.1.</span> <span class="nav-text">自驱力</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#好奇心"><span class="nav-number">2.2.</span> <span class="nav-text">好奇心</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#有什么"><span class="nav-number">2.2.1.</span> <span class="nav-text">有什么</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#为什么"><span class="nav-number">2.2.2.</span> <span class="nav-text">为什么</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#学习能力"><span class="nav-number">2.3.</span> <span class="nav-text">学习能力</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#沟通表达能力"><span class="nav-number">2.4.</span> <span class="nav-text">沟通表达能力</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#技术规划能力"><span class="nav-number">2.5.</span> <span class="nav-text">技术规划能力</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结复盘能力"><span class="nav-number">2.6.</span> <span class="nav-text">总结复盘能力</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#其他"><span class="nav-number">3.</span> <span class="nav-text">其他</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/avatar_me.png"
+      alt="Mupceet">
+  <p class="site-author-name" itemprop="name">Mupceet</p>
+  <div class="site-description" itemprop="description">君子坦荡荡 小人长戚戚</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">25</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      友情链接
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://dxinl.github.io/" title="https://dxinl.github.io/" rel="noopener" target="_blank">Write down & Think hard</a>
+        </li>
+      
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Mupceet</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.3.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.3.0"></script><script src="/js/motion.js?v=7.3.0"></script>
+<script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://Mupceet.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  function disqus_config() {
+    this.page.url = "http://yoursite.com/2018/03/engineer's-soft-skill/";
+    this.page.identifier = "2018/03/engineer's-soft-skill/";
+    this.page.title = '工程师的软素质';};
+  function loadComments() {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: disqus_config
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://Mupceet.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  }
+    (function() {
+      var offsetTop = document.getElementById('comments').offsetTop - window.innerHeight;
+      if (offsetTop <= 0) {
+        // load directly when there's no a scrollbar
+        window.addEventListener('load', loadComments, false);
+      } else {
+        var disqus_scroll = () => {
+          // offsetTop may changes because of manually resizing browser window or lazy loading images.
+          var offsetTop = document.getElementById('comments').offsetTop - window.innerHeight;
+          var scrollTop = window.scrollY;
+
+          // pre-load comments a bit? (margin or anything else)
+          if (offsetTop - scrollTop < 60) {
+            window.removeEventListener('scroll', disqus_scroll);
+            loadComments();
+          }
+        };
+        window.addEventListener('scroll', disqus_scroll);
+      }
+    })();
+  
+</script>
+
+</body>
+</html>

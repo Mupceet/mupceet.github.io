@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"搜索","hits_empty":"未找到与「 ${query} 」相关的内容","hits_stats":"找到 ${hits} 条相关条目，用时: ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="标题党一回，实际上这是一个关于注解、反射及简单使用的学习整理。当然，在常用框架：Dagger2、ButterKnife、Retrofit中也确实可以看到注解的身影，注解想必大家是很熟悉的，例如 Java 自带的注解 @Override 、 @Depressed 、@SuppressWarnings，在日常开发中，使用框架时经常使用到其自定义的注解，注解让框架的使用看起来更简单明了。 以下是一个简单">
+<meta name="keywords" content="Android,Java">
+<meta property="og:type" content="article">
+<meta property="og:title" content="自定义 ButterKnife 框架">
+<meta property="og:url" content="http://yoursite.com/2018/03/annotation&reflect-learning/index.html">
+<meta property="og:site_name" content="Mupceet">
+<meta property="og:description" content="标题党一回，实际上这是一个关于注解、反射及简单使用的学习整理。当然，在常用框架：Dagger2、ButterKnife、Retrofit中也确实可以看到注解的身影，注解想必大家是很熟悉的，例如 Java 自带的注解 @Override 、 @Depressed 、@SuppressWarnings，在日常开发中，使用框架时经常使用到其自定义的注解，注解让框架的使用看起来更简单明了。 以下是一个简单">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-04-01T07:44:05.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="自定义 ButterKnife 框架">
+<meta name="twitter:description" content="标题党一回，实际上这是一个关于注解、反射及简单使用的学习整理。当然，在常用框架：Dagger2、ButterKnife、Retrofit中也确实可以看到注解的身影，注解想必大家是很熟悉的，例如 Java 自带的注解 @Override 、 @Depressed 、@SuppressWarnings，在日常开发中，使用框架时经常使用到其自定义的注解，注解让框架的使用看起来更简单明了。 以下是一个简单">
+  <link rel="canonical" href="http://yoursite.com/2018/03/annotation&reflect-learning/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>自定义 ButterKnife 框架 | Mupceet</title>
+  <meta name="generator" content="Hexo 3.9.0">
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Mupceet</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Don't Repeat Yourself</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/03/annotation&reflect-learning/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Mupceet">
+      <meta itemprop="description" content="君子坦荡荡 小人长戚戚">
+      <meta itemprop="image" content="/images/avatar_me.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Mupceet">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">自定义 ButterKnife 框架
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2018-03-22 22:19:33" itemprop="dateCreated datePublished" datetime="2018-03-22T22:19:33+08:00">2018-03-22</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2018-04-01 15:44:05" itemprop="dateModified" datetime="2018-04-01T15:44:05+08:00">2018-04-01</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/技术向/" itemprop="url" rel="index"><span itemprop="name">技术向</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Disqus：</span>
+    
+    <a title="disqus" href="/2018/03/annotation&reflect-learning/#comments" itemprop="discussionUrl"><span class="post-comments-count disqus-comment-count" data-disqus-identifier="2018/03/annotation&reflect-learning/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>标题党一回，实际上这是一个关于注解、反射及简单使用的学习整理。当然，在常用框架：Dagger2、ButterKnife、Retrofit中也确实可以看到注解的身影，注解想必大家是很熟悉的，例如 Java 自带的注解 <code>@Override</code> 、 <code>@Depressed</code> 、<code>@SuppressWarnings</code>，在日常开发中，使用框架时经常使用到其自定义的注解，注解让框架的使用看起来更简单明了。</p>
+<p>以下是一个简单的例子，天气应用中定位当前城市时使用 EasyPermissions 获取定位权限后，执行该方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@AfterPermissionGranted</span>(<span class="number">10010</span>)</span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">getLocationWithCheckPermission</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  String[] perms = &#123;Manifest.permission.ACCESS_FINE_LOCATION&#125;;</span><br><span class="line">  <span class="keyword">if</span> (EasyPermissions.hasPermissions(<span class="keyword">this</span>, perms)) &#123;</span><br><span class="line">    getCurrentPosition();</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    EasyPermissions.requestPermissions(<span class="keyword">this</span>,</span><br><span class="line">        <span class="keyword">null</span>, <span class="number">10010</span>, perms);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>EasyPermissions 中有着唯一的一个注解 <code>@AfterPermissionGranted</code>，它的使用场景也很简单，用它来修饰方法，该方法在声明的权限被用户所授予之后执行。就这样简单的声明之后，就可以达到一种特定的效果。</p>
+<a id="more"></a>
+
+<p>可以看到注解是用字符 @ 开头，我们使用注解来修饰其后的代码元素，例如字段、方法、方法参数等，通过这种方式，编译器、其他工具可以增强或修改代码的行为。</p>
+<p>这就是所谓声明式编程风格。在这种风格中，程序由三个组件组成：</p>
+<ol>
+<li>声明的关键字和语法本身</li>
+<li>系统/框架/库，它们负责解释、执行声明式的语句</li>
+<li>应用程序，使用声明式风格写程序</li>
+</ol>
+<p>对应于 Java，这就是注解、反射及其在程序中的使用。其中第三部分在代码中的使用不用多说，只需要根据框架的 API 说明将注解使用在正确的可修饰的内容上即可。下面我们分别看看注解与反射。</p>
+<h2 id="注解"><a href="#注解" class="headerlink" title="注解"></a>注解</h2><h3 id="注解的创建"><a href="#注解的创建" class="headerlink" title="注解的创建"></a>注解的创建</h3><p>我们通过 EasyPermissions 的例子来说明、学习。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="meta">@Target</span>(ElementType.METHOD)</span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> AfterPermissionGranted &#123;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">int</span> <span class="title">value</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这看起来有点像接口，只是注解在 <code>interface</code> 前加上了 @，另外，可以看到定义注解时使用了两个注解：<code>@Retention</code> 和 <code>@Target</code>，这两个注解叫做元注解，专门用于定义注解本身。</p>
+<h3 id="Retention"><a href="#Retention" class="headerlink" title="@Retention"></a><code>@Retention</code></h3><p><code>@Retention</code> 表示注解信息保留到什么时候，取值只能有一个，类型为 RetentionPolicy，它是一个枚举，有三个取值：</p>
+<ul>
+<li><code>SOURCE</code>：只在源代码中保留，编译器将代码编译为字节码文件后就会丢掉</li>
+<li><code>CLASS</code>：保留到字节码文件中，但 Java 虚拟机将 class 文件加载到内存时不一定会在内存中保留</li>
+<li><code>RUNTIME</code>：一直保留到运行时</li>
+</ul>
+<p>如果没有声明 <code>@Retention</code>，默认为 <code>RetentionPolicy.CLASS</code>。<br><code>@AfterPermissionGranted</code> 是在运行时进行使用的，所以 <code>@Retention</code> 是 <code>RetentionPolicy.RUNTIME</code>。而 <code>@Override</code> 和 <code>@SuppressWarnings</code> 都是给编译器用的，所以 <code>@Retention</code> 都是 <code>RetentionPolicy.SOURCE</code>。事实上，要想用反射去读取注解，这个值一定是要 RUNTIME 的。</p>
+<h3 id="Target"><a href="#Target" class="headerlink" title="@Target"></a><code>@Target</code></h3><p><code>@Target</code> 表示注解的目标，类型 ElementType 是一个枚举，可选值有：</p>
+<ul>
+<li><code>TYPE</code>：表示类、接口（包括注解），或者枚举声明</li>
+<li><code>FIELD</code>：字段，包括枚举常量</li>
+<li><code>METHOD</code>：方法</li>
+<li><code>PARAMETER</code>：方法中的参数</li>
+<li><code>CONSTRUCTOR</code>：构造方法</li>
+<li><code>LOCAL_VARIABLE</code>：本地变量</li>
+<li><code>ANNOTATION_TYPE</code>：注解类型</li>
+<li><code>PACKAGE</code>：包</li>
+</ul>
+<p>如果没有声明@Target，默认为适用于所有类型。</p>
+<p><code>@AfterPermissionGranted</code> 的目标是方法，所以取值 <code>ElementType.METHOD</code>。</p>
+<h3 id="定义元素"><a href="#定义元素" class="headerlink" title="定义元素"></a>定义元素</h3><p><code>@AfterPermissionGranted</code> 的使用中可以看到，其后跟着一个 int 值，这个值是就是注解的元素。如果一个注解没有元素，那这个注解可称为 <strong>标记注解</strong>，起标记的作用。</p>
+<p>注解的元素的定义实际上是通过在定义注解的时候添加一些方法：</p>
+<ul>
+<li>方法名就是元素的名称</li>
+<li>方法的返回值就是元素的类型。</li>
+</ul>
+<p>其实在使用时，<code>@AfterPermissionGranted(10010)</code> 的完整形式为： <code>@AfterPermissionGranted(value = 10010)</code>，在元素仅有一个且为 value 时，可以省略“value =”。</p>
+<p>注解的元素仅支持有限的类型：<strong>基本类型、String、Class、枚举、注解、以及这些类型的数组</strong></p>
+<p>注解看起来像接口，而它的元素定义看起来也像接口中的方法，不同的是定义元素时可以指定一个默认值，例如：<code>int value() default 0</code>，实际上，<strong>元素一定要有值</strong>，如果定义时没有默认值，那么在使用注解的时候一定要提供具体的值，同时，默认值与提供的值都 <strong>不能为 null</strong>。由于有此约束，为了表示元素值无效，需要定义默认值为空字符串或者一个负数，这已经是一种惯例。</p>
+<p>注解能不能被继承呢？答案是不可以。大家可以自行查阅学习一个与类继承有关的元注解 <code>@Inherited</code>，这里不展开说明。</p>
+<p>通过以上的学习，我们知道如何创建自定义注解，创建之后就可以在程序中使用：修饰指定的目标，提供需要的元素。要注意的是，同一个注解在同一对象上不可以多次使用，当然这种错误 IDE 会提醒你的。</p>
+<p>到此，我们完成了 <strong>第一步：注解的声明与使用</strong>。</p>
+<p>但注解的单独使用并不会影响到程序的运行，只是定义和使用注解的话，它和写在代码中的注释一样没太大的作用。要完成完整的功能，就需要对注解进行处理，即需要另一模块来查看代码字段、方法等是否有特殊的注解，找到想要找的注解之后再对相关代码进行解释、执行以达到增加、修改代码的行为的目的。</p>
+<p>这就需要学习反射机制。</p>
+<h2 id="反射"><a href="#反射" class="headerlink" title="反射"></a>反射</h2><p>对于反射机制，大家应该有一个概念，它是一种运行时的机制，在运行时去获取类的相关信息，对其进行一系列的操作：创建、修改、访问、调用等。</p>
+<p>由于其生效于运行时，编译器无法在前期检查错误，所以使用反射时要十分注意。另外，反射的性能因为其在访问字段、调用方法前要先查找所以性能有所降低。</p>
+<p>如果直接看 EasyPermissons 的反射的例子，会比较简单不系统，所以先了解一下必要的知识后再看例子能更好地理解。</p>
+<p>首先，反射的入口为 Class 对象，因此需要先了解 Class 对象。</p>
+<h3 id="Class-对象"><a href="#Class-对象" class="headerlink" title="Class 对象"></a>Class 对象</h3><p>每一个类都有一个 Class 对象，要在运行时利用反射来操作类的信息，首先要先获取这个 Class 对象。有以下方法可以获取对应的 Class 对象：</p>
+<ol>
+<li>obj.getClass()</li>
+<li>&lt;类名&gt;.class</li>
+<li>Class.forName() 该方法可以获取 Class 对象，同时如果该类还没有加载，就加载它。</li>
+</ol>
+<p>补充说明：</p>
+<ul>
+<li>接口、枚举同样可以使用 2 方式获取对应 Class 对象；</li>
+<li>基本类型没有 getClass() 方法，也不支持 Class.forName() 的方法进行加载，但其 Class 对象存在，为其包装类型： int.class 为 <code>Class &lt;Integer&gt;</code></li>
+<li>数组类型的 Class 对象每一维度都对应一个不同的</li>
+<li>Class.forName() 可能抛出异常 <code>ClassNotFoundException</code></li>
+</ul>
+<p>有了 Class 对象之后，通过一系列方法就可以获取相关的信息，并且可以进行操作字段、调用方法。</p>
+<blockquote>
+<p>由于简单入门学习，这里不会涉及全部相关内容。</p>
+</blockquote>
+<p>想一想一个类的结构，例如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.mupceet.test;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Student</span> <span class="keyword">extends</span> <span class="title">CommonStudent</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">int</span> mAge;</span><br><span class="line">  <span class="keyword">private</span> String mName;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="title">Student</span><span class="params">(<span class="keyword">int</span> age, String name)</span> </span>&#123;</span><br><span class="line">    mAge = age;</span><br><span class="line">    mName = name;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getAge</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> mAge;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setAge</span><span class="params">(<span class="keyword">int</span> age)</span> </span>&#123;</span><br><span class="line">    mAge = age;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> String <span class="title">getName</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> mName;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setName</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">    mName = name;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从上到下我们逐一查看我们关心的一个类包含的信息：</p>
+<ul>
+<li>类的信息：名称、类的类型（接口、注解、枚举等）、声明信息（修饰符、继承、实现等）</li>
+<li>构造方法：Contractor</li>
+<li>字段信息：Field</li>
+<li>方法信息：Method</li>
+</ul>
+<h3 id="类的信息"><a href="#类的信息" class="headerlink" title="类的信息"></a>类的信息</h3><h4 id="名称信息、类型信息、声明信息"><a href="#名称信息、类型信息、声明信息" class="headerlink" title="名称信息、类型信息、声明信息"></a>名称信息、类型信息、声明信息</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 返回 Java 内部使用的真正的名字</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> String <span class="title">getName</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="comment">// 不带包信息</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> String <span class="title">getSimpleName</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="comment">// 返回更为友好的名字</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> String <span class="title">getCanonicalName</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="comment">// 返回包信息</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Package <span class="title">getPackage</span><span class="params">()</span></span></span><br></pre></td></tr></table></figure>
+
+<p>它们之间的区别可以看以下表格。</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>getName</th>
+<th>getSimpleName</th>
+<th>getCanonicalName</th>
+<th>getPackage</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>int.class</td>
+<td>int</td>
+<td>int</td>
+<td>int</td>
+<td>null</td>
+</tr>
+<tr>
+<td>int[].class</td>
+<td>[l</td>
+<td>int[]</td>
+<td>int[]</td>
+<td>null</td>
+</tr>
+<tr>
+<td>int[][].class</td>
+<td>[[l</td>
+<td>int[][]</td>
+<td>int[][]</td>
+<td>null</td>
+</tr>
+<tr>
+<td>String.class</td>
+<td>java.lang.String</td>
+<td>String</td>
+<td>java.lang.String</td>
+<td>java.lang</td>
+</tr>
+<tr>
+<td>String[].class</td>
+<td>[Ljava.lang.String;</td>
+<td>String[]</td>
+<td>java.lang.String[]</td>
+<td>null</td>
+</tr>
+<tr>
+<td>java.util.HashMap.class</td>
+<td>java.util.HashMap</td>
+<td>HashMap</td>
+<td>java.util.HashMap</td>
+<td>java.util</td>
+</tr>
+<tr>
+<td>java.util.Map.Entry.class</td>
+<td>java.util.Map$Entry</td>
+<td>Entry</td>
+<td>java.util.Map.Entry</td>
+<td>java.util</td>
+</tr>
+</tbody></table>
+<p>对于一个给定的 Class 对象，它到底是什么类型呢？可以通过以下方法进行检查：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//是否是数组</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">native</span> <span class="keyword">boolean</span> <span class="title">isArray</span><span class="params">()</span></span>;  </span><br><span class="line"><span class="comment">//是否是基本类型</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">native</span> <span class="keyword">boolean</span> <span class="title">isPrimitive</span><span class="params">()</span></span>;</span><br><span class="line"><span class="comment">//是否是接口</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">native</span> <span class="keyword">boolean</span> <span class="title">isInterface</span><span class="params">()</span></span>;</span><br><span class="line"><span class="comment">//是否是枚举</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isEnum</span><span class="params">()</span> </span></span><br><span class="line"><span class="function"><span class="comment">//是否是注解</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isAnnotation</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="comment">//是否是匿名内部类</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isAnonymousClass</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="comment">//是否是成员类</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isMemberClass</span><span class="params">()</span> </span></span><br><span class="line"><span class="function"><span class="comment">//是否是本地类</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isLocalClass</span><span class="params">()</span></span></span><br></pre></td></tr></table></figure>
+
+<p>Class 还可以获取类的声明信息，如修饰符、父类、实现的接口、注解等，如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//获取修饰符，返回值可通过 Modifier 类进行解读</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">native</span> <span class="keyword">int</span> <span class="title">getModifiers</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="comment">//获取父类，如果为 Object，父类为 null</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">native</span> Class&lt;? <span class="keyword">super</span> T&gt; <span class="title">getSuperclass</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="comment">//对于类，为自己声明实现的所有接口，对于接口，为直接扩展的接口，不包括通过父类间接继承来的</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">native</span> Class&lt;?&gt;[] <span class="title">getInterfaces</span><span class="params">()</span></span>; </span><br><span class="line"><span class="comment">//自己声明的注解</span></span><br><span class="line"><span class="keyword">public</span> Annotation[] getDeclaredAnnotations()</span><br><span class="line"><span class="comment">//所有的注解，包括继承得到的</span></span><br><span class="line"><span class="keyword">public</span> Annotation[] getAnnotations()</span><br><span class="line"><span class="comment">//获取或检查指定类型的注解，包括继承得到的</span></span><br><span class="line"><span class="keyword">public</span> &lt;A extends Annotation&gt; <span class="function">A <span class="title">getAnnotation</span><span class="params">(Class&lt;A&gt; annotationClass)</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isAnnotationPresent</span><span class="params">(Class&lt;? extends Annotation&gt; annotationClass)</span></span></span><br></pre></td></tr></table></figure>
+
+<h4 id="构造方法与创建对象"><a href="#构造方法与创建对象" class="headerlink" title="构造方法与创建对象"></a>构造方法与创建对象</h4><p>Class 有一个方法，可以用它来创建对象：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> T <span class="title">newInstance</span><span class="params">()</span> <span class="keyword">throws</span> InstantiationException, IllegalAccessException</span></span><br></pre></td></tr></table></figure>
+
+<p>它会调用类的默认构造方法(即无参 public 构造方法)，如果类没有该构造方法，会抛出异常 <code>InstantiationException</code>。很多利用反射的库和框架都 <strong>默认假定类有无参 public 构造方法</strong>，所以使用这些库和框架时要记得提供。</p>
+<p>newInstance 只能使用默认构造方法，Class 还有一些方法，可以获取所有的构造方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//获取所有的 public 构造方法，返回值可能为长度为 0 的空数组</span></span><br><span class="line"><span class="keyword">public</span> Constructor&lt;?&gt;[] getConstructors() </span><br><span class="line"><span class="comment">//获取所有的构造方法，包括非 public 的</span></span><br><span class="line"><span class="keyword">public</span> Constructor&lt;?&gt;[] getDeclaredConstructors() </span><br><span class="line"><span class="comment">//获取指定参数类型的 public 构造方法，没找到抛出异常 NoSuchMethodException</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Constructor&lt;T&gt; <span class="title">getConstructor</span><span class="params">(Class&lt;?&gt;... parameterTypes)</span></span></span><br><span class="line"><span class="function"><span class="comment">//获取指定参数类型的构造方法，包括非 public 的，没找到抛出异常 NoSuchMethodException</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Constructor&lt;T&gt; <span class="title">getDeclaredConstructor</span><span class="params">(Class&lt;?&gt;... parameterTypes)</span></span></span><br></pre></td></tr></table></figure>
+
+<p>类 Constructor 表示构造方法，通过它可以创建对象，方法为：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> T <span class="title">newInstance</span><span class="params">(Object ... initargs)</span> <span class="keyword">throws</span> InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException</span></span><br></pre></td></tr></table></figure>
+
+<p>除了创建对象，Constructor 还有很多方法，可以获取关于构造方法的很多信息，比如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//获取参数的类型信息</span></span><br><span class="line"><span class="keyword">public</span> Class&lt;?&gt;[] getParameterTypes()</span><br><span class="line"><span class="comment">//构造方法的修饰符，返回值可通过 Modifier 类进行解读</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getModifiers</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="comment">//构造方法的注解信息</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Annotation[] <span class="title">getDeclaredAnnotations</span><span class="params">()</span> </span></span><br><span class="line"><span class="function"><span class="keyword">public</span> &lt;T extends Annotation&gt; T <span class="title">getAnnotation</span><span class="params">(Class&lt;T&gt; annotationClass)</span></span></span><br><span class="line"><span class="function"><span class="comment">//构造方法中参数的注解信息</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Annotation[][] <span class="title">getParameterAnnotations</span><span class="params">()</span></span></span><br></pre></td></tr></table></figure>
+
+<h3 id="Field"><a href="#Field" class="headerlink" title="Field"></a>Field</h3><p>类中定义的静态和实例变量都被称为字段，用类 Field 表示。Class 有四个获取字段信息的方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//返回所有的 public 字段，包括其父类的，如果没有字段，返回空数组</span></span><br><span class="line"><span class="keyword">public</span> Field[] getFields() </span><br><span class="line"></span><br><span class="line"><span class="comment">//返回本类声明的所有字段，包括非 public 的，但不包括父类的</span></span><br><span class="line"><span class="keyword">public</span> Field[] getDeclaredFields() </span><br><span class="line"></span><br><span class="line"><span class="comment">//返回本类或父类中指定名称的 public 字段，找不到抛出异常 NoSuchFieldException</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Field <span class="title">getField</span><span class="params">(String name)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="comment">//返回本类中声明的指定名称的字段，找不到抛出异常 NoSuchFieldException</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Field <span class="title">getDeclaredField</span><span class="params">(String name)</span></span></span><br></pre></td></tr></table></figure>
+
+<p>Field 也有很多方法，可以获取字段的信息，也可以通过 Field 访问和操作指定对象中该字段的值，基本方法有：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//获取字段的名称</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> String <span class="title">getName</span><span class="params">()</span> </span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="comment">//判断当前程序是否有该字段的访问权限</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isAccessible</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="comment">//flag 设为 true 表示忽略 Java 的访问检查机制，以允许读写非 public 的字段</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setAccessible</span><span class="params">(<span class="keyword">boolean</span> flag)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="comment">//获取指定对象 obj 中该字段的值</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">get</span><span class="params">(Object obj)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="comment">//将指定对象 obj 中该字段的值设为 value</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">set</span><span class="params">(Object obj, Object value)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="comment">//返回字段的修饰符</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getModifiers</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="comment">//返回字段的类型</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Class&lt;?&gt; <span class="title">getType</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="comment">//以基本类型操作字段</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setBoolean</span><span class="params">(Object obj, <span class="keyword">boolean</span> z)</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">getBoolean</span><span class="params">(Object obj)</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setDouble</span><span class="params">(Object obj, <span class="keyword">double</span> d)</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">double</span> <span class="title">getDouble</span><span class="params">(Object obj)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="comment">//查询字段的注解信息</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> &lt;T extends Annotation&gt; T <span class="title">getAnnotation</span><span class="params">(Class&lt;T&gt; annotationClass)</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Annotation[] <span class="title">getDeclaredAnnotations</span><span class="params">()</span></span></span><br></pre></td></tr></table></figure>
+
+<p>在 get/set 方法中，对于静态变量，obj 被忽略，可以为 null，如果字段值为基本类型，get/set 会自动在基本类型与对应的包装类型间进行转换，对于 private 字段，直接调用 get/set 会抛出非法访问异常 IllegalAccessException，应该先调用 setAccessible(true) 以关闭 Java 的检查机制。</p>
+<h3 id="Method"><a href="#Method" class="headerlink" title="Method"></a>Method</h3><p>类中定义的静态和实例方法都被称为方法，用类 Method 表示，Class 有四个获取方法信息的方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//返回所有的 public 方法，包括其父类的，如果没有方法，返回空数组</span></span><br><span class="line"><span class="keyword">public</span> Method[] getMethods()</span><br><span class="line"></span><br><span class="line"><span class="comment">//返回本类声明的所有方法，包括非 public 的，但不包括父类的</span></span><br><span class="line"><span class="keyword">public</span> Method[] getDeclaredMethods() </span><br><span class="line"></span><br><span class="line"><span class="comment">//返回本类或父类中指定名称和参数类型的 public 方法，找不到抛出异常 NoSuchMethodException</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Method <span class="title">getMethod</span><span class="params">(String name, Class&lt;?&gt;... parameterTypes)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="comment">//返回本类中声明的指定名称和参数类型的方法，找不到抛出异常 NoSuchMethodException</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Method <span class="title">getDeclaredMethod</span><span class="params">(String name, Class&lt;?&gt;... parameterTypes)</span></span></span><br></pre></td></tr></table></figure>
+
+<p>Method 也有很多方法，可以获取方法的信息，也可以通过 Method 调用对象的方法，基本方法有：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//获取方法的名称</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> String <span class="title">getName</span><span class="params">()</span> </span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="comment">//flag 设为 true 表示忽略 Java 的访问检查机制，以允许调用非 public 的方法</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setAccessible</span><span class="params">(<span class="keyword">boolean</span> flag)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="comment">//在指定对象 obj 上调用 Method 代表的方法，传递的参数列表为 args</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">invoke</span><span class="params">(Object obj, Object... args)</span> <span class="keyword">throws</span> IllegalAccessException, IllegalArgumentException, InvocationTargetException</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="comment">//获取方法的修饰符，返回值可通过 Modifier 类进行解读</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getModifiers</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="comment">//获取方法的参数类型</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Class&lt;?&gt;[] <span class="title">getParameterTypes</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="comment">//获取方法的返回值类型</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Class&lt;?&gt; <span class="title">getReturnType</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="comment">//获取方法声明抛出的异常类型</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Class&lt;?&gt;[] <span class="title">getExceptionTypes</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="comment">//获取注解信息</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Annotation[] <span class="title">getDeclaredAnnotations</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> &lt;T extends Annotation&gt; T <span class="title">getAnnotation</span><span class="params">(Class&lt;T&gt; annotationClass)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="comment">//获取方法参数的注解信息</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Annotation[][] <span class="title">getParameterAnnotations</span><span class="params">()</span></span></span><br></pre></td></tr></table></figure>
+
+<p>对 invoke 方法，如果 Method 为静态方法，obj 被忽略，可以为 null，args 可以为 null，也可以为一个空的数组，方法调用的返回值被包装为 Object 返回，如果实际方法调用抛出异常，异常被包装为 InvocationTargetException 重新抛出，可以通过 getCause 方法得到原异常。</p>
+<blockquote>
+<p>Note：getDeclared<strong>* 获取的是仅限于本类的所有的不受访问限制的，而 get*</strong> 获取的是包括父类的但仅限于 public 修饰符的</p>
+</blockquote>
+<h3 id="使用反射需要注意的地方"><a href="#使用反射需要注意的地方" class="headerlink" title="使用反射需要注意的地方"></a>使用反射需要注意的地方</h3><blockquote>
+<p>来自：<a href="https://juejin.im/post/5a2c1c5bf265da431956334c" target="_blank" rel="noopener">Java反射以及在Android中的特殊应用</a></p>
+</blockquote>
+<p>使用反射非常方便，而且在一些特定的场合下可以实现特别的需求，但是使用反射也是需要注意一下几点的:</p>
+<ul>
+<li>反射最好是使用 public 修饰符的，其他修饰符有一定的兼容性风险，比如这个版本有，另外的版本可能没有</li>
+<li>大家都知道的 Android 开源代码引起的兼容性的问题,这是 Android 系统开源的最大的问题，特别是那些第三方的 ROM，要慎用。</li>
+<li>如果大量使用反射，在代码上需要优化封装，不然不好管理，写代码不仅仅是实现功能，还有维护性和可读性方法也需要加强。</li>
+</ul>
+<h3 id="EasyPermissons-反射处理"><a href="#EasyPermissons-反射处理" class="headerlink" title="EasyPermissons 反射处理"></a>EasyPermissons 反射处理</h3><p>通过以上注解与反射的学习，我们知道注解提升了 Java 语言的表达能力，有效地实现了应用功能和底层功能的分离，框架/库的程序员可以专注于底层实现，借助反射实现通用功能，提供注解给应用程序员使用，应用程序员可以专注于应用功能，通过简单的声明式注解与框架/库进行协作。</p>
+<p>我们再看　EasyPermissons 关于注解的处理就很简单了。</p>
+<p>整理一下思路：</p>
+<ol>
+<li>查找方法，找到具有 @AfterPermissonGranted 注解的方法</li>
+<li>判断该方法的注解的元素是否与 RequestCode 相同</li>
+<li>判断该方法的参数是否符合要求</li>
+<li>暴力反射调用该方法</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">runAnnotatedMethods</span><span class="params">(@NonNull Object object, <span class="keyword">int</span> requestCode)</span> </span>&#123;</span><br><span class="line">  Class clazz = object.getClass();</span><br><span class="line"></span><br><span class="line">  <span class="keyword">while</span> (clazz != <span class="keyword">null</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> (Method method : clazz.getDeclaredMethods()) &#123;</span><br><span class="line">      AfterPermissionGranted ann = method.getAnnotation(AfterPermissionGranted.class);</span><br><span class="line">      <span class="keyword">if</span> (ann != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="comment">// Check for annotated methods with matching request code.</span></span><br><span class="line">        <span class="keyword">if</span> (ann.value() == requestCode) &#123;</span><br><span class="line">          <span class="comment">// Method must be void so that we can invoke it</span></span><br><span class="line">          <span class="keyword">if</span> (method.getParameterTypes().length &gt; <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(</span><br><span class="line">                <span class="string">"Cannot execute method "</span> + method.getName() + <span class="string">" because it is non-void method and/or has input parameters."</span>);</span><br><span class="line">          &#125;</span><br><span class="line"></span><br><span class="line">          <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// Make method accessible if private</span></span><br><span class="line">            <span class="keyword">if</span> (!method.isAccessible()) &#123;</span><br><span class="line">              method.setAccessible(<span class="keyword">true</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            method.invoke(object);</span><br><span class="line">          &#125; <span class="keyword">catch</span> (IllegalAccessException e) &#123;</span><br><span class="line">            Log.e(TAG, <span class="string">"runDefaultMethod:IllegalAccessException"</span>, e);</span><br><span class="line">          &#125; <span class="keyword">catch</span> (InvocationTargetException e) &#123;</span><br><span class="line">            Log.e(TAG, <span class="string">"runDefaultMethod:InvocationTargetException"</span>, e);</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="结合实践：自定义-ButterKnife-伪"><a href="#结合实践：自定义-ButterKnife-伪" class="headerlink" title="结合实践：自定义 ButterKnife (伪)"></a>结合实践：自定义 ButterKnife (伪)</h2><p>结合上面所说的声明式编程的三步曲：</p>
+<ol>
+<li><p>声明</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="meta">@Target</span>(ElementType.FIELD)</span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> BindView &#123;</span><br><span class="line">    <span class="meta">@IdRes</span> <span class="function"><span class="keyword">int</span> <span class="title">value</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>解释</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">bindView</span><span class="params">(Activity context)</span> </span>&#123;</span><br><span class="line">    Class&lt;? extends Activity&gt; aClass = context.getClass();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 遍历所有的变量字段</span></span><br><span class="line">    Field[] declaredFields = aClass.getDeclaredFields();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (Field field :</span><br><span class="line">            declaredFields) &#123;</span><br><span class="line">        <span class="comment">// 如果不可访问，设置为可访问</span></span><br><span class="line">        <span class="keyword">if</span> (!field.isAccessible()) &#123;</span><br><span class="line">            field.setAccessible(<span class="keyword">true</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 如果字段有 BindView 注解，则读取其元素值进行操作</span></span><br><span class="line">        BindView bindView = field.getAnnotation(BindView.class);</span><br><span class="line">        <span class="keyword">if</span> (bindView != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">int</span> idRes = bindView.value();</span><br><span class="line">            View viewById = context.findViewById(idRes);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                field.set(context, viewById);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (IllegalAccessException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>使用</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@BindView</span>(R.id.tv_content)</span><br><span class="line">TextView mTextView;</span><br><span class="line"><span class="meta">@BindView</span>(R.id.btn_change_content)</span><br><span class="line">Button mButton;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">(Bundle savedInstanceState)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">    setContentView(R.layout.activity_butter_knife);</span><br><span class="line"></span><br><span class="line">    ButterKnife.bind(<span class="keyword">this</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ol>
+<p>当然，以上只是简单的示例，真正的 <a href="https://github.com/JakeWharton/butterknife" target="_blank" rel="noopener">ButterKnife</a> 不是这样子实现的，它是使用了注解处理器（APT：相关类<code>javax.annotation.processing</code>），在编译时对注解进行处理生成辅助代码及其他文件，从而避免降低运行时性能。编译时生成代码，可以在项目的build/generated/source/apt/目录下找到生成的代码，也可以对这些代码进行调试。现在主流的框架很多都使用这种方式来生成代码，比如 Dagger2、Glide、GreenDao、Room等。</p>
+<h2 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h2><p>Android 提供了额外的注解，合理利用这些注解可以提高代码可读性和可维护性，Coding 时就可以避免错误，比如常用的 @Nullable、@Nonnull等，要查看更多相关注解及其使用请点击以下链接：</p>
+<ul>
+<li><p><a href="https://droidyue.com/blog/2016/08/14/android-annnotation/" target="_blank" rel="noopener">探究 Android 中的注解</a> : 介绍 Android 中的注解,以及 ButterKnife 和 Otto 这些基于注解的库的一些工作原理</p>
+</li>
+<li><p><a href="https://juejin.im/post/59bf5e1c518825397176d126" target="_blank" rel="noopener">Android 中注解的使用</a> : Android Support Library 提供的元注解介绍及使用，参考了上一文章。</p>
+</li>
+<li><p><a href="https://juejin.im/post/5a2c1c5bf265da431956334c" target="_blank" rel="noopener">Java 反射以及在 Android 中的特殊应用</a> : 文章介绍了反射在 Android 框架层的应用：作为四大组件的 Activity 其实也是一个普通对象，也是由反射创建。</p>
+</li>
+<li><p>本文的大部分内容摘自老马的《<a href="https://item.jd.com/12299018.html" target="_blank" rel="noopener">Java 编程的逻辑</a>》进行整理，这本书对 Java 知识点的讲解清晰透彻，对入门的人深入理解 Java 很有帮助，推荐购买阅读。</p>
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/Android/" rel="tag"># Android</a>
+            
+              <a href="/tags/Java/" rel="tag"># Java</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2018/01/upgrade-to-Android-plugin-3.0-&-gradle-4.1/" rel="next" title="升级 Android plugin 3.0 & Gradle 4.1">
+                  <i class="fa fa-chevron-left"></i> 升级 Android plugin 3.0 & Gradle 4.1
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2018/03/engineer's-soft-skill/" rel="prev" title="工程师的软素质">
+                  工程师的软素质 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+    </div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc" data-target="post-toc-wrap">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#注解"><span class="nav-number">1.</span> <span class="nav-text">注解</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#注解的创建"><span class="nav-number">1.1.</span> <span class="nav-text">注解的创建</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Retention"><span class="nav-number">1.2.</span> <span class="nav-text">@Retention</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Target"><span class="nav-number">1.3.</span> <span class="nav-text">@Target</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#定义元素"><span class="nav-number">1.4.</span> <span class="nav-text">定义元素</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#反射"><span class="nav-number">2.</span> <span class="nav-text">反射</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Class-对象"><span class="nav-number">2.1.</span> <span class="nav-text">Class 对象</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#类的信息"><span class="nav-number">2.2.</span> <span class="nav-text">类的信息</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#名称信息、类型信息、声明信息"><span class="nav-number">2.2.1.</span> <span class="nav-text">名称信息、类型信息、声明信息</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#构造方法与创建对象"><span class="nav-number">2.2.2.</span> <span class="nav-text">构造方法与创建对象</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Field"><span class="nav-number">2.3.</span> <span class="nav-text">Field</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Method"><span class="nav-number">2.4.</span> <span class="nav-text">Method</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用反射需要注意的地方"><span class="nav-number">2.5.</span> <span class="nav-text">使用反射需要注意的地方</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#EasyPermissons-反射处理"><span class="nav-number">2.6.</span> <span class="nav-text">EasyPermissons 反射处理</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#结合实践：自定义-ButterKnife-伪"><span class="nav-number">3.</span> <span class="nav-text">结合实践：自定义 ButterKnife (伪)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#其他"><span class="nav-number">4.</span> <span class="nav-text">其他</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/avatar_me.png"
+      alt="Mupceet">
+  <p class="site-author-name" itemprop="name">Mupceet</p>
+  <div class="site-description" itemprop="description">君子坦荡荡 小人长戚戚</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">25</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      友情链接
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://dxinl.github.io/" title="https://dxinl.github.io/" rel="noopener" target="_blank">Write down & Think hard</a>
+        </li>
+      
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Mupceet</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.3.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.3.0"></script><script src="/js/motion.js?v=7.3.0"></script>
+<script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://Mupceet.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  function disqus_config() {
+    this.page.url = "http://yoursite.com/2018/03/annotation&reflect-learning/";
+    this.page.identifier = "2018/03/annotation&reflect-learning/";
+    this.page.title = '自定义 ButterKnife 框架';};
+  function loadComments() {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: disqus_config
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://Mupceet.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  }
+    (function() {
+      var offsetTop = document.getElementById('comments').offsetTop - window.innerHeight;
+      if (offsetTop <= 0) {
+        // load directly when there's no a scrollbar
+        window.addEventListener('load', loadComments, false);
+      } else {
+        var disqus_scroll = () => {
+          // offsetTop may changes because of manually resizing browser window or lazy loading images.
+          var offsetTop = document.getElementById('comments').offsetTop - window.innerHeight;
+          var scrollTop = window.scrollY;
+
+          // pre-load comments a bit? (margin or anything else)
+          if (offsetTop - scrollTop < 60) {
+            window.removeEventListener('scroll', disqus_scroll);
+            loadComments();
+          }
+        };
+        window.addEventListener('scroll', disqus_scroll);
+      }
+    })();
+  
+</script>
+
+</body>
+</html>

@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"搜索","hits_empty":"未找到与「 ${query} 」相关的内容","hits_stats":"找到 ${hits} 条相关条目，用时: ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="Theme.AppCompat, Theme.Base.AppCompat, Base.V7.Theme.AppCompat, Base.v11.Theme.AppCompat, Base.v21.Theme.AppCompat, ThemeOverlay, Platform.AppCompat, DeviceDefault, Material, Holo, Classic 等等…… 当使用安卓主">
+<meta name="keywords" content="Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="（转）深度讲解 Android 主题层级">
+<meta property="og:url" content="http://yoursite.com/2017/04/android-themes-guide/index.html">
+<meta property="og:site_name" content="Mupceet">
+<meta property="og:description" content="Theme.AppCompat, Theme.Base.AppCompat, Base.V7.Theme.AppCompat, Base.v11.Theme.AppCompat, Base.v21.Theme.AppCompat, ThemeOverlay, Platform.AppCompat, DeviceDefault, Material, Holo, Classic 等等…… 当使用安卓主">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://ww1.sinaimg.cn/large/a490147fgw1f52tnel5ggj20ka0ictaz.jpg">
+<meta property="og:updated_time" content="2018-01-20T17:39:08.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="（转）深度讲解 Android 主题层级">
+<meta name="twitter:description" content="Theme.AppCompat, Theme.Base.AppCompat, Base.V7.Theme.AppCompat, Base.v11.Theme.AppCompat, Base.v21.Theme.AppCompat, ThemeOverlay, Platform.AppCompat, DeviceDefault, Material, Holo, Classic 等等…… 当使用安卓主">
+<meta name="twitter:image" content="http://ww1.sinaimg.cn/large/a490147fgw1f52tnel5ggj20ka0ictaz.jpg">
+  <link rel="canonical" href="http://yoursite.com/2017/04/android-themes-guide/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>（转）深度讲解 Android 主题层级 | Mupceet</title>
+  <meta name="generator" content="Hexo 3.9.0">
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Mupceet</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Don't Repeat Yourself</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/04/android-themes-guide/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Mupceet">
+      <meta itemprop="description" content="君子坦荡荡 小人长戚戚">
+      <meta itemprop="image" content="/images/avatar_me.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Mupceet">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">（转）深度讲解 Android 主题层级
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2017-04-25 17:01:00" itemprop="dateCreated datePublished" datetime="2017-04-25T17:01:00+08:00">2017-04-25</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2018-01-21 01:39:08" itemprop="dateModified" datetime="2018-01-21T01:39:08+08:00">2018-01-21</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/技术向/" itemprop="url" rel="index"><span itemprop="name">技术向</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Disqus：</span>
+    
+    <a title="disqus" href="/2017/04/android-themes-guide/#comments" itemprop="discussionUrl"><span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/04/android-themes-guide/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Theme.AppCompat, Theme.Base.AppCompat, Base.V7.Theme.AppCompat, Base.v11.Theme.AppCompat, Base.v21.Theme.AppCompat, ThemeOverlay, Platform.AppCompat, DeviceDefault, Material, Holo, Classic 等等……</p>
+<p>当使用安卓主题和支持库时，你可能会遇见以上这些名字，并且好奇：</p>
+<ul>
+<li><code>Base.V{something}</code>, <code>Theme.Base.AppCompat</code>, <code>Platform.AppCompat</code> 是什么？</li>
+<li>这些主题是如何组织起来的？</li>
+<li>我应当用哪一个？</li>
+</ul>
+<p>在本文中，我将回答上述问题，并尝试阐明这一切是如何工作的。</p>
+<a id="more"></a>
+
+<h3 id="AppCompat-v7"><a href="#AppCompat-v7" class="headerlink" title="AppCompat v7"></a>AppCompat v7</h3><p>鉴于不同的安卓平台定义了不同的主题、样式和属性，最初安卓主题的层级非常繁杂，而且很不直观。直到 v7 支持库带来了全新的主题架构，使得所有安卓平台自 API v7 起能够获得一致的材质外观 (Matertial apperance)。<code>Base.V...</code> 和 <code>Platform.AppCompat</code> 正是在这个时候被加入了进来。</p>
+<blockquote>
+<p>安卓开发者们在 GitHub 上撰写了一篇 <a href="https://github.com/android/platform_frameworks_support/blob/master/v7/appcompat/THEMES.txt" target="_blank" rel="noopener">README</a> 解释主题层级，我推荐你看一看。</p>
+</blockquote>
+<p>在 <code>AppCompat</code> 中，主题被划分为四个层次，每个层次继承自更低一层：</p>
+<p><strong>Level1 → Level2 → Level3 → Level4</strong></p>
+<p>除此之外，每个版本的安卓 API 都有一个对应的 <code>values-v{api}</code> 文件夹存放各自需要定义或覆写的样式和属性：</p>
+<p><strong>values, values-v11, values-v14, values-v21, values-v22, values-v23</strong></p>
+<h4 id="Level-4-（最底层）"><a href="#Level-4-（最底层）" class="headerlink" title="Level 4 （最底层）"></a>Level 4 （最底层）</h4><p>最底层包含了 <code>Platform.AppCompat</code> 主题。该主题总是继承自当前版本中的默认主题，例如：</p>
+<p><strong>values</strong></p>
+<p>Platform.AppCompat -&gt; android:Theme</p>
+<p><strong>values-v11</strong></p>
+<p>Platform.AppCompat -&gt; android:Theme.Holo</p>
+<p><strong>values-v21</strong></p>
+<p>Platform.AppCompat -&gt; android:Theme.Material</p>
+<h4 id="Level-3"><a href="#Level-3" class="headerlink" title="Level 3"></a>Level 3</h4><p>大部分工作在这一层被完成，<code>Base.V7.Theme.AppCompat</code>, <code>Base.V11.Theme.AppCompat</code>, <code>Base.V21.Theme.AppCompat</code> 等也是在这一层被定义。这些主题都继承自 <code>Platform.AppCompat</code>。</p>
+<p><strong>values</strong></p>
+<p>Base.V7.Theme.AppCompat* → Platform.AppCompat → android:Theme</p>
+<p><strong>values-v11</strong></p>
+<p>Base.V11.Theme.AppCompat → Platform.AppCompat → android:Theme.Holo</p>
+<p><strong>values-v21</strong></p>
+<p>Base.V21.ThemeAppCompat → Base.V7.ThemeAppCompat → Platform.AppCompat → android:Theme.Material</p>
+<blockquote>
+<p>*: 还包括 Base.V7.Theme.AppCompat.Light, Base.V7.Theme.AppCompat.Dialog 等变体。</p>
+</blockquote>
+<p>绝大多数属性和几乎所有工作在 <code>Base.V{api}.Theme.AppCompat</code> 中被定义和完成。ActionBar, DropwDown, ActionMode, Panel, List, Spinner, Toolbar 等控件中的所有属性都在这里被定义。你可以在 <a href="https://github.com/android/platform_frameworks_support/blob/master/v7/appcompat/res/values/themes_base.xml" target="_blank" rel="noopener">这个链接</a> 中查看更多详情。</p>
+<h4 id="Level-2"><a href="#Level-2" class="headerlink" title="Level 2"></a>Level 2</h4><p>根据安卓的官方解释，我们在这一层拿到的主题只是第三层主题的别名：</p>
+<blockquote>
+<p>There are the themes which are pointers to the correct third level theme.They can also be used to set attributes for that specific platform (and platforms up until the next declaration).</p>
+<p>这些主题指向第三层中相应的主题。它们也可以用来配置那些特定平台的属性。</p>
+</blockquote>
+<p><strong>values</strong></p>
+<p>Base.Theme.AppCompat* → Base.V7.Theme.AppCompat</p>
+<p><strong>values-v21</strong></p>
+<p>Base.Theme.AppCompat → Base.V21.Theme.AppCompat</p>
+<blockquote>
+<p>*: 还包括 Base.Theme.AppCompat.Light, Base.Theme.AppCompat.Dialog 等变体。</p>
+</blockquote>
+<h4 id="Level-1-（最顶层）"><a href="#Level-1-（最顶层）" class="headerlink" title="Level 1 （最顶层）"></a>Level 1 （最顶层）</h4><p><code>Theme.AppCompat</code>, <code>Theme.AppCompat.Light</code>, <code>Theme.AppCompat.NoActionBar</code> 等主题在这里被定义。<strong>开发者应该使用这些主题，而非那些更底层的。</strong></p>
+<p><strong>values</strong></p>
+<p>Theme.AppCompat → Base.Theme.AppCompat</p>
+<p>这些主题只在 <code>values</code> 文件夹中被定义，并根据安卓应用运行的 API 环境，继承自下层中定义的相应主题。例如：</p>
+<ul>
+<li><strong>Running in v7 (Android 2.2)</strong></li>
+</ul>
+<p>Theme.AppCompat → Base.Theme.AppCompat → Base.V7.Theme.AppCompat → Platform.AppCompat → android:Theme</p>
+<ul>
+<li><strong>Running in v11 (Android 3.0)</strong></li>
+</ul>
+<p>Theme.AppCompat → Base.Theme.AppCompat → Base.V7.Theme.AppCompat → Platform.AppCompat → Platform.V11.AppCompat → android:Theme.Holo</p>
+<ul>
+<li><strong>Running in v21 (Android 5.0)</strong></li>
+</ul>
+<p>Theme.AppCompat → Base.Theme.AppCompat → Base.V21.Theme.AppCompat → Base.V7.Theme.AppCompat → Platform.AppCompat → android:Theme.Material</p>
+<p>以上便是我们如何在所有安卓 API 下获得一致的材质外观的答案。正如你所见到的，当我们顺着主题的层级仔细研究时会发现，这一过程有点小复杂。</p>
+<h4 id="主题图示（简化版）"><a href="#主题图示（简化版）" class="headerlink" title="主题图示（简化版）"></a>主题图示（简化版）</h4><p><img src="http://ww1.sinaimg.cn/large/a490147fgw1f52tnel5ggj20ka0ictaz.jpg" alt></p>
+<h3 id="ThemeOverlays"><a href="#ThemeOverlays" class="headerlink" title="ThemeOverlays"></a>ThemeOverlays</h3><p>在所有可用的主题中，我们可以发现一个名字带有 <code>ThemeOverlay</code> 的系列：</p>
+<ul>
+<li>ThemeOverlay</li>
+<li>ThemeOverlay.Light</li>
+<li>ThemeOverlay.ActionBar.Light</li>
+<li>ThemeOverlay.ActionBar.Dark</li>
+</ul>
+<p>这些主题又是做什么的呢？答案是 <strong>仅用于为特定的用途定义必要的属性。</strong> 例如 <code>ThemeOverlay</code> 主题只定义了 <code>textColor</code>，<code>textAppearance</code>，窗口的颜色属性和一些类似 <em>colorControlButton</em> 的属性；通常用作于 Toolbar 主题的 <code>ThemeOverlay.ActionBar.Light</code>，仅将 <em>colorControlButton</em> 的值定义为 _?attr:textColorSecondary_。</p>
+<h3 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h3><p>我在学习这些 <code>AppCompat</code> 主题的时候，顺便写了个 <a href="http://themekitapp.com" target="_blank" rel="noopener">小应用</a> 帮助大家浏览安卓主题和样式。希望能够对大家有所帮助。</p>
+<p><strong>注意：Google Play 商店的链接有时会失效几个小时。</strong></p>
+<p>我希望这篇文章能够帮你了解这些 <code>AppCompat</code> 主题是如何被组织到一起。还有一些我原本希望涉及的内容，但那样文章就太长了，或许会放在第二部分中。</p>
+<blockquote>
+<ul>
+<li>原文链接 : <a href="https://medium.com/@Sserra90/android-themes-an-in-depth-guide-f71f9db6e5bf" target="_blank" rel="noopener">Android Themes — An in-depth guide</a></li>
+</ul>
+</blockquote>
+<ul>
+<li>原文作者 : <a href="https://medium.com/@Sserra90" target="_blank" rel="noopener">Sérgio Serra</a></li>
+<li>译文出自 : <a href="https://github.com/xitu/gold-miner" target="_blank" rel="noopener">掘金翻译计划</a></li>
+<li>译者 : <a href="https://github.com/aidistan" target="_blank" rel="noopener">aidistan</a></li>
+<li>校对者: <a href="https://github.com/shixinzhang" target="_blank" rel="noopener">shixinzhang</a>, <a href="https://github.com/a-voyager" target="_blank" rel="noopener">a-voyager</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/Android/" rel="tag"># Android</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2017/04/android-performance-launch-time/" rel="next" title="Android 性能优化——启动时间优化指南">
+                  <i class="fa fa-chevron-left"></i> Android 性能优化——启动时间优化指南
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2017/05/set-dialog's-width/" rel="prev" title="设置 Dialog 的显示宽度">
+                  设置 Dialog 的显示宽度 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+    </div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc" data-target="post-toc-wrap">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#AppCompat-v7"><span class="nav-number">1.</span> <span class="nav-text">AppCompat v7</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Level-4-（最底层）"><span class="nav-number">1.1.</span> <span class="nav-text">Level 4 （最底层）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Level-3"><span class="nav-number">1.2.</span> <span class="nav-text">Level 3</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Level-2"><span class="nav-number">1.3.</span> <span class="nav-text">Level 2</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Level-1-（最顶层）"><span class="nav-number">1.4.</span> <span class="nav-text">Level 1 （最顶层）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#主题图示（简化版）"><span class="nav-number">1.5.</span> <span class="nav-text">主题图示（简化版）</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ThemeOverlays"><span class="nav-number">2.</span> <span class="nav-text">ThemeOverlays</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#结论"><span class="nav-number">3.</span> <span class="nav-text">结论</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/avatar_me.png"
+      alt="Mupceet">
+  <p class="site-author-name" itemprop="name">Mupceet</p>
+  <div class="site-description" itemprop="description">君子坦荡荡 小人长戚戚</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">25</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      友情链接
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://dxinl.github.io/" title="https://dxinl.github.io/" rel="noopener" target="_blank">Write down & Think hard</a>
+        </li>
+      
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Mupceet</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.3.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.3.0"></script><script src="/js/motion.js?v=7.3.0"></script>
+<script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://Mupceet.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  function disqus_config() {
+    this.page.url = "http://yoursite.com/2017/04/android-themes-guide/";
+    this.page.identifier = "2017/04/android-themes-guide/";
+    this.page.title = '（转）深度讲解 Android 主题层级';};
+  function loadComments() {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: disqus_config
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://Mupceet.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  }
+    (function() {
+      var offsetTop = document.getElementById('comments').offsetTop - window.innerHeight;
+      if (offsetTop <= 0) {
+        // load directly when there's no a scrollbar
+        window.addEventListener('load', loadComments, false);
+      } else {
+        var disqus_scroll = () => {
+          // offsetTop may changes because of manually resizing browser window or lazy loading images.
+          var offsetTop = document.getElementById('comments').offsetTop - window.innerHeight;
+          var scrollTop = window.scrollY;
+
+          // pre-load comments a bit? (margin or anything else)
+          if (offsetTop - scrollTop < 60) {
+            window.removeEventListener('scroll', disqus_scroll);
+            loadComments();
+          }
+        };
+        window.addEventListener('scroll', disqus_scroll);
+      }
+    })();
+  
+</script>
+
+</body>
+</html>

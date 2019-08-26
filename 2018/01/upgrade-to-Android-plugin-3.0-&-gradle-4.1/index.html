@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"搜索","hits_empty":"未找到与「 ${query} 」相关的内容","hits_stats":"找到 ${hits} 条相关条目，用时: ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="Android Studio 3.0 正式版本已经发布许久，公司的多个项目也需要升级工具并且更新项目的 Gradle 了。先跟着官方的升级说明学习一下。以下为部分内容的摘要，更多内容还请查阅：  Android Plugin for Gradle Release Notes Migrate to Android Plugin for Gradle 3.0.0 Use Java 8 Language">
+<meta name="keywords" content="Android,Gradle">
+<meta property="og:type" content="article">
+<meta property="og:title" content="升级 Android plugin 3.0 &amp; Gradle 4.1">
+<meta property="og:url" content="http://yoursite.com/2018/01/upgrade-to-Android-plugin-3.0-&-gradle-4.1/index.html">
+<meta property="og:site_name" content="Mupceet">
+<meta property="og:description" content="Android Studio 3.0 正式版本已经发布许久，公司的多个项目也需要升级工具并且更新项目的 Gradle 了。先跟着官方的升级说明学习一下。以下为部分内容的摘要，更多内容还请查阅：  Android Plugin for Gradle Release Notes Migrate to Android Plugin for Gradle 3.0.0 Use Java 8 Language">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/2946447-bbe5bb275a281bae.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="https://developer.android.google.cn/studio/images/write/desugar_2x.png">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/2946447-6afe0abb71715433.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/2946447-120680f144255c73.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/2946447-2258b7cb451453ba.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:updated_time" content="2018-01-22T15:24:30.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="升级 Android plugin 3.0 &amp; Gradle 4.1">
+<meta name="twitter:description" content="Android Studio 3.0 正式版本已经发布许久，公司的多个项目也需要升级工具并且更新项目的 Gradle 了。先跟着官方的升级说明学习一下。以下为部分内容的摘要，更多内容还请查阅：  Android Plugin for Gradle Release Notes Migrate to Android Plugin for Gradle 3.0.0 Use Java 8 Language">
+<meta name="twitter:image" content="http://upload-images.jianshu.io/upload_images/2946447-bbe5bb275a281bae.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+  <link rel="canonical" href="http://yoursite.com/2018/01/upgrade-to-Android-plugin-3.0-&-gradle-4.1/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>升级 Android plugin 3.0 & Gradle 4.1 | Mupceet</title>
+  <meta name="generator" content="Hexo 3.9.0">
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Mupceet</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Don't Repeat Yourself</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/01/upgrade-to-Android-plugin-3.0-&-gradle-4.1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Mupceet">
+      <meta itemprop="description" content="君子坦荡荡 小人长戚戚">
+      <meta itemprop="image" content="/images/avatar_me.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Mupceet">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">升级 Android plugin 3.0 & Gradle 4.1
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2018-01-22 23:09:33 / 修改时间：23:24:30" itemprop="dateCreated datePublished" datetime="2018-01-22T23:09:33+08:00">2018-01-22</time>
+            </span>
+          
+            
+
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/技术向/" itemprop="url" rel="index"><span itemprop="name">技术向</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Disqus：</span>
+    
+    <a title="disqus" href="/2018/01/upgrade-to-Android-plugin-3.0-&-gradle-4.1/#comments" itemprop="discussionUrl"><span class="post-comments-count disqus-comment-count" data-disqus-identifier="2018/01/upgrade-to-Android-plugin-3.0-&-gradle-4.1/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Android Studio 3.0 正式版本已经发布许久，公司的多个项目也需要升级工具并且更新项目的 Gradle 了。先跟着官方的升级说明学习一下。以下为部分内容的摘要，更多内容还请查阅：</p>
+<ul>
+<li><a href="https://developer.android.google.cn/studio/releases/gradle-plugin.html" target="_blank" rel="noopener">Android Plugin for Gradle Release Notes</a></li>
+<li><a href="https://developer.android.google.cn/studio/build/gradle-plugin-3-0-0-migration.html" target="_blank" rel="noopener">Migrate to Android Plugin for Gradle 3.0.0</a></li>
+<li><a href="https://developer.android.google.cn/studio/write/java8-support.html" target="_blank" rel="noopener">Use Java 8 Language Features</a></li>
+</ul>
+<h3 id="Gradle-4-1"><a href="#Gradle-4-1" class="headerlink" title="Gradle 4.1"></a>Gradle 4.1</h3><p>Gradle 4.1 开始支持 Google 的 Maven 仓库了，只需要在仓库列表中添加 google() 即可。最新的 gradle Android plugin 也是通过这个仓库下载的。</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">buildscript</span> &#123;</span><br><span class="line">    <span class="keyword">repositories</span> &#123;</span><br><span class="line">        google()</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">dependencies</span> &#123;</span><br><span class="line">        <span class="keyword">classpath</span> <span class="string">'com.android.tools.build:gradle:3.0.1'</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>记得，把 gradle 相应的版本更新一下：</p>
+<p><code>distributionUrl = https\://services.gradle.org/distributions/gradle-4.1-all.zip</code></p>
+<a id="more"></a>
+
+<p>在最新版本的 Gradle 4.1 及 Android plugin 3.0 以上版本的配合下，提高了对大型项目的编译性能。根据官方介绍在一个有着 130 多个模块的工程中，速度提升效果如下所示：</p>
+<p>|Android plugin version + Gradle version |    Android plugin 2.2.0 + Gradle 2.14.1|    Android plugin 2.3.0 + Gradle 3.3|    Android plugin 3.0.0 + Gradle 4.1|<br>|–|–|–|<br>|Configuration (e.g. running ./gradlew –help)    |<del>2 mins|    ~9 s    |</del>2.5 s|<br>|1-line Java change (implementation change)|    <del>2 mins 15 s    |</del>29 s    |~6.4 s|</p>
+<p>默认情况下，Android plugin 使用最低要求的 buildToolsVersion。所以，你不再需要为构建工具指定版本现在可以 <strong>删除 android.buildToolsVersion</strong> 属性。</p>
+<h3 id="构建优化"><a href="#构建优化" class="headerlink" title="构建优化"></a>构建优化</h3><ol>
+<li><p>优化了 multi module 的项目的并行构建速度</p>
+</li>
+<li><p>使用新的依赖配置可以提高构建性能：implementation, api, compileOnly, runtimeOnly</p>
+<blockquote>
+<p>在下一版本中，将会移除相应的 compile, provided, apk（这一项内容具体查看相应的迁移链接）</p>
+</blockquote>
+<p><img src="http://upload-images.jianshu.io/upload_images/2946447-bbe5bb275a281bae.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt></p>
+</li>
+<li><p>每个 Class 都被编译成单独的 DEX 文件，所以编译时只需要重编译修改的 Class</p>
+</li>
+<li><p>通过 chached outputs 来提高再次构建的速度，只要在 gradle.properties 中配置：<code>org.gradle.caching=true</code></p>
+</li>
+<li><p>默认使用 AAPT2 来支持资源的增量编译。如果编译发生失败，可以报告 Bug 并将其关闭：<code>android.enableAapt2=false</code></p>
+</li>
+</ol>
+<h3 id="Java8"><a href="#Java8" class="headerlink" title="Java8"></a>Java8</h3><p>支持了 Java8 的特性，例如：</p>
+<table>
+<thead>
+<tr>
+<th>Java 8 Language Feature</th>
+<th>Compatible minSdkVersion</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Lambda expressions</td>
+<td>Any. Note that Android does not support the serialization of lambda expressions.</td>
+</tr>
+<tr>
+<td>Method References</td>
+<td>Any.</td>
+</tr>
+<tr>
+<td>Type Annotations</td>
+<td>Any. However, type annotation information is available at compile time, but not at runtime. Also, the platform supports TYPE in API level 24 and below, but not ElementType.TYPE_USE or ElementType.TYPE_PARAMETER.</td>
+</tr>
+<tr>
+<td>Default and static interface methods</td>
+<td>Any.</td>
+</tr>
+<tr>
+<td>Repeating annotations</td>
+<td>Any.</td>
+</tr>
+</tbody></table>
+<p>另外，还有一些特性的支持对 minSdkVersion 有要求，具体的查看对应说明即可。</p>
+<p>简单原理示意图：</p>
+<p><img src="https://developer.android.google.cn/studio/images/write/desugar_2x.png" alt></p>
+<p>为了支持 Java8 的特性，你需要做的也很简单：</p>
+<ol>
+<li><p>指定 Java8</p>
+<p>在使用 Java8 语法的 Module 中添加以下配置</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">android.compileOptions &#123;</span><br><span class="line">    sourceCompatibility JavaVersion.VERSION_1_8</span><br><span class="line">    targetCompatibility JavaVersion.VERSION_1_8</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>移除 Jack</p>
+<p>事实上，Android 已经弃用 Jack 了。当然，你只需要移除即可。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">android.defaultConfig &#123;</span><br><span class="line">    ...</span><br><span class="line">    // Remove this block.</span><br><span class="line">    jackOptions &#123;</span><br><span class="line">        enabled true</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对于应用开发者来说，可以指定 dexer 为 D8，这是 Google 推出的工具。你的开发不需要关注 D8 的细节。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">android.enableD8=true</span><br></pre></td></tr></table></figure>
+
+<p>D8 更快，编译产物更小，甚至能够提高运行时的性能。</p>
+</li>
+<li><p>移除 Retrolambda<br>相信添加了 Retrolambda 相关配置的知道如何移除吧，把对应的语句删除即可。</p>
+</li>
+</ol>
+<p>如果你在使用中发现了问题，可以禁用掉它：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">android.enableDesugar=false</span><br></pre></td></tr></table></figure>
+
+<h3 id="行为变更"><a href="#行为变更" class="headerlink" title="行为变更"></a>行为变更</h3><ol>
+<li><p>移除了 outputFile() 及 processManifest.manifestOutputFile() 的使用</p>
+</li>
+<li><p>crunchPngs</p>
+<p>因为 crunchPngs 会增加构建时间 ，所以在大量 PNG 的项目中，非 Release 版本可以禁用处理。Debug 版本默认为关闭。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">android &#123;</span><br><span class="line">  buildTypes &#123;</span><br><span class="line">    release &#123;</span><br><span class="line">      // Disables PNG crunching for the release build type.</span><br><span class="line">      crunchPngs false</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对于这一点我的理解是如果有一个 buildTypes 是非 Realease 版本的而又不是 Debug 版本，那么为了提高构建速度，需要手动设置该属性。</p>
+</li>
+<li><p>以前使用的第三方 android-apt plugin 不被支持，可以直接在依赖中使用 annotationProcessor</p>
+</li>
+<li><p>对于构建变体的约束更强了</p>
+<p>必需指定 productFlavors 所属的 flavorDimensions。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">// Specifies two flavor dimensions.</span><br><span class="line">flavorDimensions &quot;tier&quot;, &quot;minApi&quot;</span><br><span class="line"></span><br><span class="line">productFlavors &#123;</span><br><span class="line">    free &#123;</span><br><span class="line">      // Assigns this product flavor to the &quot;tier&quot; flavor dimension. Specifying</span><br><span class="line">      // this property is optional if you are using only one dimension.</span><br><span class="line">      dimension &quot;tier&quot;</span><br><span class="line">      ...</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    paid &#123;</span><br><span class="line">      dimension &quot;tier&quot;</span><br><span class="line">      ...</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    minApi23 &#123;</span><br><span class="line">        dimension &quot;minApi&quot;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    minApi18 &#123;</span><br><span class="line">        dimension &quot;minApi&quot;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>另外，如果 App 和 Library 模块的 buildtype 和 flavors 不完全匹配，则需要使用 DSL 描述来解决。<br><img src="http://upload-images.jianshu.io/upload_images/2946447-6afe0abb71715433.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt></p>
+<p><img src="http://upload-images.jianshu.io/upload_images/2946447-120680f144255c73.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt></p>
+<p><img src="http://upload-images.jianshu.io/upload_images/2946447-2258b7cb451453ba.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt></p>
+</li>
+</ol>
+<ol start="5">
+<li><p>遍历：all</p>
+<p>如果之前使用 each 遍历 Variants，则需要开始使用 all()。 这是因为 each() 仅在 configuration time 遍历已经存在的对象，但在新的体系中，这些对象还不存在。 而 all() 通过在执行过程中添加对象来遍历。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">android.applicationVariants.all &#123; variant -&gt;</span><br><span class="line">    variant.outputs.all &#123;</span><br><span class="line">        outputFileName = &quot;$&#123;variant.name&#125;-$&#123;variant.versionName&#125;.apk&quot;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>proguard </p>
+<p>为 Library Module 中设置 ProGuard 不起作用。只需要在 app module 中设置即可。</p>
+</li>
+</ol>
+<h3 id="其它"><a href="#其它" class="headerlink" title="其它"></a>其它</h3><p>还有一些其他内容，由于了解不多，就不展开介绍，可以自行查看。</p>
+<ul>
+<li><p>一些对 androidTest 的支持</p>
+</li>
+<li><p>字体资源的支持，Oreo 的特性之一（国内没有这个条件）</p>
+</li>
+<li><p>Instant Apps 支持</p>
+</li>
+<li><p>NDK项目可指定输出目录</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">android &#123;</span><br><span class="line">    ...</span><br><span class="line">    externalNativeBuild &#123;</span><br><span class="line">        // For ndk-build, instead use the ndkBuild block.</span><br><span class="line">        cmake &#123;</span><br><span class="line">            ...</span><br><span class="line">            // Specifies a relative path for outputs from external native</span><br><span class="line">            // builds. You can specify any path that&apos;s not a subdirectory</span><br><span class="line">            // of your project&apos;s temporary build/ directory.</span><br><span class="line">            buildStagingDirectory &quot;./outputs/cmake&quot;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>支持使用 Cmake 3.7 及以上版本进行 native 项目构建</p>
+</li>
+<li><p>支持自定义的 Lint 检查项目。</p>
+<p>lintChecks project(‘:lint-chcks’)，这个对该 Lint 工程有要求。</p>
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/Android/" rel="tag"># Android</a>
+            
+              <a href="/tags/Gradle/" rel="tag"># Gradle</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2018/01/blog-new-start/" rel="next" title="博客方向调整">
+                  <i class="fa fa-chevron-left"></i> 博客方向调整
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2018/03/annotation&reflect-learning/" rel="prev" title="自定义 ButterKnife 框架">
+                  自定义 ButterKnife 框架 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+    </div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc" data-target="post-toc-wrap">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Gradle-4-1"><span class="nav-number">1.</span> <span class="nav-text">Gradle 4.1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#构建优化"><span class="nav-number">2.</span> <span class="nav-text">构建优化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Java8"><span class="nav-number">3.</span> <span class="nav-text">Java8</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#行为变更"><span class="nav-number">4.</span> <span class="nav-text">行为变更</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#其它"><span class="nav-number">5.</span> <span class="nav-text">其它</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/avatar_me.png"
+      alt="Mupceet">
+  <p class="site-author-name" itemprop="name">Mupceet</p>
+  <div class="site-description" itemprop="description">君子坦荡荡 小人长戚戚</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">25</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      友情链接
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://dxinl.github.io/" title="https://dxinl.github.io/" rel="noopener" target="_blank">Write down & Think hard</a>
+        </li>
+      
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Mupceet</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.3.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.3.0"></script><script src="/js/motion.js?v=7.3.0"></script>
+<script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://Mupceet.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  function disqus_config() {
+    this.page.url = "http://yoursite.com/2018/01/upgrade-to-Android-plugin-3.0-&-gradle-4.1/";
+    this.page.identifier = "2018/01/upgrade-to-Android-plugin-3.0-&-gradle-4.1/";
+    this.page.title = '升级 Android plugin 3.0 & Gradle 4.1';};
+  function loadComments() {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: disqus_config
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://Mupceet.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  }
+    (function() {
+      var offsetTop = document.getElementById('comments').offsetTop - window.innerHeight;
+      if (offsetTop <= 0) {
+        // load directly when there's no a scrollbar
+        window.addEventListener('load', loadComments, false);
+      } else {
+        var disqus_scroll = () => {
+          // offsetTop may changes because of manually resizing browser window or lazy loading images.
+          var offsetTop = document.getElementById('comments').offsetTop - window.innerHeight;
+          var scrollTop = window.scrollY;
+
+          // pre-load comments a bit? (margin or anything else)
+          if (offsetTop - scrollTop < 60) {
+            window.removeEventListener('scroll', disqus_scroll);
+            loadComments();
+          }
+        };
+        window.addEventListener('scroll', disqus_scroll);
+      }
+    })();
+  
+</script>
+
+</body>
+</html>

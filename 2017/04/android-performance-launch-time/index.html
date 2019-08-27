@@ -469,7 +469,7 @@
 <ol>
 <li><p>收集 trace 数据（具体可查看：<a href="https://developer.android.google.cn/studio/profile/systrace-walkthru.html" target="_blank" rel="noopener">Systrace Walkthrough</a>）<br><img src="http://upload-images.jianshu.io/upload_images/2946447-01c6d79a0f928633.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="Steps for starting Systrace"><br><img src="http://upload-images.jianshu.io/upload_images/2946447-d9f63b6282e1df4b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="Steps for creating a trace.png"></p>
 <p>收集 trace 数据还可以通过命令行的方式，使用命令行配置好后多次使用可以快速得到数据，不用每次手动点击去收集。</p>
-<figure class="highlight console"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">cd</span> android-sdk/platform-tools/systrace</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> python systrace.py --time=10 -o mynewtrace.html <span class="built_in">sched</span> gfx view wm</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight console"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> cd android-sdk/platform-tools/systrace</span><br><span class="line"><span class="meta">$</span> python systrace.py --time=10 -o mynewtrace.html sched gfx view wm</span><br></pre></td></tr></table></figure>
 
 </li>
 </ol>
@@ -647,7 +647,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">25</span>
+          <span class="site-state-item-count">26</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>

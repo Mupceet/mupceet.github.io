@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"搜索","hits_empty":"未找到与「 ${query} 」相关的内容","hits_stats":"找到 ${hits} 条相关条目，用时: ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="前面提到，我们想要解决在不同电脑上都能维护博客或配置、发布的内容丢失可恢复的问题。 观察部署到仓库的内容，我们可以看到上传的内容是 public 文件夹下的所有内容。事实上 hexo-deploy-git 插件通过拷贝 public 文件夹内容到 .deploy_git 文件夹下，然后提交推送到远程分支上实现了网站文件的部署。 那我们的备份思路也可以这样，上传其他所有文件就可以了，而 Git 可以">
+<meta name="keywords" content="杂谈">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hexo 博客备份与恢复">
+<meta property="og:url" content="http://yoursite.com/2019/09/backup-hexo-blog/index.html">
+<meta property="og:site_name" content="Mupceet">
+<meta property="og:description" content="前面提到，我们想要解决在不同电脑上都能维护博客或配置、发布的内容丢失可恢复的问题。 观察部署到仓库的内容，我们可以看到上传的内容是 public 文件夹下的所有内容。事实上 hexo-deploy-git 插件通过拷贝 public 文件夹内容到 .deploy_git 文件夹下，然后提交推送到远程分支上实现了网站文件的部署。 那我们的备份思路也可以这样，上传其他所有文件就可以了，而 Git 可以">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-09-01T04:59:11.332Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Hexo 博客备份与恢复">
+<meta name="twitter:description" content="前面提到，我们想要解决在不同电脑上都能维护博客或配置、发布的内容丢失可恢复的问题。 观察部署到仓库的内容，我们可以看到上传的内容是 public 文件夹下的所有内容。事实上 hexo-deploy-git 插件通过拷贝 public 文件夹内容到 .deploy_git 文件夹下，然后提交推送到远程分支上实现了网站文件的部署。 那我们的备份思路也可以这样，上传其他所有文件就可以了，而 Git 可以">
+  <link rel="canonical" href="http://yoursite.com/2019/09/backup-hexo-blog/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Hexo 博客备份与恢复 | Mupceet</title>
+  <meta name="generator" content="Hexo 3.9.0">
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Mupceet</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Don't Repeat Yourself</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/backup-hexo-blog/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Mupceet">
+      <meta itemprop="description" content="君子坦荡荡 小人长戚戚">
+      <meta itemprop="image" content="/images/avatar_me.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Mupceet">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">Hexo 博客备份与恢复
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-09-01 12:21:33 / 修改时间：12:59:11" itemprop="dateCreated datePublished" datetime="2019-09-01T12:21:33+08:00">2019-09-01</time>
+            </span>
+          
+            
+
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/整理/" itemprop="url" rel="index"><span itemprop="name">整理</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Disqus：</span>
+    
+    <a title="disqus" href="/2019/09/backup-hexo-blog/#comments" itemprop="discussionUrl"><span class="post-comments-count disqus-comment-count" data-disqus-identifier="2019/09/backup-hexo-blog/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>前面提到，我们想要解决在不同电脑上都能维护博客或配置、发布的内容丢失可恢复的问题。</p>
+<p>观察部署到仓库的内容，我们可以看到上传的内容是 <code>public</code> 文件夹下的所有内容。事实上 <code>hexo-deploy-git</code> 插件通过拷贝 <code>public</code> 文件夹内容到 <code>.deploy_git</code> 文件夹下，然后提交推送到远程分支上实现了网站文件的部署。</p>
+<p>那我们的备份思路也可以这样，上传其他所有文件就可以了，而 Git 可以使用不同的分支存储不同的内容，那我们就考虑使用 Git 的分支来备份其他所有文件。</p>
+<p>最简单的方法，就是在仓库创建一个新的分支，把本地所有的内容都上传到该分支上。但这样会备份一部分不必要的文件，例如 <code>public</code> 文件夹内容，它可以再次生成，就没有必要备份。</p>
+<p>那具体要备份哪些文件呢？</p>
+<a id="more"></a>
+
+<h2 id="备份"><a href="#备份" class="headerlink" title="备份"></a>备份</h2><h3 id="备份的文件列表"><a href="#备份的文件列表" class="headerlink" title="备份的文件列表"></a>备份的文件列表</h3><p>我们先看下，现在博客文件夹都有什么内容：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">.</span><br><span class="line">├── _config.yml</span><br><span class="line">├── db.json</span><br><span class="line">├── node_modules</span><br><span class="line">├── package.json</span><br><span class="line">├── package-lock.json</span><br><span class="line">├── public</span><br><span class="line">├── scaffolds</span><br><span class="line">├── source</span><br><span class="line">└── themes</span><br><span class="line">    ├── next</span><br><span class="line">    └── landscape</span><br></pre></td></tr></table></figure>
+
+<p>这几个文件或文件夹的内容分别是：</p>
+<ol>
+<li><code>_config.yml</code> 文件：站点配置文件，很多功能、插件需要修改该配置文件应用生效。</li>
+<li><code>node_modules</code> 文件夹：包含依赖的模块。</li>
+<li><code>package.json</code> 文件：依赖的模块列表。说明见：<a href="https://www.npmjs.cn/files/package.json/" target="_blank" rel="noopener">package.json:Specifics of npm’s package.json handling</a></li>
+<li><code>package-lock.json</code> 文件：依赖的模块安装记录。说明见：<a href="https://www.npmjs.cn/files/package-locks/" target="_blank" rel="noopener">npm-package-locks:An explanation of npm lockfiles</a></li>
+<li><code>public</code> 文件夹：包含生成的网页静态文件。</li>
+<li><code>scaffolds</code> 文件夹：包含创建的文章、分类、标签界面的模板。博客的定制修改会对模板进行修改。</li>
+<li><code>source</code> 文件夹：包含生成网页所需要的源文件，包括包含我们心血的 Markdown 文稿，这也是最重要的内容。</li>
+<li><code>themes</code> 文件夹：其中 <code>landscape</code> 是默认的主题，其他文件夹是克隆下来时的主题。</li>
+</ol>
+<p>我们可以参考 Hexo 初始化使用的仓库的备份列表，它的仓库是 <a href="https://github.com/hexojs/hexo-starter" target="_blank" rel="noopener">hexojs/hexo-starter</a>。我们看下它备份了哪些内容：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">scaffolds</span><br><span class="line">source</span><br><span class="line">themes</span><br><span class="line">.gitignore</span><br><span class="line">.gitmodules</span><br><span class="line">_config.yml</span><br><span class="line">package.json</span><br></pre></td></tr></table></figure>
+
+<p>比对一下，它抛弃了：</p>
+<ol>
+<li><code>node_modules</code> &amp; <code>package-lock.json</code>：这两部分内容，只要保留 <code>package.json</code>，执行 <code>npm install</code> 就可以下载、生成。</li>
+<li><code>public</code>：执行 <code>hexo g</code> 即可根据源文件生成网页内容。</li>
+</ol>
+<p>这些可重新生成的文件都可以不上传，因为它们只要使用特定的操作即可恢复。</p>
+<p>那另外的 <code>.gitmodules</code> 作用又是什么呢？其实 <code>hexojs/hexo-starter</code> 是通过 Git 的 Submodule 功能来管理主题模块，本身仓库并不备份主题文件。其实我们对于主题文件的备份有两个方案：一个方案是将其内容全部上传进行备份。一方面可以保证原主题的更新不会影响你原先配置的效果，另一方面，主题可能在进行配置的时候还需要下载一些额外的库，直接上传可以避免再次下载这些内容和配置。另一个方案是像 <code>hexo-starter</code> 仓库一样通过 Git 的 Submodule 功能来管理，这样可以进行主题的更新。</p>
+<p>我选择和 Hexo 初始化仓库一样使用子模块的方式进行主题的备份处理。但通过子模块管理的方式我们仅同步到了 Next 主题的原文件，没法直接同步我们对主题配置文件或其他文件的修改，因为我们没有权限提交修改到 Next 仓库中。因此我创建了了个 <code>themes_custom</code> 文件夹来存放对应主题的修改的备份，这样子我们同步之后，只需要对比一下把这些配置应用过去就可以快速完成对主题的配置。</p>
+<p>最终备份文件列表如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">scaffolds</span><br><span class="line">source</span><br><span class="line">themes</span><br><span class="line">themes_custom/next</span><br><span class="line">.gitignore</span><br><span class="line">.gitmodules</span><br><span class="line">_config.yml</span><br><span class="line">package.json</span><br></pre></td></tr></table></figure>
+
+<h3 id="具体操作"><a href="#具体操作" class="headerlink" title="具体操作"></a>具体操作</h3><p>有了方案之后，我们备份的具体操作如下：</p>
+<ol>
+<li><p>先修改 <code>.gitignore</code> 文件，查看之后由于原文件已经忽略了 <code>public</code> 和 <code>node_modules</code> 文件夹，因此仅需要添加 <code>package-lock.json</code> 到忽略清单中。</p>
+</li>
+<li><p>我们可以删除不使用的主题 <code>landscape</code> 或者把主题路径添加到忽略列表中。</p>
+</li>
+<li><p>创建 <code>themes_custom/next</code> 文件夹，将对主题进行的配件修改的文件拷贝一份到这里</p>
+</li>
+<li><p>执行以下命令，在本地创建备份仓库：</p>
+ <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> cd blog</span><br><span class="line"><span class="meta">$</span> git init</span><br><span class="line">已初始化空的 Git 仓库于 blog/.git/</span><br><span class="line"></span><br><span class="line"><span class="meta">$</span> git submodule add https://github.com/theme-next/hexo-theme-next.git themes/next</span><br><span class="line">添加位于 'themes/next' 的现存仓库到索引</span><br><span class="line"></span><br><span class="line"><span class="meta">$</span> git add .</span><br><span class="line"><span class="meta">$</span> git commit -m "init blog backup"</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>将备份仓库跟踪并 push 到远程仓库的备份分支 <code>hexo</code> 上：</p>
+ <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> git branch -m master hexo</span><br><span class="line"><span class="meta">$</span> git remote add origin https://github.com/Mupceet/mupceet.github.io.git</span><br><span class="line"><span class="meta">$</span> git push -u origin hexo:hexo</span><br></pre></td></tr></table></figure>
+
+<p> 这里，我对分支进行了重命名以减少记忆负担</p>
+</li>
+</ol>
+<p>经过以上步骤，我们就备份了所有所必要的文件。后续更新博客之后，需要及时地将这些备份文件的变更提交并上传。</p>
+<h2 id="恢复"><a href="#恢复" class="headerlink" title="恢复"></a>恢复</h2><p>有了备份之后，在另一台电脑上创建博客，或者是恢复备份时，就可以直接使用我们备份的内容进行操作。</p>
+<ol>
+<li><p>克隆备份的内容</p>
+ <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> git clone --recursive -b hexo https://github.com/Mupceet/mupceet.github.io.git blog</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>下载 npm 依赖模块</p>
+ <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> cd blog</span><br><span class="line"><span class="meta">$</span> npm install</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>恢复主题配置</p>
+<p> 将 <code>themes_custom</code> 文件夹中对主题的配置的修改恢复到对应的主题文件夹中，这里建议使用对比的方式对其进行修改，而不是直接覆盖，这样就完成了主题的配置。</p>
+</li>
+<li><p>正常更新博客</p>
+ <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> hexo g</span><br><span class="line"><span class="meta">$</span> hexo s</span><br><span class="line"><span class="meta">$</span> hexo d</span><br></pre></td></tr></table></figure>
+
+</li>
+</ol>
+<p>可以看到，使用备份文件恢复博客的环境是非常简单的。大家搭建好博客之后别忘记备份哦。</p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/杂谈/" rel="tag"># 杂谈</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2019/08/build-blog-based-on-hexo/" rel="next" title="Hexo 博客搭建与主题配置（零基础版）">
+                  <i class="fa fa-chevron-left"></i> Hexo 博客搭建与主题配置（零基础版）
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+    </div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc" data-target="post-toc-wrap">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#备份"><span class="nav-number">1.</span> <span class="nav-text">备份</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#备份的文件列表"><span class="nav-number">1.1.</span> <span class="nav-text">备份的文件列表</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#具体操作"><span class="nav-number">1.2.</span> <span class="nav-text">具体操作</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#恢复"><span class="nav-number">2.</span> <span class="nav-text">恢复</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/avatar_me.png"
+      alt="Mupceet">
+  <p class="site-author-name" itemprop="name">Mupceet</p>
+  <div class="site-description" itemprop="description">君子坦荡荡 小人长戚戚</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">27</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      友情链接
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://dxinl.github.io/" title="https://dxinl.github.io/" rel="noopener" target="_blank">Write down & Think hard</a>
+        </li>
+      
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Mupceet</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.3.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.3.0"></script><script src="/js/motion.js?v=7.3.0"></script>
+<script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://Mupceet.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  function disqus_config() {
+    this.page.url = "http://yoursite.com/2019/09/backup-hexo-blog/";
+    this.page.identifier = "2019/09/backup-hexo-blog/";
+    this.page.title = 'Hexo 博客备份与恢复';};
+  function loadComments() {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: disqus_config
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://Mupceet.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  }
+    (function() {
+      var offsetTop = document.getElementById('comments').offsetTop - window.innerHeight;
+      if (offsetTop <= 0) {
+        // load directly when there's no a scrollbar
+        window.addEventListener('load', loadComments, false);
+      } else {
+        var disqus_scroll = () => {
+          // offsetTop may changes because of manually resizing browser window or lazy loading images.
+          var offsetTop = document.getElementById('comments').offsetTop - window.innerHeight;
+          var scrollTop = window.scrollY;
+
+          // pre-load comments a bit? (margin or anything else)
+          if (offsetTop - scrollTop < 60) {
+            window.removeEventListener('scroll', disqus_scroll);
+            loadComments();
+          }
+        };
+        window.addEventListener('scroll', disqus_scroll);
+      }
+    })();
+  
+</script>
+
+</body>
+</html>

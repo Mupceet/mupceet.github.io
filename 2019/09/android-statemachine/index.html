@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"搜索","hits_empty":"未找到与「 ${query} 」相关的内容","hits_stats":"找到 ${hits} 条相关条目，用时: ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="在过去 CPU 非常昂贵的时候，通常通过设定任务让其不间断执行以提高效率，而在今天几乎所有的计算机在大多数时间都是空闲的，运行的是事件驱动系统（Event Drive System）亦或叫响应式系统（Reactive System）。可以回忆下常听到的“中断（Interrupt）”一词。 响应式系统通常没有开始与结束的概念，而是始终运行着，只在处理事件（Event）时才获得控制权，实际执行的动作由">
+<meta name="keywords" content="Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android StateMachine">
+<meta property="og:url" content="http://yoursite.com/2019/09/android-statemachine/index.html">
+<meta property="og:site_name" content="Mupceet">
+<meta property="og:description" content="在过去 CPU 非常昂贵的时候，通常通过设定任务让其不间断执行以提高效率，而在今天几乎所有的计算机在大多数时间都是空闲的，运行的是事件驱动系统（Event Drive System）亦或叫响应式系统（Reactive System）。可以回忆下常听到的“中断（Interrupt）”一词。 响应式系统通常没有开始与结束的概念，而是始终运行着，只在处理事件（Event）时才获得控制权，实际执行的动作由">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://barrgroup.com/images/articles/IntroHierarchicalStateMachines01UmlNestedStates.gif#align=left&display=inline&height=135&originHeight=135&originWidth=600&status=done&width=600">
+<meta property="og:updated_time" content="2019-09-22T11:16:51.434Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android StateMachine">
+<meta name="twitter:description" content="在过去 CPU 非常昂贵的时候，通常通过设定任务让其不间断执行以提高效率，而在今天几乎所有的计算机在大多数时间都是空闲的，运行的是事件驱动系统（Event Drive System）亦或叫响应式系统（Reactive System）。可以回忆下常听到的“中断（Interrupt）”一词。 响应式系统通常没有开始与结束的概念，而是始终运行着，只在处理事件（Event）时才获得控制权，实际执行的动作由">
+<meta name="twitter:image" content="https://barrgroup.com/images/articles/IntroHierarchicalStateMachines01UmlNestedStates.gif#align=left&display=inline&height=135&originHeight=135&originWidth=600&status=done&width=600">
+  <link rel="canonical" href="http://yoursite.com/2019/09/android-statemachine/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Android StateMachine | Mupceet</title>
+  <meta name="generator" content="Hexo 3.9.0">
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Mupceet</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Don't Repeat Yourself</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/android-statemachine/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Mupceet">
+      <meta itemprop="description" content="君子坦荡荡 小人长戚戚">
+      <meta itemprop="image" content="/images/avatar_me.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Mupceet">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">Android StateMachine
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-09-22 19:07:33 / 修改时间：19:16:51" itemprop="dateCreated datePublished" datetime="2019-09-22T19:07:33+08:00">2019-09-22</time>
+            </span>
+          
+            
+
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/技术向/" itemprop="url" rel="index"><span itemprop="name">技术向</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Disqus：</span>
+    
+    <a title="disqus" href="/2019/09/android-statemachine/#comments" itemprop="discussionUrl"><span class="post-comments-count disqus-comment-count" data-disqus-identifier="2019/09/android-statemachine/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>在过去 CPU 非常昂贵的时候，通常通过设定任务让其不间断执行以提高效率，而在今天几乎所有的计算机在大多数时间都是空闲的，运行的是事件驱动系统（Event Drive System）亦或叫响应式系统（Reactive System）。可以回忆下常听到的“中断（Interrupt）”一词。</p>
+<p>响应式系统通常没有开始与结束的概念，而是始终运行着，只在处理事件（Event）时才获得控制权，实际执行的动作由事件与所处的状态（State）共同决定，而当前的状态与过去的事件顺序相关，因此，整个系统都是由事件驱动的。事件很大程度上以不可预测的顺序和时间到达，因此软件每次运行时调用的代码的路径很可能不同。</p>
+<h2 id="有限状态机"><a href="#有限状态机" class="headerlink" title="有限状态机"></a>有限状态机</h2><p>状态机模型明确地声明了事件的处理依赖于<strong>事件</strong>与<strong>状态</strong>。当然你也可以使用条件语句和标志实现状态记录与事件响应，但这其中的可维护性与复杂度可想而知。状态机通过将状态和行为封装在一起，解决庞大分支语句带来的阅读性差和不方便扩展的问题，降低程序的复杂性，提升灵活性。</p>
+<p>我们所说的状态机实际上是指 FSM（Finite State Machine，有限状态机），它表示有限个状态以及在这些状态下执行动作和状态转移等行为的模型。FSM 可分为两种类型：</p>
+<ul>
+<li>Moore Machine：状态机的<strong>输出只与当前状态相关</strong>，与当前的输入无关</li>
+<li>Mealy Machine：状态机的<strong>输出与当前状态和当前输入有关</strong></li>
+</ul>
+<a id="more"></a>
+
+<p>举例说明 FSM 及其两种类型的区别。游戏中士兵的行为状态有<code>巡逻</code>、<code>追击敌人</code>、<code>攻击敌人</code>、<code>逃跑</code>等；响应的事件有<code>发现敌人</code>、<code>追到敌人</code>、<code>敌人逃跑</code>、<code>敌人死亡</code>、自己<code>血量不足</code>等。这些状态的转移及对事件的响应如下表所示。</p>
+<table>
+<thead>
+<tr>
+<th><strong>当前状态</strong></th>
+<th><strong>当前输入</strong></th>
+<th><strong>转移状态</strong></th>
+<th><strong>输出（Mealy）</strong></th>
+<th><strong>输出（Moore）</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>巡逻</td>
+<td>发现敌人</td>
+<td>追击敌人</td>
+<td>增加功劳 10</td>
+<td>体力值下降 5</td>
+</tr>
+<tr>
+<td>追击敌人</td>
+<td>追到敌人</td>
+<td>攻击敌人</td>
+<td>增加功劳 20</td>
+<td>体力值下降 20</td>
+</tr>
+<tr>
+<td>追击敌人</td>
+<td>敌人死亡</td>
+<td>巡逻</td>
+<td>增加功劳 0</td>
+<td>体力值下降 20</td>
+</tr>
+<tr>
+<td>攻击敌人</td>
+<td>敌人死亡</td>
+<td>巡逻</td>
+<td>获得金钱 100</td>
+<td>敌方掉血 100</td>
+</tr>
+<tr>
+<td>攻击敌人</td>
+<td>血量不足</td>
+<td>逃跑</td>
+<td>扣除功劳 100</td>
+<td>敌方掉血 100</td>
+</tr>
+</tbody></table>
+<p>从表格中可以看出，FSM 分类依据中的<strong>输出</strong>不是指某个状态的输出，而是<strong>状态机系统对外的输出</strong>。状态机本身状态的转移与状态机当前状态和当前输入都是相关的。</p>
+<p>实际上，系统中常使用混合状态机，即状态机既包含了 Moore 状态机也包含了 Mealy 状态机。仅部分单一功能的设计采用单纯的状态机类型（如：检测 1001 字符串）。其中由于 Moore 状态机中状态的增加与事件处理的修改对其输出影响不大，所以它具备安全可扩展的特点，因此混合状态机需要尽可能地 Moore 化。</p>
+<p>用代码实现的思路描述 FSM 则是：不同的状态下都有一个 handleEvent 的方法供调用处理输入的不同的 Event，运行时 State 将根据事件输入进行转换，由于所处状态的不同，导致了即使向系统输入同一事件，它表现出来的行为都不一样。这也正是状态模式（State Pattern）的含义。</p>
+<h2 id="分层状态机"><a href="#分层状态机" class="headerlink" title="分层状态机"></a>分层状态机</h2><p>FSM 存在一个问题，随着系统复杂度增加，状态机的管理将越来越繁复。例如，在上面游戏系统的例子中加入一个用户退出事件，就需要在每个状态中增加退出事件的处理逻辑，而且处理逻辑可能相同，都是保存当前相关数据这一逻辑。实际上，大部分现实系统都是复杂度足够高的响应式系统，仅采用 FSM 显得力不从心。</p>
+<p>如何改进呢？我们可以站在巨人的肩膀上进行思考，回想一下所知道的 GUI 系统是怎么处理用户输入事件的。例如 Android 系统，它处理触摸事件使用的是事件分发机制，将事件分发到子控件处理，如果子控件未处理则事件流回到父控件，重复此流程直至最高处理级别。整个处理逻辑体现了一种分层的结构设计，事件始终被尝试处理着，该设计模式是典型的责任链模式（Interator Pattern）</p>
+<p>将这种事件处理的分层结构引入 FSM 则产生了 HFSM（Hierarchical Finite State Machines，分层状态机）。典型结构如下图所示。</p>
+<p><img src="https://barrgroup.com/images/articles/IntroHierarchicalStateMachines01UmlNestedStates.gif#align=left&display=inline&height=135&originHeight=135&originWidth=600&status=done&width=600" alt="HFSM"></p>
+<ol>
+<li><strong>嵌套</strong>：如果系统处于状态 s11（称为子状态），它也隐式地处于状态 s1（父状态）中。 此状态机将使用状态 s11 尝试处理事件。如果状态 s11 没有规定如何处理事件，则事件将交由更高级别的父状态 s1 进行处理。</li>
+<li><strong>复用</strong>：在 s1 中增加另一嵌套状态 s12 如 (b) 所示，两个子状态之间可以通过父状态复用的方式处理同一事件。</li>
+</ol>
+<p>HFSM 最重要的设计为父子状态的引入。新定义状态可<strong>继承</strong>父状态的行为逻辑，因此只需要定义与现有状态的差异来快速引入新的状态，并且可以<strong>复写</strong>对事件的处理来<strong>覆盖或扩展</strong>父状态的事件处理。</p>
+<p>HFSM 另一重要设计是状态的进入（Enter）与退出（Exit）操作。Enter 与 Exit 操作与状态相关，而与其转移条件无关，该设计即 Moore 状态机的表现。通常 Enter 与 Exit 用于状态资源的初始化与释放，其执行顺序为<strong>从父状态往下进行初始化，退出则以相反顺序执行</strong>，这个设计可与<strong>面向对象编程中的构造和销毁</strong>对比。该设计的典型应用为状态间对系统稀有资源的复用，仅需要通过这两个方法进行使用与释放。</p>
+<h2 id="Android-HFSM-使用说明"><a href="#Android-HFSM-使用说明" class="headerlink" title="Android HFSM 使用说明"></a>Android HFSM 使用说明</h2><p>Android 系统源码中提供了 HFSM 的实现，源码路径为：sources/android-[version]/com/android/internal/util</p>
+<ul>
+<li>IState.java</li>
+<li>State.java</li>
+<li>StateMachine.java</li>
+</ul>
+<h3 id="IState"><a href="#IState" class="headerlink" title="IState"></a>IState</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">IState</span> </span>&#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">boolean</span> HANDLED = <span class="keyword">true</span>;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">boolean</span> NOT_HANDLED = <span class="keyword">false</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">enter</span><span class="params">()</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">exit</span><span class="params">()</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">boolean</span> <span class="title">processMessage</span><span class="params">(Message msg)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="function">String <span class="title">getName</span><span class="params">()</span></span>; <span class="comment">// for debugging</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这是 HFSM 中每个状态的典型接口：</p>
+<ul>
+<li><code>processMessage</code> 方法：状态机中任一时刻只执行一个 <code>processMessage</code> 方法，因此不需要同步锁，但需要尽快完成处理，否则后续事件都不会被处理。</li>
+<li><code>enter/exit</code> 方法：状态的进入与退出，分别用于执行该状态的初始化和清理。</li>
+<li><code>getName</code> 方法：获取状态的名称用于调试。默认返回类名，如果状态会有多个实例，最好让 <code>getName</code> 返回实例名称。</li>
+</ul>
+<h3 id="State"><a href="#State" class="headerlink" title="State"></a>State</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">State</span> <span class="keyword">implements</span> <span class="title">IState</span> </span>&#123;</span><br><span class="line">　　<span class="function"><span class="keyword">protected</span> <span class="title">State</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line">　　<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">enter</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line">　　<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">exit</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line">　　<span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">processMessage</span><span class="params">(Message msg)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getName</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        String name = getClass().getName();</span><br><span class="line">        <span class="keyword">int</span> lastDollar = name.lastIndexOf(<span class="string">'$'</span>);</span><br><span class="line">        <span class="keyword">return</span> name.substring(lastDollar + <span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个是 ISate 的默认实现：</p>
+<ul>
+<li><code>processMessage</code> 方法：默认不处理任何消息。</li>
+<li><code>getName</code> 方法：默认返回类名，如果状态会有多个实例，最好让 <code>getName</code> 返回实例名称。</li>
+</ul>
+<p>一般情况下，StateMachine 中的状态选择继承 State 而不用直接实现接口。其实我觉得 State 类设计成抽象类更合适。</p>
+<h3 id="StateMachine"><a href="#StateMachine" class="headerlink" title="StateMachine"></a>StateMachine</h3><p>首先我们看下 StateMachine 的构造函数中的初始化方法，它们最终调用了以下方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">initStateMachine</span><span class="params">(String name, Looper looper)</span> </span>&#123;</span><br><span class="line">    mName = name;</span><br><span class="line">    mSmHandler = <span class="keyword">new</span> SmHandler(looper, <span class="keyword">this</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看出，状态机内部有一个 Handler 来处理消息，这个 Handler 可以在创建时传入，也可以内部自动创建子线程来构建。因此，我们可以知道，状态机消息处理时是处在 Handler 所在的线程中，这一点在主动传入外部 Handler 时要特别注意，不要因为外部的消息处理阻塞了状态机的消息处理。</p>
+<p>更进一步，我们看以下这些状态机的公共方法的处理，可以发现，所有真正的执行动作都是在其内部的 Handler 中，与调用方法的上下文无关。因此，如果清楚 StateMachine 处理消息的线程，就不用担心它的处理会阻塞调用线程。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">StateMachine</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 初始化</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">addState</span><span class="params">(State state)</span> </span>&#123;&#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">addState</span><span class="params">(State state, State parent)</span> </span>&#123;&#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">setInitialState</span><span class="params">(State initialState)</span> </span>&#123;&#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">start</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 发送消息</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> Message <span class="title">obtainMessage</span><span class="params">()</span> </span>&#123;&#125; <span class="comment">// 一系列同名方法</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">sendMessage</span><span class="params">(Message msg)</span> </span>&#123;&#125; <span class="comment">// 一系列同名方法</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">sendMessageDelayed</span><span class="params">(Message msg, <span class="keyword">long</span> delayMillis)</span> </span>&#123;&#125; <span class="comment">// 一系列同名方法</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">deferMessage</span><span class="params">(Message msg)</span> </span>&#123;&#125;</span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">sendMessageAtFrontOfQueue</span><span class="params">(Message msg)</span> </span>&#123;&#125; <span class="comment">// 一系列同名方法</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 状态操作</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">transitionTo</span><span class="params">(IState destState)</span> </span>&#123;&#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">removeState</span><span class="params">(State state)</span> </span>&#123;&#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">transitionToHaltingState</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 退出</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">quit</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">quitNow</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 其他</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> Handler <span class="title">getHandler</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> IState <span class="title">getCurrentState</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> Message <span class="title">getCurrentMessage</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们先把 public 方法进行分类，分别说明。</p>
+<h4 id="初始化相关方法"><a href="#初始化相关方法" class="headerlink" title="初始化相关方法"></a>初始化相关方法</h4><p>创建状态机时，<code>addState</code> 用于构建层次结构，<code>setInitialState</code> 用于标识初始状态。构造完成后，调用 <code>start</code>，完成初始化并启动状态机。正如 HFSM 设计，进入操作将逐一调用状态链的 <code>enter</code> 方法直到进入初始状态，等待消息到来进行处理。</p>
+<p><strong>注意：不要在调用 <code>start</code> 之前给状态机发送消息，否则会导致崩溃。</strong></p>
+<h4 id="发送消息相关方法"><a href="#发送消息相关方法" class="headerlink" title="发送消息相关方法"></a>发送消息相关方法</h4><p>状态机启动后，可通过 <code>obtainMessage</code> 方法创建 Message 再 <code>sendMessage</code> 到状态机中，或者直接 <code>sendMessage</code> 发送消息到状态机中，状态机将调用当前状态的 <code>processMessage</code> 进行处理。而正如 HFSM 设计，如果当前状态未能处理该消息（returen NOT_HANDLED），那么在它存在父状态时，则将该消息交由父状态进行处理。<br>另外，还可通过 <code>defferMessage</code> 发送一个延缓处理的消息，该消息将在<strong>状态转移后立即处理</strong>。因此，在发送新消息时要根据该消息是要在当前状态进行处理还是在下一状态才进行处理，选择对应的 <code>sendMessage</code> 或 <code>deferMessage</code> 方法。<br>如果在状态机内部，还可通过 <code>sendMessageAtFrontOfQueue</code> 将消息发送至队列前面以尽快进行处理。</p>
+<h4 id="状态操作相关方法"><a href="#状态操作相关方法" class="headerlink" title="状态操作相关方法"></a>状态操作相关方法</h4><p>当前状态处理消息时，根据逻辑设计可调用 <code>transitionTo</code> 进行状态的转换，调用该方法并不会立即进行状态的转换，而是在该消息处理完成后进行状态的转移。<br>可根据需要可调用 <code>removeState</code> 从状态机中移除不再需要的状态，该方法不能移除当前的状态链中的状态，也不能移除某个子状态的父状态，条件比较严格。<br>此外，状态机提供了一个 Halting 的暂停状态，可通过 <code>transitionToHaltingState</code> 方法进入，状态机处于该状态时，后续的消息都由 <code>haltedProcessMessage</code> 处理，后文再对此特殊状态进行补充说明。</p>
+<h4 id="退出相关方法"><a href="#退出相关方法" class="headerlink" title="退出相关方法"></a>退出相关方法</h4><p>当希望退出状态机时，可以调用 <code>quit</code> 或 <code>quitNow</code> 方法，状态机将转移到 Quitting 状态。它们的区别是前者会在状态机处理完消息队列中的所有消息再退出，后者在当前消息处理完成后直接退出，正如 HFSM 设计，退出操作将逐一调用状态链的 <code>exit</code> 方法。</p>
+<h4 id="其他模板方法"><a href="#其他模板方法" class="headerlink" title="其他模板方法"></a>其他模板方法</h4><p>前面对状态机的 public 方法的使用进行了说明，其实状态机还有一些有用的模板方法，可在实现状态机时有选择地进行重写。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onPreHandleMessage</span><span class="params">(Message msg)</span> </span>&#123;&#125;</span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onPostHandleMessage</span><span class="params">(Message msg)</span> </span>&#123;&#125;</span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">unhandledMessage</span><span class="params">(Message msg)</span> </span>&#123;&#125;</span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">haltedProcessMessage</span><span class="params">(Message msg)</span> </span>&#123;&#125;</span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onHalting</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onQuitting</span><span class="params">()</span> </span>&#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对正常消息来说，在处理前后会分别调用 <code>onPreHandleMessage</code> 和 <code>onPostHandleMessage</code> 方法，重写 <code>onPreHandleMessage</code> 方法时切记<strong>不要修改 Message 对象</strong>，否则出问题很难定位。</p>
+<p>如果子状态及其所有父状态都未处理消息，则将调用 <code>unhandledMessage</code> 为状态机提供最后一次处理消息的机会。</p>
+<p>上文说到状态机提供了两个特殊的状态，分别是 Halting 和 Quitting。在进入 Quitting 状态后，会调用 <code>onQuitting</code> 方法，这一般用来通知状态机本身进行资源的释放。同样地，在进入 Halting 状态后，会调用 <code>onHalting</code> 方法使得状态机了解该事件，可以释放暂时不需要的资源，并且后续的消息都由 <code>haltedProcessMessage</code> 进行处理，子类可重写该方法以便根据特定消息从 Halting 状态转移恢复到正常状态。</p>
+<h4 id="调试相关"><a href="#调试相关" class="headerlink" title="调试相关"></a>调试相关</h4><p>状态机提供了一些调试配置选项，简单介绍一下。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 日志调试</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setDbg</span><span class="params">(<span class="keyword">boolean</span> dbg)</span> </span>&#123;&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isDbg</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">log</span><span class="params">(String s)</span> </span>&#123;&#125; <span class="comment">// 一系列 log 方法</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">protected</span> String <span class="title">getWhatToString</span><span class="params">(<span class="keyword">int</span> what)</span> </span>&#123;&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">setLogOnlyTransitions</span><span class="params">(<span class="keyword">boolean</span> enable)</span> </span>&#123;&#125;</span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">boolean</span> <span class="title">recordLogRec</span><span class="params">(Message msg)</span> </span>&#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> String <span class="title">getName</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> <span class="title">getLogRecSize</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">setLogRecSize</span><span class="params">(<span class="keyword">int</span> maxSize)</span> </span>&#123;&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> <span class="title">getLogRecMaxSize</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> <span class="title">getLogRecCount</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> LogRec <span class="title">getLogRec</span><span class="params">(<span class="keyword">int</span> index)</span> </span>&#123;&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> Collection&lt;LogRec&gt; <span class="title">copyLogRecs</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addLogRec</span><span class="params">(String string)</span> </span>&#123;&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">dump</span><span class="params">(FileDescriptor fd, PrintWriter pw, String[] args)</span> </span>&#123;&#125;</span><br><span class="line"><span class="function"><span class="keyword">protected</span> String <span class="title">getLogRecString</span><span class="params">(Message msg)</span> </span>&#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在开发调试时，最好打开 Debug 开关， <code>setDbg</code> 为 true 之后，处理消息和状态转移时会在日志中打印相关信息。状态机内部可以直接调用 <code>log</code> 系列方法打印出相同 TAG 的日志，与其内部保持一致。实践中，记得在 <code>log</code> 调用前加上 <code>isDbg</code> 判断，从而在上线版本中 <code>setDbg</code> 为 false 关闭日志输出。</p>
+<p>log 打印的日志信息比较简单，如果要查看消息更多的信息，可以调用 StateMachine 的 <code>toString</code> 方法，实际上它也是调用了 <code>dump</code> 方法对这些所谓的 LogRec 进行输出。LogRec 的记录默认记录 20 条所有消息，这个可以通过查看 LogRecMaxSize 为 20 以及 <code>recordLogRec</code> 方法默认对所有消息返回 true 知道。如果只记录状态转移的消息可以 <code>setLogOnlyTransitions(true)</code> 。但这些信息打印消息时只打印 what，不够直观，我们可以重写 <code>getWhatToString(int what)</code> 方法，把 what 转成容易理解的字符串。</p>
+<h3 id="实践经验"><a href="#实践经验" class="headerlink" title="实践经验"></a>实践经验</h3><ol>
+<li>要特别注意消息处理线程和其他业务的线程的关系。要注意耗时处理的影响以及适时退出状态机，回收资源。</li>
+<li>消息的前后关系要放在心上，消息和状态的对应关系也要注意。有时候要插入消息或清除旧消息，要注意这种场景下的消息队列的消息处理情况。</li>
+</ol>
+<blockquote>
+<p>参考资料：</p>
+<ol>
+<li><a href="https://en.wikipedia.org/wiki/Finite-state_machine" target="_blank" rel="noopener">Finite-state machine Wikipedia</a></li>
+<li><a href="https://barrgroup.com/Embedded-Systems/How-To/State-Machines-Event-Driven-Systems" target="_blank" rel="noopener">State Machines for Event-Driven Systems</a></li>
+<li><a href="https://barrgroup.com/Embedded-Systems/How-To/Introduction-Hierarchical-State-Machines" target="_blank" rel="noopener">Introduction to Hierarchical State Machines (HSMs)</a></li>
+<li><a href="http://www.aisharing.com/archives/393" target="_blank" rel="noopener">层次化状态机的讨论</a></li>
+<li><a href="https://blog.csdn.net/a8403025/article/details/80666056" target="_blank" rel="noopener">关于 StateMachine 的那些事儿</a></li>
+</ol>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/Android/" rel="tag"># Android</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2019/09/backup-hexo-blog/" rel="next" title="Hexo 博客备份与恢复">
+                  <i class="fa fa-chevron-left"></i> Hexo 博客备份与恢复
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+    </div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc" data-target="post-toc-wrap">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#有限状态机"><span class="nav-number">1.</span> <span class="nav-text">有限状态机</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#分层状态机"><span class="nav-number">2.</span> <span class="nav-text">分层状态机</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Android-HFSM-使用说明"><span class="nav-number">3.</span> <span class="nav-text">Android HFSM 使用说明</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#IState"><span class="nav-number">3.1.</span> <span class="nav-text">IState</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#State"><span class="nav-number">3.2.</span> <span class="nav-text">State</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#StateMachine"><span class="nav-number">3.3.</span> <span class="nav-text">StateMachine</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#初始化相关方法"><span class="nav-number">3.3.1.</span> <span class="nav-text">初始化相关方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#发送消息相关方法"><span class="nav-number">3.3.2.</span> <span class="nav-text">发送消息相关方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#状态操作相关方法"><span class="nav-number">3.3.3.</span> <span class="nav-text">状态操作相关方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#退出相关方法"><span class="nav-number">3.3.4.</span> <span class="nav-text">退出相关方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#其他模板方法"><span class="nav-number">3.3.5.</span> <span class="nav-text">其他模板方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#调试相关"><span class="nav-number">3.3.6.</span> <span class="nav-text">调试相关</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#实践经验"><span class="nav-number">3.4.</span> <span class="nav-text">实践经验</span></a></li></ol></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/avatar_me.png"
+      alt="Mupceet">
+  <p class="site-author-name" itemprop="name">Mupceet</p>
+  <div class="site-description" itemprop="description">君子坦荡荡 小人长戚戚</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      友情链接
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://dxinl.github.io/" title="https://dxinl.github.io/" rel="noopener" target="_blank">Write down & Think hard</a>
+        </li>
+      
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Mupceet</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.3.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.3.0"></script><script src="/js/motion.js?v=7.3.0"></script>
+<script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://Mupceet.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  function disqus_config() {
+    this.page.url = "http://yoursite.com/2019/09/android-statemachine/";
+    this.page.identifier = "2019/09/android-statemachine/";
+    this.page.title = 'Android StateMachine';};
+  function loadComments() {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: disqus_config
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://Mupceet.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  }
+    (function() {
+      var offsetTop = document.getElementById('comments').offsetTop - window.innerHeight;
+      if (offsetTop <= 0) {
+        // load directly when there's no a scrollbar
+        window.addEventListener('load', loadComments, false);
+      } else {
+        var disqus_scroll = () => {
+          // offsetTop may changes because of manually resizing browser window or lazy loading images.
+          var offsetTop = document.getElementById('comments').offsetTop - window.innerHeight;
+          var scrollTop = window.scrollY;
+
+          // pre-load comments a bit? (margin or anything else)
+          if (offsetTop - scrollTop < 60) {
+            window.removeEventListener('scroll', disqus_scroll);
+            loadComments();
+          }
+        };
+        window.addEventListener('scroll', disqus_scroll);
+      }
+    })();
+  
+</script>
+
+</body>
+</html>

@@ -55,19 +55,19 @@
   };
 </script>
 
-  <meta name="description" content="在过去 CPU 非常昂贵的时候，通常通过设定任务让其不间断执行以提高效率，而在今天几乎所有的计算机在大多数时间都是空闲的，运行的是事件驱动系统（Event Drive System）亦或叫响应式系统（Reactive System）。可以回忆下常听到的“中断（Interrupt）”一词。 响应式系统通常没有开始与结束的概念，而是始终运行着，只在处理事件（Event）时才获得控制权，实际执行的动作由">
+  <meta name="description" content="在过去 CPU 非常昂贵的时候，通常通过设定任务让其不间断执行以提高效率，而在今天几乎所有的计算机在大多数时间都是空闲的，运行的是事件驱动系统（Event Driven System）亦或叫响应式系统（Reactive System）。可以回忆下常听到的“中断（Interrupt）”一词。 响应式系统通常没有开始与结束的概念，而是始终运行着，只在处理事件（Event）时才获得控制权，实际执行的动作">
 <meta name="keywords" content="Android">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Android StateMachine">
 <meta property="og:url" content="http://yoursite.com/2019/09/android-statemachine/index.html">
 <meta property="og:site_name" content="Mupceet">
-<meta property="og:description" content="在过去 CPU 非常昂贵的时候，通常通过设定任务让其不间断执行以提高效率，而在今天几乎所有的计算机在大多数时间都是空闲的，运行的是事件驱动系统（Event Drive System）亦或叫响应式系统（Reactive System）。可以回忆下常听到的“中断（Interrupt）”一词。 响应式系统通常没有开始与结束的概念，而是始终运行着，只在处理事件（Event）时才获得控制权，实际执行的动作由">
+<meta property="og:description" content="在过去 CPU 非常昂贵的时候，通常通过设定任务让其不间断执行以提高效率，而在今天几乎所有的计算机在大多数时间都是空闲的，运行的是事件驱动系统（Event Driven System）亦或叫响应式系统（Reactive System）。可以回忆下常听到的“中断（Interrupt）”一词。 响应式系统通常没有开始与结束的概念，而是始终运行着，只在处理事件（Event）时才获得控制权，实际执行的动作">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://barrgroup.com/images/articles/IntroHierarchicalStateMachines01UmlNestedStates.gif#align=left&display=inline&height=135&originHeight=135&originWidth=600&status=done&width=600">
-<meta property="og:updated_time" content="2019-09-22T11:16:51.434Z">
+<meta property="og:updated_time" content="2019-09-22T11:21:21.784Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Android StateMachine">
-<meta name="twitter:description" content="在过去 CPU 非常昂贵的时候，通常通过设定任务让其不间断执行以提高效率，而在今天几乎所有的计算机在大多数时间都是空闲的，运行的是事件驱动系统（Event Drive System）亦或叫响应式系统（Reactive System）。可以回忆下常听到的“中断（Interrupt）”一词。 响应式系统通常没有开始与结束的概念，而是始终运行着，只在处理事件（Event）时才获得控制权，实际执行的动作由">
+<meta name="twitter:description" content="在过去 CPU 非常昂贵的时候，通常通过设定任务让其不间断执行以提高效率，而在今天几乎所有的计算机在大多数时间都是空闲的，运行的是事件驱动系统（Event Driven System）亦或叫响应式系统（Reactive System）。可以回忆下常听到的“中断（Interrupt）”一词。 响应式系统通常没有开始与结束的概念，而是始终运行着，只在处理事件（Event）时才获得控制权，实际执行的动作">
 <meta name="twitter:image" content="https://barrgroup.com/images/articles/IntroHierarchicalStateMachines01UmlNestedStates.gif#align=left&display=inline&height=135&originHeight=135&originWidth=600&status=done&width=600">
   <link rel="canonical" href="http://yoursite.com/2019/09/android-statemachine/">
 
@@ -252,7 +252,7 @@
                 
               
 
-              <time title="创建时间：2019-09-22 19:07:33 / 修改时间：19:16:51" itemprop="dateCreated datePublished" datetime="2019-09-22T19:07:33+08:00">2019-09-22</time>
+              <time title="创建时间：2019-09-22 19:07:33 / 修改时间：19:21:21" itemprop="dateCreated datePublished" datetime="2019-09-22T19:07:33+08:00">2019-09-22</time>
             </span>
           
             
@@ -298,7 +298,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>在过去 CPU 非常昂贵的时候，通常通过设定任务让其不间断执行以提高效率，而在今天几乎所有的计算机在大多数时间都是空闲的，运行的是事件驱动系统（Event Drive System）亦或叫响应式系统（Reactive System）。可以回忆下常听到的“中断（Interrupt）”一词。</p>
+        <p>在过去 CPU 非常昂贵的时候，通常通过设定任务让其不间断执行以提高效率，而在今天几乎所有的计算机在大多数时间都是空闲的，运行的是事件驱动系统（Event Driven System）亦或叫响应式系统（Reactive System）。可以回忆下常听到的“中断（Interrupt）”一词。</p>
 <p>响应式系统通常没有开始与结束的概念，而是始终运行着，只在处理事件（Event）时才获得控制权，实际执行的动作由事件与所处的状态（State）共同决定，而当前的状态与过去的事件顺序相关，因此，整个系统都是由事件驱动的。事件很大程度上以不可预测的顺序和时间到达，因此软件每次运行时调用的代码的路径很可能不同。</p>
 <h2 id="有限状态机"><a href="#有限状态机" class="headerlink" title="有限状态机"></a>有限状态机</h2><p>状态机模型明确地声明了事件的处理依赖于<strong>事件</strong>与<strong>状态</strong>。当然你也可以使用条件语句和标志实现状态记录与事件响应，但这其中的可维护性与复杂度可想而知。状态机通过将状态和行为封装在一起，解决庞大分支语句带来的阅读性差和不方便扩展的问题，降低程序的复杂性，提升灵活性。</p>
 <p>我们所说的状态机实际上是指 FSM（Finite State Machine，有限状态机），它表示有限个状态以及在这些状态下执行动作和状态转移等行为的模型。FSM 可分为两种类型：</p>

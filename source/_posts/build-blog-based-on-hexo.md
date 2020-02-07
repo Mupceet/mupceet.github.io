@@ -1,6 +1,7 @@
 ---
 title: Hexo 博客搭建与主题配置（零基础版）
 date: 2019-08-27 22:21:33
+updated: 2020-02-08 02:16:33
 categories:
 - 整理
 tags:
@@ -35,6 +36,8 @@ $ git config --global user.name "Your Name"
 ```
 
 ### 安装 [Node.js](https://nodejs.org/en/)
+
+**建议参考 [Ubuntu 安装 Node.js 的正确姿势](https://mupceet.com/2020/02/the-best-way-to-install-nodejs/)使用 NVM 方式进行安装。(2020-02-08)**
 
 选择下载最新的 10.16.3 LTS 版本（*2019-08-28*），得到 `node-v10.16.3-linux-x64.tar.xz`，解压到 `/opt/`（适用于共享用户）或 `/usr/local/`（适用于用户个人资料）。以下以 `/opt/` 为例。
 

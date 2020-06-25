@@ -51,7 +51,9 @@ $ repo init
 
 ## 下载 Repo 仓库
 
-我们先看下 Repo 仓库是如何下载的。
+我们先看下 Repo 仓库是如何下载的。整体流程如下图所示：
+
+![Repo 仓库初始化](https://cdn.nlark.com/yuque/0/2020/svg/162088/1593033717333-c421466b-bfbb-4d4a-9114-cc02a46e00a6.svg)
 
 ```python
 def main(orig_args):
@@ -131,7 +133,7 @@ def _ParseArguments(args):
 
 ### _FindRepo
 
-`_FindRepo` 从执行指令的当前目录开始往上遍历直到根目录。如果中间某一个目录存在一个 `. repo/repo/main.py` 文件，那么就代表找到 Repo 仓库了，这时候它就会返回 main.py 文件的绝对路径和 .repo 目录的绝对路径。
+`_FindRepo` 从执行指令的当前目录开始往上遍历直到根目录。如果中间某一个目录存在一个 `.repo/repo/main.py` 文件，那么就代表找到 Repo 仓库了，这时候它就会返回 main.py 文件的绝对路径和 .repo 目录的绝对路径。
 
 `_FindRepo` 的实现如下所示：
 
@@ -385,7 +387,7 @@ def _DownloadBundle(url, local, quiet):
 > Git 知识点：
 >
 > 1. git config --get-regexp key 返回正则匹配的配置值
-> 1. url."<https://".insteadOf> "git://" 可以统一配置传输协议
+> 1. `url."https://".insteadOf "git://"` 可以统一配置传输协议
 
 首先，根据前面的 URL 信息以及配置，获取最终的仓库远程链接。如果是本地仓库，这里直接返回 False，否则就从网络上下载这个 bundle 文件。
 
@@ -496,7 +498,9 @@ def main(orig_args):
 
 在完成 Repo 仓库下载或找到 Repo 仓库后，可以看到实际上是通过 Repo 仓库中的 main.py 脚本执行对应的命令。其中，将命令拼接成如下格式调用执行:
 
-`['/usr/bin/python3.7', '[path]/main.py', '--repo-dir=[path]/.repo', '--wrapper-version=2.5', '--wrapper-path=[path]/repo', '--', 'init', '-u', 'https://android.googlesource.com/platform/manifest', '-b', 'androidx-master-dev']`
+```shell
+['/usr/bin/python3.7', '[path]/main.py', '--repo-dir=[path]/.repo', '--wrapper-version=2.5', '--wrapper-path=[path]/repo', '--', 'init', '-u', 'https://android.googlesource.com/platform/manifest', '-b', 'androidx-master-dev']
+```
 
 main.py 脚本的 `_Main` 函数如下所示：
 

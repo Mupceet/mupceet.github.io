@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"搜索","hits_empty":"未找到与「 ${query} 」相关的内容","hits_stats":"找到 ${hits} 条相关条目，用时: ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="从前文知道，init 命令的执行是通过 init.py 的 Execute 方法完成实际操作。该方法主要功能为下载 Manifest 仓库，整体流程如下图所示：">
+<meta name="keywords" content="Android,Git">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Repo：init - 下载 Manifest 仓库">
+<meta property="og:url" content="http://yoursite.com/2020/07/repo-init-manifest-repository/index.html">
+<meta property="og:site_name" content="Mupceet">
+<meta property="og:description" content="从前文知道，init 命令的执行是通过 init.py 的 Execute 方法完成实际操作。该方法主要功能为下载 Manifest 仓库，整体流程如下图所示：">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2020/svg/162088/1593033770887-eefdfc1d-40d9-4ab9-9a51-8e906d28d48c.svg#align=left&display=inline&height=830&margin=%5Bobject%20Object%5D&name=Repo-manifest%E4%BB%93%E5%BA%93.svg&originHeight=830&originWidth=491&size=15420&status=done&style=none&width=491">
+<meta property="og:updated_time" content="2020-07-05T20:45:52.628Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Repo：init - 下载 Manifest 仓库">
+<meta name="twitter:description" content="从前文知道，init 命令的执行是通过 init.py 的 Execute 方法完成实际操作。该方法主要功能为下载 Manifest 仓库，整体流程如下图所示：">
+<meta name="twitter:image" content="https://cdn.nlark.com/yuque/0/2020/svg/162088/1593033770887-eefdfc1d-40d9-4ab9-9a51-8e906d28d48c.svg#align=left&display=inline&height=830&margin=%5Bobject%20Object%5D&name=Repo-manifest%E4%BB%93%E5%BA%93.svg&originHeight=830&originWidth=491&size=15420&status=done&style=none&width=491">
+  <link rel="canonical" href="http://yoursite.com/2020/07/repo-init-manifest-repository/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Repo：init - 下载 Manifest 仓库 | Mupceet</title>
+  <meta name="generator" content="Hexo 3.9.0">
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Mupceet</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Don't Repeat Yourself</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/07/repo-init-manifest-repository/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Mupceet">
+      <meta itemprop="description" content="君子坦荡荡 小人长戚戚">
+      <meta itemprop="image" content="/images/avatar_me.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Mupceet">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">Repo：init - 下载 Manifest 仓库
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-07-06 04:35:33 / 修改时间：04:45:52" itemprop="dateCreated datePublished" datetime="2020-07-06T04:35:33+08:00">2020-07-06</time>
+            </span>
+          
+            
+
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/技术向/" itemprop="url" rel="index"><span itemprop="name">技术向</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Disqus：</span>
+    
+    <a title="disqus" href="/2020/07/repo-init-manifest-repository/#comments" itemprop="discussionUrl"><span class="post-comments-count disqus-comment-count" data-disqus-identifier="2020/07/repo-init-manifest-repository/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>从前文知道，<code>init</code> 命令的执行是通过 <code>init.py</code> 的 <code>Execute</code> 方法完成实际操作。该方法主要功能为下载 Manifest 仓库，整体流程如下图所示：</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2020/svg/162088/1593033770887-eefdfc1d-40d9-4ab9-9a51-8e906d28d48c.svg#align=left&display=inline&height=830&margin=%5Bobject%20Object%5D&name=Repo-manifest%E4%BB%93%E5%BA%93.svg&originHeight=830&originWidth=491&size=15420&status=done&style=none&width=491" alt="下载 Manifest 仓库"></p>
+<a id="more"></a>
+
+<p>具体实现如下所示：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">Execute</span><span class="params">(self, opt, args)</span>:</span></span><br><span class="line">    git_require(MIN_GIT_VERSION_HARD, fail=<span class="literal">True</span>)</span><br><span class="line">......</span><br><span class="line">    self._SyncManifest(opt)</span><br><span class="line">    self._LinkManifest(opt.manifest_name)</span><br><span class="line">......</span><br><span class="line">    self._DisplayResult(opt)</span><br></pre></td></tr></table></figure>
+
+<p><code>Execute</code> 主要通过调用 <code>_SyncManifest</code> 和 <code>_LinkManifest</code> 两个函数来完成 Manifest 仓库的克隆操作。</p>
+<h2 id="下载-Manifest-仓库"><a href="#下载-Manifest-仓库" class="headerlink" title="下载 Manifest 仓库"></a>下载 Manifest 仓库</h2><h3 id="SyncManifest"><a href="#SyncManifest" class="headerlink" title="_SyncManifest"></a>_SyncManifest</h3><p><code>_SyncManifest</code> 的实现如下所示：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">_SyncManifest</span><span class="params">(self, opt)</span>:</span></span><br><span class="line">    m = self.manifest.manifestProject</span><br><span class="line">    is_new = <span class="keyword">not</span> m.Exists</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> is_new:</span><br><span class="line">......</span><br><span class="line">      m._InitGitDir(mirror_git=mirrored_manifest_git)</span><br><span class="line">......</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">      <span class="keyword">if</span> opt.manifest_branch:</span><br><span class="line">        m.revisionExpr = opt.manifest_branch</span><br><span class="line">      <span class="keyword">else</span>:</span><br><span class="line">        m.PreSync()</span><br><span class="line">......</span><br><span class="line"></span><br><span class="line">    self._ConfigureDepth(opt)</span><br><span class="line">......</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> m.Sync_NetworkHalf(is_new=is_new, quiet=opt.quiet, verbose=opt.verbose,</span><br><span class="line">                              clone_bundle=opt.clone_bundle,</span><br><span class="line">                              current_branch_only=opt.current_branch_only,</span><br><span class="line">                              tags=opt.tags, submodules=opt.submodules,</span><br><span class="line">                              clone_filter=opt.clone_filter):</span><br><span class="line">......</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> opt.manifest_branch:</span><br><span class="line">      m.MetaBranchSwitch(submodules=opt.submodules)</span><br><span class="line">......</span><br><span class="line">    m.Sync_LocalHalf(syncbuf, submodules=opt.submodules)</span><br><span class="line">......</span><br><span class="line">    <span class="keyword">if</span> is_new <span class="keyword">or</span> m.CurrentBranch <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">      <span class="keyword">if</span> <span class="keyword">not</span> m.StartBranch(<span class="string">'default'</span>):</span><br><span class="line">        print(<span class="string">'fatal: cannot create default in manifest'</span>, file=sys.stderr)</span><br><span class="line">        sys.exit(<span class="number">1</span>)</span><br></pre></td></tr></table></figure>
+
+<p>我们看到，大部分操作是通过一个 <code>m</code> 对象来完成操作的，从 <code>main.py</code> 文件的 <code>_Run</code> 方法看到，其中通过 <code>cmd.manifest = XmlManifest(cmd.repodir)</code> 给 <code>cmd</code> 对象注入了 <code>XmlManifest</code> 对象，而这里的 <code>m</code> 对象是 <code>XmlManifest</code> 对象中的 <code>MetaProject</code> 对象，XmlManifest 对象定义在 <code>.repo/repo/manifest_xml.py</code> 文件中。我们先放下当前流程去了解下这个对象。</p>
+<h3 id="XmlManifest"><a href="#XmlManifest" class="headerlink" title="XmlManifest"></a>XmlManifest</h3><p>查看类构造函数：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">XmlManifest</span><span class="params">(object)</span>:</span></span><br><span class="line">  <span class="string">"""manages the repo configuration file"""</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, repodir)</span>:</span></span><br><span class="line">    self.repodir = os.path.abspath(repodir)</span><br><span class="line">    self.topdir = os.path.dirname(self.repodir)</span><br><span class="line">    self.manifestFile = os.path.join(self.repodir, MANIFEST_FILE_NAME)</span><br><span class="line">......</span><br><span class="line">    self.repoProject = MetaProject(self, <span class="string">'repo'</span>,</span><br><span class="line">                                   gitdir=os.path.join(repodir, <span class="string">'repo/.git'</span>),</span><br><span class="line">                                   worktree=os.path.join(repodir, <span class="string">'repo'</span>))</span><br><span class="line">    self.manifestProject = MetaProject(self, <span class="string">'manifests'</span>,</span><br><span class="line">                     gitdir=os.path.join(repodir, <span class="string">'manifests.git'</span>),</span><br><span class="line">                     worktree=os.path.join(repodir, <span class="string">'manifests'</span>))</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+
+<p>它描述了项目的 Repo 目录（repodir）、根目录（topdir）和 Manifest.xml 文件（manifestFile），以及两个 MetaProject 对象描述了项目的 Repo 仓库（repoProject）和 Manifest 仓库（manifestProject）。</p>
+<p>我们看到 Repo 仓库的位置如之前所述的，git 目录为 <code>repo/.git</code>，工作区为 <code>repo</code>，这与普通的 Git 仓库一样。而 Manifest 仓库的 Git 目录为 <code>manifests.git</code>，工作区为 <code>manifests</code>（为什么不一样？）。</p>
+<p>在 Repo 项目中，每一个子项目（或者说子仓库）都用一个 Project 对象来描述。Project 类定义在文件 <code>.repo/repo/project.py</code> 文件中，用来封装对各个项目的基础 Git 操作，例如，对项目进行暂存、提交和更新等。Repo 仓库和 Manifest 仓库也是属于 Repo 项目中的仓库，但由于它们是用来描述 Repo 子项目元信息的仓库，我们就使用另外一个类型为 MetaProject 的对象来描述它们。不过实际的功能和 Project 对象是一致的，只是为了强调它们是元信息仓库而已。</p>
+<h3 id="SyncManifest（续）"><a href="#SyncManifest（续）" class="headerlink" title="_SyncManifest（续）"></a>_SyncManifest（续）</h3><p>回到 Init 类的成员函数 <code>_SyncManifest</code> 流程，我们可以看到，它整个流程主要调用了 Manifest 的 ManifestProject 对象的几个方法：</p>
+<ol>
+<li><code>m._InitGitDir</code></li>
+<li><code>m.Sync_NetworkHalf</code></li>
+<li><code>m.Sync_LocalHalf</code></li>
+<li><code>m.StartBranch</code></li>
+</ol>
+<p>这几个函数实际上都是由 <code>MetaProject</code> 的父类 <code>Project</code> 来实现的，因此，下面我们就分析 Project 类的这几个函数的实现。</p>
+<h4 id="Project-InitGitDir"><a href="#Project-InitGitDir" class="headerlink" title="Project#_InitGitDir"></a>Project#_InitGitDir</h4><p><code>_InitGitDir</code> 用来初始化 Git 目录，具体实现如下所示：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">_InitGitDir</span><span class="params">(self, mirror_git=None, force_sync=False, quiet=False)</span>:</span></span><br><span class="line">    init_git_dir = <span class="keyword">not</span> os.path.exists(self.gitdir)</span><br><span class="line">    init_obj_dir = <span class="keyword">not</span> os.path.exists(self.objdir)</span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">      <span class="comment"># Initialize the bare repository, which contains all of the objects.</span></span><br><span class="line">      <span class="keyword">if</span> init_obj_dir:</span><br><span class="line">        os.makedirs(self.objdir)</span><br><span class="line">        self.bare_objdir.init()</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+
+<p>首先是检查项目的 Git 目录是否已经存在。如果不存在，那么就会首先创建这个 Git 目录，然后再调用成员变量 <code>bare_git</code>（<code>_GitGetByExec</code> 对象）的成员函数 <code>init</code> 在该目录下初始化一个 Git 仓库。由于 <code>_GitGetByExec</code> 类不存在 <code>init</code> 成员函数，此时会触发调用 <code>__getattr__</code>。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Project</span><span class="params">(object)</span>:</span></span><br><span class="line">  ......</span><br><span class="line"></span><br><span class="line">  <span class="class"><span class="keyword">class</span> <span class="title">_GitGetByExec</span><span class="params">(object)</span>:</span></span><br><span class="line">    ......</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__getattr__</span><span class="params">(self, name)</span>:</span></span><br><span class="line">      <span class="string">"""Allow arbitrary git commands using pythonic syntax.</span></span><br><span class="line"><span class="string">      This allows you to do things like:</span></span><br><span class="line"><span class="string">        git_obj.rev_parse('HEAD')</span></span><br><span class="line"><span class="string">      Since we don't have a 'rev_parse' method defined, the __getattr__ will</span></span><br><span class="line"><span class="string">      run.  We'll replace the '_' with a '-' and try to run a git command.</span></span><br><span class="line"><span class="string">      Any other positional arguments will be passed to the git command, and the</span></span><br><span class="line"><span class="string">      following keyword arguments are supported:</span></span><br><span class="line"><span class="string">        config: An optional dict of git config options to be passed with '-c'.</span></span><br><span class="line"><span class="string">      Args:</span></span><br><span class="line"><span class="string">        name: The name of the git command to call.  Any '_' characters will</span></span><br><span class="line"><span class="string">            be replaced with '-'.</span></span><br><span class="line"><span class="string">      Returns:</span></span><br><span class="line"><span class="string">        A callable object that will try to call git with the named command.</span></span><br><span class="line"><span class="string">      """</span></span><br><span class="line">......</span><br><span class="line">      <span class="keyword">return</span> runner</span><br></pre></td></tr></table></figure>
+
+<p>从注释可以知道，调用 <code>_GitGetByExec</code> 类没有实现的成员函数，会将调用的名称中的 <code>_</code> 替换为 <code>-</code> 并作为 <code>git</code> 的一个参数来执行。所以，当执行 <code>_GitGetByExec.init()</code> 的时候，实际上是执行了一个 <code>git init</code> 命令，它正是用来初始化 Git 仓库的命令。</p>
+<h4 id="Project-Sync-NetworkHalf"><a href="#Project-Sync-NetworkHalf" class="headerlink" title="Project#Sync_NetworkHalf"></a>Project#Sync_NetworkHalf</h4><p><code>Sync_NetworkHalf</code> 会通过网络来获取仓库内容，本地的工作区状态不会受到影响。其中命名中的 half 实际上是指这一步骤是 Sync 步骤的“一半”。具体实现如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">Sync_NetworkHalf</span><span class="params">(self, quiet=False, verbose=False, is_new=None, current_branch_only=False, force_sync=False,</span></span></span><br><span class="line"><span class="function"><span class="params">                     clone_bundle=True, tags=True, archive=False, optimized_fetch=False, retry_fetches=<span class="number">0</span>,</span></span></span><br><span class="line"><span class="function"><span class="params">                     prune=False, submodules=False, clone_filter=None)</span>:</span></span><br><span class="line">......</span><br><span class="line">    self._InitRemote()</span><br><span class="line">......</span><br><span class="line">    <span class="comment"># See if we can skip the network fetch entirely.</span></span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> (optimized_fetch <span class="keyword">and</span></span><br><span class="line">            (ID_RE.match(self.revisionExpr) <span class="keyword">and</span></span><br><span class="line">             self._CheckForImmutableRevision())):</span><br><span class="line">      <span class="keyword">if</span> <span class="keyword">not</span> self._RemoteFetch(</span><br><span class="line">              initial=is_new, quiet=quiet, verbose=verbose, alt_dir=alt_dir,</span><br><span class="line">              current_branch_only=current_branch_only,</span><br><span class="line">              tags=tags, prune=prune, depth=depth,</span><br><span class="line">              submodules=submodules, force_sync=force_sync,</span><br><span class="line">              clone_filter=clone_filter, retry_fetches=retry_fetches):</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">False</span></span><br><span class="line">......</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">True</span></span><br></pre></td></tr></table></figure>
+
+<p>主要操作为通过 <code>_InitRemote</code> 更新远程仓库信息，再调用 <code>_RemoteFetch</code> 来从远程仓库更新本地仓库。查看 <code>_RemoteFetch</code> 的实现，其核心操作就是调用 <code>git fetch</code> 命令从远程仓库更新本地仓库。</p>
+<h4 id="Project-Sync-LocalHalf"><a href="#Project-Sync-LocalHalf" class="headerlink" title="Project#Sync_LocalHalf"></a>Project#Sync_LocalHalf</h4><p>Sync 步骤的“另一半”是在工作区进行内容检出，具体实现如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">Sync_LocalHalf</span><span class="params">(self, syncbuf, force_sync=False, submodules=False)</span>:</span></span><br><span class="line">    <span class="string">"""Perform only the local IO portion of the sync process.</span></span><br><span class="line"><span class="string">       Network access is not required.</span></span><br><span class="line"><span class="string">    """</span></span><br><span class="line">......</span><br><span class="line">    self._InitWorkTree(force_sync=force_sync, submodules=submodules)</span><br><span class="line">    all_refs = self.bare_ref.all</span><br><span class="line">    self.CleanPublishedCache(all_refs)</span><br><span class="line">    revid = self.GetRevisionId(all_refs)</span><br><span class="line">......</span><br><span class="line">    head = self.work_git.GetHead()</span><br><span class="line">    <span class="keyword">if</span> head.startswith(R_HEADS):</span><br><span class="line">      branch = head[len(R_HEADS):]</span><br><span class="line">      <span class="keyword">try</span>:</span><br><span class="line">        head = all_refs[head]</span><br><span class="line">      <span class="keyword">except</span> KeyError:</span><br><span class="line">        head = <span class="literal">None</span></span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">      branch = <span class="literal">None</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> branch <span class="keyword">is</span> <span class="literal">None</span> <span class="keyword">or</span> syncbuf.detach_head:</span><br><span class="line">      <span class="comment"># Currently on a detached HEAD.  The user is assumed to</span></span><br><span class="line">      <span class="comment"># not have any local modifications worth worrying about.</span></span><br><span class="line">      <span class="comment">#</span></span><br><span class="line">......</span><br><span class="line">      <span class="keyword">if</span> head == revid:</span><br><span class="line">        <span class="comment"># No changes; don't do anything further.</span></span><br><span class="line">        <span class="comment"># Except if the head needs to be detached</span></span><br><span class="line">        <span class="comment">#</span></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> syncbuf.detach_head:</span><br><span class="line">          <span class="comment"># The copy/linkfile config may have changed.</span></span><br><span class="line">          self._CopyAndLinkFiles()</span><br><span class="line">          <span class="keyword">return</span></span><br><span class="line">      <span class="keyword">else</span>:</span><br><span class="line">        lost = self._revlist(not_rev(revid), HEAD)</span><br><span class="line">        <span class="keyword">if</span> lost:</span><br><span class="line">          syncbuf.info(self, <span class="string">"discarding %d commits"</span>, len(lost))</span><br><span class="line">      <span class="keyword">try</span>:</span><br><span class="line">        self._Checkout(revid, quiet=<span class="literal">True</span>)</span><br><span class="line">......</span><br><span class="line">      self._CopyAndLinkFiles()</span><br><span class="line">      <span class="keyword">return</span></span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+
+<p>初始化新 Repo 项目时，流程较为简单，首先初始化工作区，再获取要 Checkout 的节点 ID，然后调用 <code>_Checkout</code> 方法检出仓库内容。查看 <code>_Checkout</code> 实现，就是通过 <code>git checkout</code> 命令完成实际操作。由于此时并没有分支信息，检出时是处于游离分支的状态。</p>
+<h4 id="Project-StartBranch"><a href="#Project-StartBranch" class="headerlink" title="Project#StartBranch"></a>Project#StartBranch</h4><p>Menifest 仓库检出后，在初始化时会调用 <code>m.StartBranch(&#39;default&#39;)</code> 来创建一个 default 分支。至此，Repo 项目的 Manifest 仓库就完成了下载。</p>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><blockquote>
+<p>Repo 系列文章是基于老罗的<a href="https://blog.csdn.net/Luoshengyang/article/details/18195205?utm_source=blogxgwz2" target="_blank" rel="noopener">《Android源代码仓库及其管理工具Repo分析》</a>博客学习演绎的结果，原博文发布时间较早（ 2014-01-20），与现在有了些微差别并且有部分说法不太正确，因此重新学习整理出此系列文章，特此说明并表示感谢。</p>
+</blockquote>
+<ol>
+<li><a href="https://gerrit.googlesource.com/git-repo/" target="_blank" rel="noopener">Repo 项目主页</a></li>
+<li><a href="https://blog.csdn.net/Luoshengyang/article/details/18195205?utm_source=blogxgwz2" target="_blank" rel="noopener">Android 源代码仓库及其管理工具 Repo 分析</a></li>
+</ol>
+<h3 id="附：Project-对象"><a href="#附：Project-对象" class="headerlink" title="附：Project 对象"></a>附：Project 对象</h3><p>Project 对象构造函数如下所示：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Project</span><span class="params">(object)</span>:</span></span><br><span class="line">......</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, manifest, name, remote, gitdir, objdir, worktree, relpath,</span></span></span><br><span class="line"><span class="function"><span class="params">               revisionExpr, revisionId,</span></span></span><br><span class="line"><span class="function"><span class="params">               rebase=True, groups=None,</span></span></span><br><span class="line"><span class="function"><span class="params">               sync_c=False, sync_s=False, sync_tags=True, clone_depth=None,</span></span></span><br><span class="line"><span class="function"><span class="params">               upstream=None, parent=None, use_git_worktrees=False,</span></span></span><br><span class="line"><span class="function"><span class="params">               is_derived=False, dest_branch=None, optimized_fetch=False,</span></span></span><br><span class="line"><span class="function"><span class="params">               retry_fetches=<span class="number">0</span>, old_revision=None)</span>:</span></span><br><span class="line">    <span class="string">"""Init a Project object.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Args:</span></span><br><span class="line"><span class="string">      manifest: The XmlManifest object.</span></span><br><span class="line"><span class="string">      name: The `name` attribute of manifest.xml's project element.</span></span><br><span class="line"><span class="string">      remote: RemoteSpec object specifying its remote's properties.</span></span><br><span class="line"><span class="string">      gitdir: Absolute path of git directory.</span></span><br><span class="line"><span class="string">      objdir: Absolute path of directory to store git objects.</span></span><br><span class="line"><span class="string">      worktree: Absolute path of git working tree.</span></span><br><span class="line"><span class="string">      relpath: Relative path of git working tree to repo's top directory.</span></span><br><span class="line"><span class="string">      revisionExpr: The `revision` attribute of manifest.xml's project element.</span></span><br><span class="line"><span class="string">      revisionId: git commit id for checking out.</span></span><br><span class="line"><span class="string">      rebase: The `rebase` attribute of manifest.xml's project element.</span></span><br><span class="line"><span class="string">      groups: The `groups` attribute of manifest.xml's project element.</span></span><br><span class="line"><span class="string">      sync_c: The `sync-c` attribute of manifest.xml's project element.</span></span><br><span class="line"><span class="string">      sync_s: The `sync-s` attribute of manifest.xml's project element.</span></span><br><span class="line"><span class="string">      sync_tags: The `sync-tags` attribute of manifest.xml's project element.</span></span><br><span class="line"><span class="string">      upstream: The `upstream` attribute of manifest.xml's project element.</span></span><br><span class="line"><span class="string">      parent: The parent Project object.</span></span><br><span class="line"><span class="string">      use_git_worktrees: Whether to use `git worktree` for this project.</span></span><br><span class="line"><span class="string">      is_derived: False if the project was explicitly defined in the manifest;</span></span><br><span class="line"><span class="string">                  True if the project is a discovered submodule.</span></span><br><span class="line"><span class="string">      dest_branch: The branch to which to push changes for review by default.</span></span><br><span class="line"><span class="string">      optimized_fetch: If True, when a project is set to a sha1 revision, only</span></span><br><span class="line"><span class="string">                       fetch from the remote if the sha1 is not present locally.</span></span><br><span class="line"><span class="string">      retry_fetches: Retry remote fetches n times upon receiving transient error</span></span><br><span class="line"><span class="string">                     with exponential backoff and jitter.</span></span><br><span class="line"><span class="string">      old_revision: saved git commit id for open GITC projects.</span></span><br><span class="line"><span class="string">    """</span></span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>manifest：XmlManifest 对象。</li>
+<li>name：项目名称，也是 Git 远程仓库中的名称。通过它和远程链接拼接出实际的远程仓库链接：<code>${remote_fetch}/${project_name}.git</code></li>
+<li>remote：远程仓库。</li>
+<li>gitdir：.git 目录，也就是 Git 仓库目录。</li>
+<li>objdir：存放 git 对象的目录，通常与 gitdir 等同。</li>
+<li>worktree：项目的工作区，即仓库检出内容的目录。</li>
+<li>relpath：项目的工作区相对 Repo 项目的根目录的相对路径。</li>
+<li>revisionExpr：项目要跟踪的 Git  分支的名称。</li>
+<li>revisionId：项目跟踪的 Git 提交 ID。</li>
+<li>rebase：<em><strong>Manifest 格式中无此字段</strong></em></li>
+<li>groups：项目所属的分组列表。</li>
+<li>sync_c：为 true 时表示 sync 时仅同步给定的分支。</li>
+<li>sync_s：为 true 时表示 sync 时同时同步子项目。</li>
+<li>sync_tags：为 true 时表示 sync 时会同步 Tag。</li>
+<li>upstream：项目的远程分支引用。</li>
+<li>parent：项目的父项目。</li>
+<li>use_git_worktrees：是否使用 git worktree。</li>
+<li>is_derived：当前这个项目是否是项目的子项目。</li>
+<li>dest_branch：推送后的远程 Review 的分支。</li>
+<li>optimized_fetch、retry_fetches、old_revision：这几个暂时不了解。</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/Android/" rel="tag"># Android</a>
+            
+              <a href="/tags/Git/" rel="tag"># Git</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2020/05/repo-script-and-repo-repository/" rel="next" title="Repo：Repo 脚本与 Repo 仓库">
+                  <i class="fa fa-chevron-left"></i> Repo：Repo 脚本与 Repo 仓库
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+    </div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc" data-target="post-toc-wrap">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#下载-Manifest-仓库"><span class="nav-number">1.</span> <span class="nav-text">下载 Manifest 仓库</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#SyncManifest"><span class="nav-number">1.1.</span> <span class="nav-text">_SyncManifest</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#XmlManifest"><span class="nav-number">1.2.</span> <span class="nav-text">XmlManifest</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SyncManifest（续）"><span class="nav-number">1.3.</span> <span class="nav-text">_SyncManifest（续）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Project-InitGitDir"><span class="nav-number">1.3.1.</span> <span class="nav-text">Project#_InitGitDir</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Project-Sync-NetworkHalf"><span class="nav-number">1.3.2.</span> <span class="nav-text">Project#Sync_NetworkHalf</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Project-Sync-LocalHalf"><span class="nav-number">1.3.3.</span> <span class="nav-text">Project#Sync_LocalHalf</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Project-StartBranch"><span class="nav-number">1.3.4.</span> <span class="nav-text">Project#StartBranch</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考链接"><span class="nav-number">2.</span> <span class="nav-text">参考链接</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#附：Project-对象"><span class="nav-number">2.1.</span> <span class="nav-text">附：Project 对象</span></a></li></ol></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/avatar_me.png"
+      alt="Mupceet">
+  <p class="site-author-name" itemprop="name">Mupceet</p>
+  <div class="site-description" itemprop="description">君子坦荡荡 小人长戚戚</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">30</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      友情链接
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://dxinl.github.io/" title="https://dxinl.github.io/" rel="noopener" target="_blank">Write down & Think hard</a>
+        </li>
+      
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 – <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Mupceet</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.3.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.3.0"></script><script src="/js/motion.js?v=7.3.0"></script>
+<script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://Mupceet.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  function disqus_config() {
+    this.page.url = "http://yoursite.com/2020/07/repo-init-manifest-repository/";
+    this.page.identifier = "2020/07/repo-init-manifest-repository/";
+    this.page.title = 'Repo：init - 下载 Manifest 仓库';};
+  function loadComments() {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: disqus_config
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://Mupceet.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  }
+    (function() {
+      var offsetTop = document.getElementById('comments').offsetTop - window.innerHeight;
+      if (offsetTop <= 0) {
+        // load directly when there's no a scrollbar
+        window.addEventListener('load', loadComments, false);
+      } else {
+        var disqus_scroll = () => {
+          // offsetTop may changes because of manually resizing browser window or lazy loading images.
+          var offsetTop = document.getElementById('comments').offsetTop - window.innerHeight;
+          var scrollTop = window.scrollY;
+
+          // pre-load comments a bit? (margin or anything else)
+          if (offsetTop - scrollTop < 60) {
+            window.removeEventListener('scroll', disqus_scroll);
+            loadComments();
+          }
+        };
+        window.addEventListener('scroll', disqus_scroll);
+      }
+    })();
+  
+</script>
+
+</body>
+</html>

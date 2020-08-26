@@ -24,7 +24,7 @@ Google 选择了 Git 作为 AOSP 的版本控制系统，而 AOSP 一方面为�
 
 现在，我们用一个图来勾勒一下它们的关系：
 
-![关系图](https://cdn.nlark.com/yuque/__puml/b0a76a4cb6ecf7d803f77baac4af9510.svg#lake_card_v2=eyJjb2RlIjoiQHN0YXJ0dW1sXG5maWxlIFwiUmVwbyBTY3JpcHQgLS0gQSBweXRob24gc2NyaXB0XCIgYXMgcmVwb1NjcmlwdFxuXG5kYXRhYmFzZSByZXBvUmVwbyBbXG5SZXBvIFJlcG9zaXRvcnkgXG4tLSBDb25zaXN0cyBvZiBtYW55IHB5dGhvbiBzY3JpcHRzXG5dXG5cbmRhdGFiYXNlIG1hbmlmZXN0UmVwbyBbXG5NYW5pZmVzdCBSZXBvc2l0b3J5IFxuLS0gQ29udGFpbnMgYW4geG1sIGZpbGVcbl1cblxuZGF0YWJhc2UgcHJvamVjdE9uZVJlcG8gW1xuUHJvamVjdC0xIFJlcG9zaXRvcnlcbl1cbmRhdGFiYXNlIHByb2plY3RUd29SZXBvIFtcblByb2plY3QtMiBSZXBvc2l0b3J5XG5dXG5kYXRhYmFzZSBwcm9qZWN0TlJlcG8gW1xuUHJvamVjdC1OIFJlcG9zaXRvcnlcbl1cblxucmVwb1NjcmlwdCAtLSByZXBvUmVwb1xucmVwb1NjcmlwdCAtLSBtYW5pZmVzdFJlcG9cblxubWFuaWZlc3RSZXBvIC0tIHByb2plY3RPbmVSZXBvXG5tYW5pZmVzdFJlcG8gLS0gcHJvamVjdFR3b1JlcG9cbm1hbmlmZXN0UmVwbyAtLSBwcm9qZWN0TlJlcG9cbkBlbmR1bWwiLCJ0eXBlIjoicHVtbCIsIm1hcmdpbiI6dHJ1ZSwiaWQiOiJQOUViUiIsInVybCI6Imh0dHBzOi8vY2RuLm5sYXJrLmNvbS95dXF1ZS9fX3B1bWwvYjBhNzZhNGNiNmVjZjdkODAzZjc3YmFhYzRhZjk1MTAuc3ZnIiwiaGVpZ2h0IjozODYsImNhcmQiOiJkaWFncmFtIn0=)
+![关系图](https://github.com/Mupceet/article-piture/raw/master/repo-script-and-projects.png)
 
 根据 AOSP 项目主页介绍，项目要从一个 Repo 脚本开始。我们根据指导，下载该 Repo 脚本，赋予可执行权限，并将它添加到环境变量中，以便执行后续的 repo 命令。
 
@@ -51,7 +51,7 @@ $ repo init
 
 我们先看下 Repo 仓库是如何下载的。整体流程如下图所示：
 
-![Repo 仓库初始化](https://cdn.nlark.com/yuque/0/2020/svg/162088/1593033717333-c421466b-bfbb-4d4a-9114-cc02a46e00a6.svg)
+![Repo 仓库初始化](https://raw.githubusercontent.com/Mupceet/article-piture/master/repo-init-base.png)
 
 ```python
 def main(orig_args):

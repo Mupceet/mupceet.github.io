@@ -10,7 +10,7 @@ tags:
 
 从前文知道，`init` 命令的执行是通过 `init.py` 的 `Execute` 方法完成实际操作。该方法主要功能为下载 Manifest 仓库，整体流程如下图所示：
 
-![下载 Manifest 仓库](https://cdn.nlark.com/yuque/0/2020/svg/162088/1593033770887-eefdfc1d-40d9-4ab9-9a51-8e906d28d48c.svg#align=left&display=inline&height=830&margin=%5Bobject%20Object%5D&name=Repo-manifest%E4%BB%93%E5%BA%93.svg&originHeight=830&originWidth=491&size=15420&status=done&style=none&width=491)
+![下载 Manifest 仓库](https://raw.githubusercontent.com/Mupceet/article-piture/master/repo-init.png)
 
 <!--more-->
 

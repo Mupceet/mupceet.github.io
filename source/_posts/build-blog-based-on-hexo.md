@@ -39,39 +39,26 @@ $ git config --global user.name "Your Name"
 
 **建议参考 [Ubuntu 安装 Node.js 的正确姿势](https://mupceet.com/2020/02/the-best-way-to-install-nodejs/)使用 NVM 方式进行安装。(2020-02-08)**
 
-选择下载最新的 10.16.3 LTS 版本（*2019-08-28*），得到 `node-v10.16.3-linux-x64.tar.xz`，解压到 `/opt/`（适用于共享用户）或 `/usr/local/`（适用于用户个人资料）。以下以 `/opt/` 为例。
+根据 NVM 的 [Github 仓库](https://github.com/creationix/nvm)指导，执行以下命令完成安装：
 
 ```shell
-$ cd ~/Download
-$ tar -xvf node-v10.16.3-linux-x64.tar.xz
-$ sudo mv node-v10.16.3-linux-x64 /opt/node
+$ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.2/install.sh | bash
 ```
-
-将 `/opt/node/bin` 添加到 `PATH` 环境变量中，这样就可以从任意终端中执行 `npm` 命令了。
+再下载 node：
 
 ```shell
-$ sudo vim /etc/profile
+# 安装最新版本 node
+$ nvm install node
+# 或列出可安装版本，选择安装某一版本
+$ nvm list
+$ nvm install 12.14.1 # or 10.10.0, 8.9.1, etc
 ```
 
-打开 `/etc/profile` 文件，增添以下内容，注意**等号前后没有空格**，保存退出。
-
-```txt
-# Node.js
-export NODE_HOME=/opt/node/bin
-export PATH=$PATH:$NODE_HOME
-```
-
-为了使该环境变量生效，可以在终端中执行 `source /etc/profile` 或者 `. /etc/profile`，但这样只在当前终端中生效。**要使得任意终端都生效，退出当前用户再登陆即可。**
-
-> Deepin 下 zsh 使用 source 的方式会有问题，请使用注销再登录的方式。
-
-也可以直接将环境变量配置到 Shell 的配置文件中，如 `~/.bashrc` 或 `~/.zshrc`，这样，重启终端该环境变量即可生效。
-
-确保环境变量生效可以执行命令看是否可以查看 node 版本。
+可以执行命令看是否可以查看 node 版本确保生效。
 
 ```shell
 $ node -v
-v10.16.3
+v12.20.0
 ```
 
 Node 自带 `npm`，所以装完应该会有某个版本的 `npm`。但 `npm` 相比 Node 更新更频繁，所以，要是想确保使用的是最新版本的，你可以执行以下命令：
@@ -82,34 +69,59 @@ $ npm install npm -g
 
 ### 安装 [Hexo](https://hexo.io/zh-cn/docs/index.html)
 
+安装包时常因为网络原因迟迟无法完成下载。这时候，你需要[淘宝 NPM 镜像](http://npm.taobao.org/)，使用方法很简单：
+
+* 可以使用定制的 cnpm (gzip 压缩支持) 命令行工具代替默认的 npm:
+
+```shell
+$ npm install -g cnpm --registry=https://registry.npm.taobao.org
+```
+
+* 或者直接通过添加 npm 参数 alias 一个新命令:
+
+```shell
+$ alias cnpm="npm --registry=https://registry.npm.taobao.org \
+--cache=$HOME/.npm/.cache/cnpm \
+--disturl=https://npm.taobao.org/dist \
+--userconfig=$HOME/.cnpmrc"
+
+# Or alias it in .bashrc or .zshrc
+$ echo '#alias for cnpm
+alias cnpm="npm --registry=https://registry.npm.taobao.org \
+  --cache=$HOME/.npm/.cache/cnpm \
+  --disturl=https://npm.taobao.org/dist \
+  --userconfig=$HOME/.cnpmrc"' >> ~/.zshrc && source ~/.zshrc
+  ```
+
+后续**对应的 `npm` 命令只要替换成 `cnpm` 即可**。
+
 ```shell
 $ npm install -g hexo-cli
 ```
-
-如果网络条件不好——你懂的，比较难以下载成功，这个自行解决。如果碰到权限问题，可以参考链接：[处理npm权限问题](https://www.kancloud.cn/shellway/npm-doc/199985)
 
 安装后可查看版本信息。一般来说不需要去关心这些信息，我只是看看……
 
 ```shell
 $ hexo -v
 hexo: 3.9.0
-hexo-cli: 2.0.0
-os: Linux 4.15.0-29deepin-generic linux x64
-http_parser: 2.8.0
-node: 10.16.3
-v8: 6.8.275.32-node.54
-uv: 1.28.0
+hexo-cli: 4.2.0
+os: Linux 5.4.70-amd64-desktop linux x64
+node: 12.20.0
+v8: 7.8.279.23-node.45
+uv: 1.40.0
 zlib: 1.2.11
-brotli: 1.0.7
-ares: 1.15.0
-modules: 64
-nghttp2: 1.39.2
-napi: 4
-openssl: 1.1.1c
-icu: 64.2
-unicode: 12.1
-cldr: 35.1
-tz: 2019a
+brotli: 1.0.9
+ares: 1.16.1
+modules: 72
+nghttp2: 1.41.0
+napi: 7
+llhttp: 2.1.3
+http_parser: 2.9.3
+openssl: 1.1.1g
+cldr: 37.0
+icu: 67.1
+tz: 2019c
+unicode: 13.0
 ```
 
 ## 建站及配置
@@ -150,7 +162,7 @@ $ npm install
 
 ……
 
-好吧，重点配置在后面……
+好吧，重点配置在后面。
 
 ### 部署远程服务器
 
@@ -464,8 +476,6 @@ tags:
 
 经过以上步骤，一个 Hexo 博客已经搭建出来了，并且我们可以愉快地发表文章了！
 
-后续可修改的内容还有很多，可以给博客添加更多的功能如搜索、评论、阅读量统计等，还可以对博客进行个性化定制如头像、背景的修改等等。这些内容我们可以查看主题的说明文档、网站、配置文件，它们一般都对支持的配置进行了说明。
+博客可定制的内容还有很多，例如可以给博客添加更多的功能如搜索、评论、阅读量统计等，还可以对博客进行个性化定制如头像、背景的修改等等。这些内容我们可以查看主题的说明文档、网站、配置文件，它们一般都对支持的配置进行了说明。
 
-博客的定制化修改不做过多说明，而是来考虑一个问题：程序员一般都不只一台电脑，想在不同电脑上都能维护博客怎么办？或者说以上配置、发布的内容丢失了，博客又怎么找回？
-
-查看远程仓库主干上的内容，可以看到，上传的只有编译好的网页文件，而没有这些博客源文件、文章、主题、配置等，因此我们需要合理备份这些内容来解决上面这个问题。
+博客的定制化修改不做过多说明，接下来考虑一个问题：程序员一般都不只一台电脑，想在不同电脑上都能维护博客怎么办？或者说担心以上配置、发布的内容丢失无法找回博客又要如何进行备份？查看远程仓库主干上的内容，可以看到，上传的只有编译好的网页文件，而没有这些博客源文件、文章、主题、配置等，因此我们需要合理备份这些内容来解决上面这个问题。我在[Hexo 博客备份与恢复](https://mupceet.com/2019/09/backup-hexo-blog/)中描述了具体的过程，有需要的话可以参考。

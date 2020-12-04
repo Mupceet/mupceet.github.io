@@ -48,7 +48,7 @@ $ curl -sL https://deb.nodesource.com/setup_13.x | sudo -E bash -
 $ sudo apt-get install -y nodejs
 ```
 
-这种安装方式下，升级不用手动下载替换了，可以使用一个 npm 模块 `n` 来升级，可以参见：[升级node.js和npm](https://segmentfault.com/a/1190000009025883)。这里不具体展开，因为在这之前就有另外的问题让你头疼。
+这种安装方式下，升级不用手动下载替换了，可以使用一个 npm 模块 `n` 来升级，可以参见：[升级node.js 和 npm](https://segmentfault.com/a/1190000009025883)。这里不具体展开，因为在这之前就有另外的问题让你头疼。
 
 ## 问题
 
@@ -71,7 +71,8 @@ $ alias cnpm="npm --registry=https://registry.npm.taobao.org \
 --userconfig=$HOME/.cnpmrc"
 
 # Or alias it in .bashrc or .zshrc
-$ echo '\n#alias for cnpm\nalias cnpm="npm --registry=https://registry.npm.taobao.org \
+$ echo '#alias for cnpm
+alias cnpm="npm --registry=https://registry.npm.taobao.org \
   --cache=$HOME/.npm/.cache/cnpm \
   --disturl=https://npm.taobao.org/dist \
   --userconfig=$HOME/.cnpmrc"' >> ~/.zshrc && source ~/.zshrc
@@ -98,13 +99,15 @@ sudo: npm：command not found
 $ alias sudo='sudo '
 ```
 
-这样就可以了，但每次安装都要 sudo 其实并不愉快。事实上，我们一开始就可以选择更合适的 Node.js 的安装方法。
+这样就可以了，但每次安装都要 sudo 其实并不愉快。
+
+事实上，我们一开始就可以选择更合适的 Node.js 的安装方法。
 
 ## NVM
 
 > NVM: 全称是 Node Version Manager, 也就是 Node 版本管理器。
 
-如果你已经安装过了 Node，最好先把原来的卸载。
+如果你已经安装过了 Node，先把原来的卸载。
 
 ### 1. 卸载 Node, 可能需要 root 权限.
 
@@ -125,13 +128,6 @@ $ sudo rm -rf /usr/lib/node_moudles
 
 ```shell
 $ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.2/install.sh | bash
-```
-
-然后设置环境变量：
-
-```shell
-$ export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
 ```
 
 ### 4. 使用 NVM

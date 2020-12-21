@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"搜索","hits_empty":"未找到与「 ${query} 」相关的内容","hits_stats":"找到 ${hits} 条相关条目，用时: ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="配置文件是什么随着业务的发展，程序的功能复杂度也在增加，我们需要开关某些功能、变更功能的参数范围、修改业务的文案、调整界面的显示参数等等，这些功能的变更点都可以称作配置项。 小萌新把这些配置直接硬编码在代码中，每次都勤勤恳恳地找到对应的代码进行修改；后来，老油条把这些配置提取成配置文件，应用通过加载配置文件就完成了业务功能的开关控制，变更时只要找到对应配置项修改一下即可。 因此，我们可以知道配置文">
+<meta name="keywords" content="杂谈">
+<meta property="og:type" content="article">
+<meta property="og:title" content="配置文件版本控制的方案">
+<meta property="og:url" content="http://yoursite.com/2019/06/configuration-file-version-control-scheme/index.html">
+<meta property="og:site_name" content="Mupceet">
+<meta property="og:description" content="配置文件是什么随着业务的发展，程序的功能复杂度也在增加，我们需要开关某些功能、变更功能的参数范围、修改业务的文案、调整界面的显示参数等等，这些功能的变更点都可以称作配置项。 小萌新把这些配置直接硬编码在代码中，每次都勤勤恳恳地找到对应的代码进行修改；后来，老油条把这些配置提取成配置文件，应用通过加载配置文件就完成了业务功能的开关控制，变更时只要找到对应配置项修改一下即可。 因此，我们可以知道配置文">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-12-21T18:09:42.369Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="配置文件版本控制的方案">
+<meta name="twitter:description" content="配置文件是什么随着业务的发展，程序的功能复杂度也在增加，我们需要开关某些功能、变更功能的参数范围、修改业务的文案、调整界面的显示参数等等，这些功能的变更点都可以称作配置项。 小萌新把这些配置直接硬编码在代码中，每次都勤勤恳恳地找到对应的代码进行修改；后来，老油条把这些配置提取成配置文件，应用通过加载配置文件就完成了业务功能的开关控制，变更时只要找到对应配置项修改一下即可。 因此，我们可以知道配置文">
+  <link rel="canonical" href="http://yoursite.com/2019/06/configuration-file-version-control-scheme/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>配置文件版本控制的方案 | Mupceet</title>
+  <meta name="generator" content="Hexo 3.9.0">
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Mupceet</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Don't Repeat Yourself</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/06/configuration-file-version-control-scheme/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Mupceet">
+      <meta itemprop="description" content="君子坦荡荡 小人长戚戚">
+      <meta itemprop="image" content="/images/avatar_me.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Mupceet">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">配置文件版本控制的方案
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-06-23 22:21:33" itemprop="dateCreated datePublished" datetime="2019-06-23T22:21:33+08:00">2019-06-23</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-12-22 02:09:42" itemprop="dateModified" datetime="2020-12-22T02:09:42+08:00">2020-12-22</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/整理/" itemprop="url" rel="index"><span itemprop="name">整理</span></a></span>
+
+                
+                
+                  ，
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/整理/技术向/" itemprop="url" rel="index"><span itemprop="name">技术向</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Disqus：</span>
+    
+    <a title="disqus" href="/2019/06/configuration-file-version-control-scheme/#comments" itemprop="discussionUrl"><span class="post-comments-count disqus-comment-count" data-disqus-identifier="2019/06/configuration-file-version-control-scheme/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="配置文件是什么"><a href="#配置文件是什么" class="headerlink" title="配置文件是什么"></a>配置文件是什么</h2><p>随着业务的发展，程序的功能复杂度也在增加，我们需要开关某些功能、变更功能的参数范围、修改业务的文案、调整界面的显示参数等等，这些功能的变更点都可以称作配置项。</p>
+<p>小萌新把这些配置直接硬编码在代码中，每次都勤勤恳恳地找到对应的代码进行修改；后来，老油条把这些配置提取成配置文件，应用通过加载配置文件就完成了业务功能的开关控制，变更时只要找到对应配置项修改一下即可。</p>
+<p>因此，我们可以知道<strong>配置文件是一个集中记录了配置项的文件，它会影响应用的行为，即同一份程序代码在不同的配置文件下会有不同的行为。</strong></p>
+<p>大家发现只要改改配置文件就可以改变APP的行为表现真是太awosone了，干脆把配置文件拿到服务器上，这样更新配置文件后，通过网络下发给应用，就不用再麻烦开发工程师变更发布应用版本了。看起来，配置文件简直是公司产品运营的上帝啊，只需要程序员发一个应用版本，以后就不需要程序员了。</p>
+<p>当然，很显然这种事情是不可能的，因为应用的变更实际有不同的可能，从应用的逻辑来看都发生了变更，但不同的变更可以有不同的处理方式。</p>
+<a id="more"></a>
+
+<ol>
+<li><p>增删应用的功能：应用的功能增删一定需要代码的变更，没程序员可不行，这种情况需要发布新版本的APP。</p>
+</li>
+<li><p>应用的功能范围变更：应用的某个功能或业务需要调整范围，例如开关某个功能、指定优惠活动业务的地区城市、增减商品的种类等，这种情况通常就只需要更新配置文件。</p>
+</li>
+</ol>
+<p>因此，配置文件是为了满足应用不重出版本而动态改变业务逻辑而存在的，也可以说配置文件的存在是为了扩展性需要。</p>
+<h3 id="配置文件管理问题"><a href="#配置文件管理问题" class="headerlink" title="配置文件管理问题"></a>配置文件管理问题</h3><p>配置文件的好处显而易见，从端到端出发，还有一些问题需要考虑。</p>
+<p>从服务器后端来看：</p>
+<blockquote>
+<p>本人没开发过服务器，相关内容不作展开，还请有经验的人士多多指教。</p>
+</blockquote>
+<ol>
+<li><p>完善的权限控制：</p>
+<p> 由于配置文件可以改变应用的行为，如果配置出现问题可能引起灾难。因此配置文件的更新需要有权限控制，上线生产环境前要确保新配置文件经过测试环境的验证。</p>
+</li>
+<li><p>高效的配置管理</p>
+<p> 配置中心是为了方便开发或运维下发配置文件的，不同环境（开发环境、测试环境、生产环境）、不同集群（异地数据中心）可能配置文件不同，配置文件资源的管理一定要方便高效。</p>
+</li>
+<li><p>可靠的服务</p>
+<p> 配置中心作为基础服务，可用性要求非常高。配置文件上线后发现新严重问题，服务器要有兜底能力。</p>
+</li>
+</ol>
+<p>从应用前端来看：</p>
+<ol>
+<li><p>合理地获取与使用</p>
+<p> 对配置文件和资源的获取要考虑流量问题。且配置对于程序是只读的，程序通过读取配置来改变自己的行为，但是程序不应该去改变配置。</p>
+</li>
+<li><p>兼容稳定性</p>
+<p> 配置文件的获取要与应用本向相匹配，且应用要对配置文件的内容有容错机制，尽量保证应用的稳定性、兼容性不受影响。另外在服务器不可用情况下也要有相应的处理。</p>
+</li>
+</ol>
+<p>从配置文件本身来看：</p>
+<ol>
+<li><p>灵活扩展性</p>
+<p> 配置文件的内容的结构设计要考虑灵活统一，不能像大杂烩，也不能有太多限制，否则配置文件就无法迭代。</p>
+</li>
+</ol>
+<h2 id="配置文件的版本管理"><a href="#配置文件的版本管理" class="headerlink" title="配置文件的版本管理"></a>配置文件的版本管理</h2><p>获取配置文件并加载使用的过程相对于App而言，类似于从服务器提获取数据，然后解析返回的数据。服务器获取数据的API都有变更的需求，配置文件变更的可能性就更大了，当配置文件中字段的修改或增加导致必须要修改代码才可支持，那么就认为新配置文件中该设备与老版本APK不兼容。</p>
+<p>因此类比于API的版本控制，来思考一下配置文件下发版本的控制。API的版本控制有三种常见的方式：</p>
+<ol>
+<li><p>无版本控制</p>
+<p> 指的是仅有一个版本，不保证兼容性，所有客户端必须使用最新的版本，即客户端来适配API。这种情况下API的行为变更会影响到整个平台的用户。</p>
+</li>
+<li><p>兼容性版本控制</p>
+<p> 指的是平台仅有一个版本，但新版本要兼容旧版本的行为。</p>
+</li>
+<li><p>多版本控制</p>
+<p> 指的是平台有多版本，使用不同版本号来区分，客户端根据需求使用，需要获取对应的版本。</p>
+</li>
+</ol>
+<p>通常情况下应用会从简单处理的角度出发希望做配置文件的兼容性版本控制。在此处理下通常新增功能字段不会影响旧版本APK的处理，因为旧版本APK会忽略新字段。但对字段内容进行新增或更新可能会导致功能与实际情况不符。</p>
+<p>在实际情况中，无版本控制基本是不可取的，而兼容性版本控制对API设计、代码功能设计能力要求很高，且可能出现多次兼容修改后无法继续迭代，最终走向多版本控制。即使使用了多版本控制，在接口设计时，同样要注意扩展能力的保留，尽量避免频繁不兼容的变更，而且多版本控制给API设计留出的灵活度较大，但需要维护多套配置，维护成本还是比较大。</p>
+<p>多版本共存基本上跑不了，那多版本共存的方式怎么选择呢？</p>
+<h3 id="配置文件多版本控制方式"><a href="#配置文件多版本控制方式" class="headerlink" title="配置文件多版本控制方式"></a>配置文件多版本控制方式</h3><p>如果你是做服务端平台的，会有不同的用户来使用你的API，客户端范围本身也是变化的，加上用户更新不及时，就必然会遗留多个版本，因此服务端设计多版本共存时要提供给客户端主动指定版本的方式。常用的有以下方式：</p>
+<ol>
+<li>URL路径中添加不同版本：<code>base.com/v1/res</code> &amp; <code>base.com/v2/res</code></li>
+<li>子域名：<code>v1.xx.com</code> &amp; <code>v2.xx.com</code></li>
+<li>参数： <code>base.com/res?version=v1</code> &amp; <code>base.com/res?version=v2</code></li>
+<li>HEADER: <code>version:1</code> &amp; <code>version:2</code></li>
+</ol>
+<p>各方案都有各自的优缺点，具体可见链接：<a href="https://learnku.com/articles/20322" target="_blank" rel="noopener">App 多版本服务端兼容</a>。</p>
+<p>而从单一客户端来说，服务端的多版本API的使用给开发维护带得不小的难度，甚至可能是混乱的。例如可能在切换API版本过程中，有的接口还不准备换，导致多个版本的API共存于代码中，难以分辨，维护改动时需要极度关注细节。</p>
+<p>从客户端角度出发，客户端想要从服务器获取为自己定制的数据或配置文件。因此还有一个常用的办法，就是把API<strong>内容的选择控制权交给服务端</strong>，由服务端主导。简单来说就是把客户端本身的信息比如<em>应用版本、设备名称、系统版本</em>等传到服务器，服务器解析字段，匹配到对应的API版本，返回给客户端，这样客户端使用的永远是自己支持的版本。</p>
+<p>例如，客户端获取时，使用如下链接 <code>xx.com/res?appVersion=100&amp;platform=Android</code>，这就是通过参数隔离的方式，由服务器进行条件匹配针对性下发内容。</p>
+<p>这种方式需要服务器支持且服务端配置维护工作量相对比较大，但比起它的收益而言，这是可以接受的。在实践中，我们希望这个服务器对这些参数的匹配可以有相对灵活的配置方式，从而稍微降低维护人员的工作量。例如支持以下特点的匹配规则：</p>
+<ol>
+<li><p>最大化匹配</p>
+<p> 例如查询的条件参数有 10 个，服务器上有几个配置实例，分别声明了 5 个、4 个、3 个的匹配规则参数；服务器优先与 5 个参数的配置实例匹配，如果能匹配上则返回信息，否则查询 4 个参数的实例能否匹配，如果不能匹配就依次直至最少参数的实例匹配完毕，如果都不匹配就返回空值。</p>
+</li>
+<li><p>时间优先匹配</p>
+<p> 如果服务器多个配置实例的匹配参数个数相同，且 APK 查询的参数都满足匹配，那么返回最新上线的配置实例的信息。</p>
+</li>
+</ol>
+<p>我们以如下目标使用客户端上传参数的方式来设计一个方案实例。</p>
+<p>目标：</p>
+<ol>
+<li>APP需要获取配置文件和显示资源</li>
+<li>不同版本APP获取不同配置文件</li>
+<li>不同平台或不同品牌APP获取不同的显示资源</li>
+</ol>
+<h4 id="获取配置文件和显示资源"><a href="#获取配置文件和显示资源" class="headerlink" title="获取配置文件和显示资源"></a>获取配置文件和显示资源</h4><p>根据RESTful概念，这是两种资源，不应该在一个链接中返回，因此，增加参数 <code>query</code>，即：</p>
+<ul>
+<li>xx.com/res?query=config</li>
+<li>xx.com/res?query=drawable</li>
+<li>xx.com/res?query=language</li>
+</ul>
+<p>分别返回config下载链接列表和资源的下载链接列表。拆分的好处是配置文件很小，可以直接下载，而不同的资源可以根据需要在适合的时机才进行查询。</p>
+<h4 id="不同版本APP获取不同配置文件"><a href="#不同版本APP获取不同配置文件" class="headerlink" title="不同版本APP获取不同配置文件"></a>不同版本APP获取不同配置文件</h4><p>为了满足对APP版本的匹配要求，要增加APP版本参数 <code>version</code>。实际上这里指的是应用的功能版本，不建议直接使用APP本身的版本号，因为如果APP版本与配置项无关我们仍修改此版本，可能会极大地增加维护人员的工作量。因此我们采用 <code>apiVersion</code> 参数，即由APP来定义“API版本”，如果APP的可配置功能发生变更，就更新这个版本号。即：</p>
+<ul>
+<li>xx.com/res?query=config&amp;apiVersion=100</li>
+</ul>
+<p>这个版本号理论上只要传一个就可以，如果不兼容就加1就好了。不过在APP迭代中建议遵循<a href="https://semver.org/lang/zh-CN/" target="_blank" rel="noopener">语义化版本</a>的规范：版本格式为 <code>主版本号.次版本号.修订号</code>，版本号递增规则如下：</p>
+<ol>
+<li>主版本号：当你做了不兼容的 API 修改，</li>
+<li>次版本号：当你做了向下兼容的功能性新增，</li>
+<li>修订号：当你做了向下兼容的问题修正。</li>
+</ol>
+<p>为了防止可能的兼容性修改并不兼容，建议使用两个参数 <code>versionMajor</code> 、<code>versionMinor</code> 把主次版本信息传递给服务器，这样在有必要的时候，可以支持区分。因此链接参数定为：</p>
+<ul>
+<li>xx.com/res?query=config&amp;versionMajor=2&amp;versionMinor=0</li>
+</ul>
+<h4 id="不同平台或不同品牌APP获取不同的显示资源"><a href="#不同平台或不同品牌APP获取不同的显示资源" class="headerlink" title="不同平台或不同品牌APP获取不同的显示资源"></a>不同平台或不同品牌APP获取不同的显示资源</h4><p>对应用来说，不同平台或品牌的风格由于多品牌策略可能有所不同，比如设计风格不同，那显示资源就要有所区分。可以考虑增加参数 <code>brand</code> 和 <code>platform</code>，即最终链接体现为：</p>
+<ul>
+<li>xx.com/res?query=config&amp;versionMajor=2&amp;versionMinor=0&amp;brand=Xiaomi&amp;platform=Android</li>
+</ul>
+<p>对参数的制定和扩展大可根据业务自行选择制定。</p>
+<h2 id="配置文件内容的版本管理"><a href="#配置文件内容的版本管理" class="headerlink" title="配置文件内容的版本管理"></a>配置文件内容的版本管理</h2><p>如果所有的功能开关都由服务器来选择配置，除非服务器支持动态生成配置文件，否则对配置文件 的维护人员而言也是一个很大的考验。</p>
+<p>因此我们考虑把配置文件下发给应用，让应用在配置文件中进行识别了。可以在各个列表范围内增加一个功能节点，其中增加一个字段标识此功能哪个版本开始支持。如：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">"supportVersion": [</span><br><span class="line">    <span class="string">"base_version"</span></span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+
+<h3 id="配置文件中功能版本号"><a href="#配置文件中功能版本号" class="headerlink" title="配置文件中功能版本号"></a>配置文件中功能版本号</h3><p>功能版本号版本号具备两个作用：</p>
+<ol>
+<li>区分大版本：因为大版本会共存；</li>
+<li>区分代码版本：代码涉及功能变更时变更的代码版本号。</li>
+</ol>
+<p>因此，<code>base_version</code> 分成两段：1000_0004，前一段表示应用大版本，后一段表示代码功能小版本。一个完整的 <code>supportVersion</code>字段示例如下：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">"supportVersion": [</span><br><span class="line">    "910_0002",</span><br><span class="line">    "911_0002",</span><br><span class="line">    <span class="string">"1000_0004"</span></span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+
+<p>该版本号指定的是一种限制，表示限制该大版本下，小版本之后可支持该设备。因此对应的解析规则可作如下设定，我们以设备列表节点中具备多个功能节点为前提：</p>
+<ol>
+<li>某一设备不添加 supportVersion 限定，则认为所有版本都支持。</li>
+<li>应用大版本不在限定版本列表中，则认为支持该设备。</li>
+<li>应用大版本与限定的大版本匹配时，但应用小版本大于限定的小版本时，认为此应用不支持该功能，但支持该设备。若新功能范围不被旧版本支持，请将子版本设定为最大值 9999。</li>
+<li>格式错误或混入非数字，则应用直接不支持该功能：防错。</li>
+</ol>
+<p>结合以上两个方面：配置文件的获取版本控制和配置文件内容的版本控制，基本可以支持应用配置的灵活扩展与兼容稳定。</p>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><ul>
+<li><a href="http://pingguohe.net/2016/03/18/config-center.html" target="_blank" rel="noopener">动态调整的基础 —— 配置中心</a></li>
+<li><a href="https://cloud.tencent.com/developer/article/1063232" target="_blank" rel="noopener">携程开源配置中心Apollo的设计与实现</a></li>
+<li><a href="http://unclechen.github.io/2016/09/25/App%E5%8A%A8%E6%80%81%E9%85%8D%E7%BD%AE%E6%8E%A2%E8%AE%A8/" target="_blank" rel="noopener">App动态配置探讨</a></li>
+<li><a href="https://36kr.com/p/5162593" target="_blank" rel="noopener">稳定、灵活、高效，美团点评运营配置平台的设计与实践之道</a></li>
+<li><a href="https://learnku.com/articles/20322" target="_blank" rel="noopener">App 多版本服务端兼容</a></li>
+<li><a href="https://semver.org/lang/zh-CN/" target="_blank" rel="noopener">语义化版本 2.0.0</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/杂谈/" rel="tag"># 杂谈</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2018/07/emoji-distinguish&filter/" rel="next" title="Emoji 识别与过滤">
+                  <i class="fa fa-chevron-left"></i> Emoji 识别与过滤
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2019/08/build-blog-based-on-hexo/" rel="prev" title="Hexo 博客搭建与主题配置（零基础版）">
+                  Hexo 博客搭建与主题配置（零基础版） <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+    </div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc" data-target="post-toc-wrap">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#配置文件是什么"><span class="nav-number">1.</span> <span class="nav-text">配置文件是什么</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#配置文件管理问题"><span class="nav-number">1.1.</span> <span class="nav-text">配置文件管理问题</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#配置文件的版本管理"><span class="nav-number">2.</span> <span class="nav-text">配置文件的版本管理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#配置文件多版本控制方式"><span class="nav-number">2.1.</span> <span class="nav-text">配置文件多版本控制方式</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#获取配置文件和显示资源"><span class="nav-number">2.1.1.</span> <span class="nav-text">获取配置文件和显示资源</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#不同版本APP获取不同配置文件"><span class="nav-number">2.1.2.</span> <span class="nav-text">不同版本APP获取不同配置文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#不同平台或不同品牌APP获取不同的显示资源"><span class="nav-number">2.1.3.</span> <span class="nav-text">不同平台或不同品牌APP获取不同的显示资源</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#配置文件内容的版本管理"><span class="nav-number">3.</span> <span class="nav-text">配置文件内容的版本管理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#配置文件中功能版本号"><span class="nav-number">3.1.</span> <span class="nav-text">配置文件中功能版本号</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考链接"><span class="nav-number">4.</span> <span class="nav-text">参考链接</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/avatar_me.png"
+      alt="Mupceet">
+  <p class="site-author-name" itemprop="name">Mupceet</p>
+  <div class="site-description" itemprop="description">君子坦荡荡 小人长戚戚</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">31</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      友情链接
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://dxinl.github.io/" title="https://dxinl.github.io/" rel="noopener" target="_blank">Write down & Think hard</a>
+        </li>
+      
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 – <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Mupceet</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.3.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.3.0"></script><script src="/js/motion.js?v=7.3.0"></script>
+<script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://Mupceet.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  function disqus_config() {
+    this.page.url = "http://yoursite.com/2019/06/configuration-file-version-control-scheme/";
+    this.page.identifier = "2019/06/configuration-file-version-control-scheme/";
+    this.page.title = '配置文件版本控制的方案';};
+  function loadComments() {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: disqus_config
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://Mupceet.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  }
+    (function() {
+      var offsetTop = document.getElementById('comments').offsetTop - window.innerHeight;
+      if (offsetTop <= 0) {
+        // load directly when there's no a scrollbar
+        window.addEventListener('load', loadComments, false);
+      } else {
+        var disqus_scroll = () => {
+          // offsetTop may changes because of manually resizing browser window or lazy loading images.
+          var offsetTop = document.getElementById('comments').offsetTop - window.innerHeight;
+          var scrollTop = window.scrollY;
+
+          // pre-load comments a bit? (margin or anything else)
+          if (offsetTop - scrollTop < 60) {
+            window.removeEventListener('scroll', disqus_scroll);
+            loadComments();
+          }
+        };
+        window.addEventListener('scroll', disqus_scroll);
+      }
+    })();
+  
+</script>
+
+</body>
+</html>

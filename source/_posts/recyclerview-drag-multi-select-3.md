@@ -7,242 +7,129 @@ tags:
 - Android
 ---
 
-## 方案二：DragSelectRecyclerView
-### 扩展的选择策略
-之前提到，方案二是基于方案三进行扩展的，可以看到，在 `OnItemTouchListener` 这一块，两者其实几乎是一模一样的。而方案二一个很好的地方，就是在几乎不修改 DragSelectTouchListener 的前提下，对其选择功能进行了强大方便的扩展。下面我将从设计的思路出发，理一理是怎样完成的。
+## DragMultiSelect
 
-首先要清楚方案二扩展了哪些选择策略，总共有 4 种模式：
+设计目标是为了给 RecyclerView 提供便捷多选的功能，它具有以下特性：
 
-- Simple: 滑过时选中，往回滑时取消选中
-- ToggleAndUndo: 滑过时反选，往回滑时恢复原状态
-- FirstItemDependent: 反选按下的第一条目，滑过时与第一条目状态一致，往回滑时与第一条目状态相反
-- FirstItemDependentToggleAndUndo: 反选按下的第一条目，滑过时与第一条目状态一致，往回滑时恢复原状态
+1. 基于 OnItemTouchListener 实现，便于与项目中的 RecyclerView 集成；
+1. 支持拖动多选与滑动多选；
+1. 支持横向滚动与竖向滚动的列表；
+
+DragMultiSelect 引入了一个滑动选择的模式，因此需要在方法三的实现上进一步扩展。我们逐一看下方案的具体实现。
+
+### 滚动区的定义
+
+DragMultiSelect 的滚动区的定义与方案三一致：
+
+![DragMultiSelect 滚动区](https://raw.githubusercontent.com/Mupceet/article-piture/master/drag-area-option-three.png)
 
 <!--more-->
 
-关于这 4 种模式的效果请看 GIF 图：
+### 自动滚动实现
 
-| Simple | ToggleAndUndo |
-| :---: | :---: |
-| ![](http://upload-images.jianshu.io/upload_images/2946447-8d96895d3148a146.gif?imageMogr2/auto-orient/strip)  | ![](http://upload-images.jianshu.io/upload_images/2946447-ee38d0edb5a09acd.gif?imageMogr2/auto-orient/strip) |
-| FirstItemDependent | FirstItemDependentToggleAndUndo |
-| ![](http://upload-images.jianshu.io/upload_images/2946447-287bf777d67f9ecc.gif?imageMogr2/auto-orient/strip) | ![](http://upload-images.jianshu.io/upload_images/2946447-ed26e2b06d46abcd.gif?imageMogr2/auto-orient/strip) |
+DragMultiSelect 的自动滚动的实现与方案一类似，在每一次的动画回调中调用列表的滚动方法。
 
-第 1 种模式其实就是 Google Photos 的策略，而第 4 种策略与我需要实现的基本相同（感动地哭出声……）。看了效果之后，我们再想想基于方案三的一个回调 `onSelectChange(int start, int end, boolean isSelected)` 能完成吗？
+```java
+private final Runnable mScrollRunnable = new Runnable() {
+    @Override
+    public void run() {
+        final AutoScroller scroller = mScroller;
+        if (!scroller.isScrolling()) {
+            return;
+        }
 
-首先可以知道 Simple 模式是可以做到的，因为这个模式下除了位置信息之外无需另外的信息。而另外三种都无法做到，因为它们都需要按下时列表目前的状态信息：
-
-- ToggleAndUndo 需要知道按下时，哪些条目已经被选择了，这样子才能恢复原状态；
-- FirstItemDependent 需要知道按下时的条目的原状态，才能反选第一条目；
-- FirstItemDependentToggleAndUndo 需要知道的就包括前两者的信息：哪些条目被选择了、第一条目的原状态（事实上，这一信息包含在前一个信息里）。
-
-那么，很自然地，在按下时也需要一个回调，以此为入口获取所需要的信息了。因此方案二先扩展了 `DragSelectTouchListener.OnDragSelectListener` 的接口，首先看一下对 `OnDragSelectListener` 这个接口的扩展：
-
-```Java
-public interface OnAdvancedDragSelectListener extends OnDragSelectListener{
-   void onSelectionStarted(int start);
-   void onSelectionFinished(int end);
-}
-
-// 增加了新接口后在原代码逻辑中增加调用逻辑
-public void startDragSelection(int position){
-   // 省略代码...
-   if (mSelectListener != null && mSelectListener instanceof OnAdvancedDragSelectListener) {
-       ((OnAdvancedDragSelectListener)mSelectListener).onSelectionStarted(position);
-   }        
-}
-
-private void reset() {
-   // 省略代码...
-   if (mSelectListener != null && mSelectListener instanceof OnAdvancedDragSelectListener)
-       ((OnAdvancedDragSelectListener) mSelectListener).onSelectionFinished(mEnd);
-}
-```
-可以看到，只是继承增加了两个接口，分别在点击开始、结束时被调用。实现该接口获取点击时列表的状态信息了，也就可以通过这些信息实现扩展的选择策略。
-
-### DragSelectionProcessor
-方案二在扩展了 DragSelectTouchListener 后，将其实现封装了一层，把这 4 种模式放到一个控制器里：
-
-```Java
-public class DragSelectionProcessor implements DragSelectTouchListener.OnAdvancedDragSelectListener {}
-```
-
-看看它是怎么在按下时的回调 `onSelectionStarted()` 中获得信息的呢？
-```Java
-@Override
-public void onSelectionStarted(int start) {
-   mOriginalSelection = new HashSet<>();
-   Set<Integer> selected = mSelectionHandler.getSelection();
-   if (selected != null)
-       mOriginalSelection.addAll(selected);
-   mFirstWasSelected = mOriginalSelection.contains(start);
-   // 省略代码...
-}
-```
-
-从上面代码中可以看到，正是在开始选择的回调中获取了列表中已选择项的信息，而且这也是使用了一个接口 `ISelectionHandler` 来获取信息的：
-
-```Java
-public interface ISelectionHandler {
-   Set<Integer> getSelection();
-   void updateSelection(int start, int end, boolean isSelected, boolean calledFromOnStart);
-   boolean isSelected(int index);
-}
-```
-
-可以看到该接口还有两个回调函数，那另外两个方法是做什么的呢？看一下上面 `onSelectionStarted()` 省略的代码：
-
-```Java
-@Override
-public void onSelectionStarted(int start) {
-   // 省略代码...
-   switch (mMode) {
-       case Simple: {
-           mSelectionHandler.updateSelection(start, start, true, true);
-           break;
-       }
-       case ToggleAndUndo: {
-           mSelectionHandler.updateSelection(start, start, !mOriginalSelection.contains(start), true);
-           break;
-       }
-       case FirstItemDependent: {
-           mSelectionHandler.updateSelection(start, start, !mFirstWasSelected, true);
-           break;
-       }
-       case FirstItemDependentToggleAndUndo: {
-           mSelectionHandler.updateSelection(start, start, !mFirstWasSelected, true);
-           break;
-       }
-   }
-}
-```
-也就是对于不同模式下，得到了第一个条目的信息，要更新第一条目的状态，比如说 FirstItemDependent 就是要反选第一条目，所以 `updateSelection()` 这个方法就是调用具体设置状态的方法的。而在 `onSelectChange()` 回调中，我们看到更新状态变成了另一个方法 `checkedUpdateSelection()` 。
-
-```Java
-@Override
-public void onSelectChange(int start, int end, boolean isSelected) {
-   switch (mMode) {
-       case Simple: {
-           if (mCheckSelectionState)
-               checkedUpdateSelection(start, end, isSelected);
-           else
-               mSelectionHandler.updateSelection(start, end, isSelected, false);
-           break;
-       }
-       case ToggleAndUndo: {
-           for (int i = start; i <= end; i++)
-               checkedUpdateSelection(i, i, isSelected ? !mOriginalSelection.contains(i) : mOriginalSelection.contains(i));
-           break;
-       }
-       case FirstItemDependent: {
-           checkedUpdateSelection(start, end, isSelected ? !mFirstWasSelected : mFirstWasSelected);
-           break;
-       }
-       case FirstItemDependentToggleAndUndo: {
-           for (int i = start; i <= end; i++)
-               checkedUpdateSelection(i, i, isSelected ? !mFirstWasSelected : mOriginalSelection.contains(i));
-           break;
-       }
-   }
-}
-```
-
-```Java
-private void checkedUpdateSelection(int start, int end, boolean newSelectionState) {
-   if (mCheckSelectionState) {
-       for (int i = start; i <= end; i++) {
-           if (mSelectionHandler.isSelected(i) != newSelectionState)
-               mSelectionHandler.updateSelection(i, i, newSelectionState, false);
-       }
-   } else
-       mSelectionHandler.updateSelection(start, end, newSelectionState, false);
-}
-```
-一下子就明白了，`isSelected()` 是获取某一条目的选择状态的，可以用来检测原来列表的状态的选项。也就是说，如果原列表的某条目的状态 `mSelectionHandler.isSelected(i)` 如果与新状态不同的话，才需要更新该条目的状态。这个的原因其实之前也说过了，对于相同的状态就不要调用 Adapter 的方法去重新设置了，这是一种浪费。
-
-拿 FirstItemDependentToggleAndUndo 模式下的选择：`checkedUpdateSelection(i, i, isSelected ? !mFirstWasSelected : mOriginalSelection.contains(i))` 来理解一下。
-
-`onSelectChange` 这一回调中，第三个参数 `isSelected` 意义为 true 时想要将 i 条目状态设置为选中，false 时想要将 i 条目状态设置为取消选中。对于 FirstItemDependentToggleAndUndo 模式来说，true 代表 i 条目要与 start 条目的现状态相同，所以是 `!mFirstWasSelected`，false 不代表与 start 条目相反，而是代表 i 条目要恢复到原来的状态，所以变成了 `mOriginalSelection.contains(i)`。这种设计真是妙极。
-
-当然了，前面也说到，这个 DragSelectionProcessor 就是对 `DragSelectTouchListener.OnAdvancedDragSelectListener` 的扩展的一个封装，而 `DragSelectTouchListener.OnAdvancedDragSelectListener` 是对 `DragSelectTouchListener.OnDragSelectListener` 的扩展。因此，如果你只需要实现 Simple 模式也就是 Google Photos 的选择模式的话，直接实现 `DragSelectTouchListener.OnDragSelectListener` 就可以了。
-
-```Java
-onDragSelectionListener = new DragSelectTouchListener.OnDragSelectListener() {
-   @Override
-   public void onSelectChange(int start, int end, boolean isSelected) {
-    // update your selection
-    // range is inclusive start/end positions
-   }
-}
-```
-
-如果需要在点击开始与结束时做一些操作，只需要实现 `DragSelectTouchListener.OnAdvancedDragSelectListener`。
-
-```Java
-onDragSelectionListener = new DragSelectTouchListener.OnAdvancedDragSelectListener() {
-  @Override
-  public void onSelectChange(int start, int end, boolean isSelected) {
-    // update your selection
-    // range is inclusive start/end positions
-  }
-
-  @Override
-  public void onSelectionStarted(int start) {
-    // drag selection was started at index start
-  }
-
-  @Override
-  public void onSelectionFinished(int end) {
-    // drag selection was finished at index start
-  }
+        scroller.computeScrollDelta();
+        scrollBy(scroller.getDelta());
+        ViewCompat.postOnAnimation(mRecyclerView, this);
+    }
 };
 ```
 
-而如果想要使用扩展出来的 3 种模式，可以基于 `OnAdvancedDragSelectListener` 自己进行实现，也可以直接使用封装好的 DragSelectionProcessor。
+### 触摸事件的处理
 
-```Java
-onDragSelectionListener = new DragSelectionProcessor(new DragSelectionProcessor.ISelectionHandler() {
-	@Override
-	public Set<Integer> getSelection() {
-		// return a set of all currently selected indizes
-		return selection;
-	}
+DragMultiSelect 的选择模式的切换如图所示：
 
-	@Override
-	public boolean isSelected(int index) {
-		// return the current selection state of the index
-		return selected;
-	}
-
-	@Override
-	public void updateSelection(int start, int end, boolean isSelected, boolean calledFromOnStart) {
-		// update your selection
-		// range is inclusive start/end positions
-		// and the processor has already converted all events according to it'smode
-	}
-})
-	// pass in one of the 4 modes, simple mode is selected by default otherwise
-	.withMode(DragSelectionProcessor.Mode.FirstItemDependentToggleAndUndo);
-
-mDragSelectTouchListener = new DragSelectTouchListener()
-	// check region OnDragSelectListener for more infos
-	.withSelectListener(onDragSelectionListener);
+```txt
+                       !autoChangeMode           +-------------------+     inactiveSelect()
+          +------------------------------------> |                   | <--------------------+
+          |                                      |      Normal       |                      |
+          |        activeDragSelect(position)    |                   | activeSlideSelect()  |
+          |      +------------------------------ |                   | ----------+          |
+          |      v                               +-------------------+           v          |
+ +-------------------+                              autoChangeMode     +-----------------------+
+ | Drag From Normal  | ----------------------------------------------> |                       |
+ +-------------------+                                                 |                       |
+ |                   |                                                 |                       |
+ |                   | activeDragSelect(position) && allowDragInSlide  |        Slide          |
+ |                   | <---------------------------------------------- |                       |
+ |  Drag From Slide  |                                                 |                       |
+ |                   |                                                 |                       |
+ |                   | ----------------------------------------------> |                       |
+ +-------------------+                                                 +-----------------------+
 ```
 
-具体的代码以及使用示例请直接查看 [MFlisar/DragSelectRecyclerView](https://github.com/MFlisar/DragSelectRecyclerView) 的 README 文档。至此，GitHub 上的三个库都分析完毕了，DragSelectRecyclerView 是完整度最好的，接下来是时候来撸一个自已的支持网格列表及常规列表的拖动、滑动多选的库了。
+正常情况下（Normal），可以通过设置，设置成长按选择之后抬手退出以及长按选择之后抬手进入滑动选择的情况，又通过 API 或者操作，进入 Slide 模式。而 Drag 模式细分为 Drag From Normal 和 Drag From Slide，分别对应于长按进入拖动选择以及滑动进入选择的情况。
 
-## DragMultiSelectRecyclerView
-### 滚动区的定义
-DragMultiSelectRecyclerView 的滚动区的定义与方案二一致：
+在触摸事件的处理中，增加了滑动选择模式的识别，具体的改动见代码中的注释。
 
-![DragMultiSelectRecyclerView 滚动区](http://upload-images.jianshu.io/upload_images/2946447-ccdc1cf6cabd4815.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
-### 自动滚动实现
-DragMultiSelectRecyclerView 的自动滚动的实现与方案二、三是完全一致的，这里就不赘述。
-
-### 触摸事件的处理
-增加了滑动多选模式，具体的改动见代码中的注释。
 ```Java
+@Override
+public boolean onInterceptTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
+    RecyclerView.Adapter<?> adapter = rv.getAdapter();
+    if (adapter == null || adapter.getItemCount() == 0) {
+        return false;
+    }
+    boolean intercept = false;
+    int action = e.getAction();
+    int actionMask = action & MotionEvent.ACTION_MASK;
+    // It seems that it's unnecessary to process multiple pointers.
+    switch (actionMask) {
+        case MotionEvent.ACTION_DOWN:
+            // call the selection start's callback before moving
+            if (mSelectState == SELECT_STATE_SLIDE && isInSlideArea(e)) {
+                mSlideStateStartPosition = getItemPosition(rv, e.getX(), e.getY());
+                if (mSlideStateStartPosition != RecyclerView.NO_POSITION) {
+                    intercept = true;
+                    mCallback.onSelectStart(mSlideStateStartPosition);
+                    mHaveCalledSelectStart = true;
+                }
+            }
+            break;
+        case MotionEvent.ACTION_MOVE:
+            if (mSelectState == SELECT_STATE_DRAG_FROM_NORMAL
+                    || mSelectState == SELECT_STATE_DRAG_FROM_SLIDE) {
+                Logger.i("onInterceptTouchEvent: move in drag mode");
+                intercept = true;
+            }
+            break;
+        case MotionEvent.ACTION_UP:
+            if (mSelectState == SELECT_STATE_DRAG_FROM_NORMAL
+                    || mSelectState == SELECT_STATE_DRAG_FROM_SLIDE) {
+                intercept = true;
+            }
+            // fall through
+        case MotionEvent.ACTION_CANCEL:
+            // finger is lifted before moving
+            Logger.i("onInterceptTouchEvent: finger is lifted before moving");
+            if (mSlideStateStartPosition != RecyclerView.NO_POSITION) {
+                selectFinished(mSlideStateStartPosition);
+                mSlideStateStartPosition = RecyclerView.NO_POSITION;
+            }
+            // selection has triggered
+            if (mSelectionRecorder.startPosition() != RecyclerView.NO_POSITION) {
+                selectFinished(mSelectionRecorder.endPosition());
+            }
+            break;
+        default:
+            // do nothing
+    }
+    // Intercept only when the selection is triggered
+    if (intercept) {
+        Logger.i("will intercept event");
+    }
+    return intercept;
+}
+
 @Override
 public boolean onInterceptTouchEvent(RecyclerView rv, MotionEvent e) {
    if (rv.getAdapter().getItemCount() == 0) {
@@ -303,6 +190,7 @@ private void init(RecyclerView rv) {
    mHasInit = true;
 }
 ```
+
 在 `onInterceptTouchEvent()` 中对是否拦截进行处理后，具体的事件处理如下：
 
 ```Java
@@ -339,7 +227,8 @@ public void onTouchEvent(RecyclerView rv, MotionEvent e) {
 ```
 
 ### 选择范围的更新与回调
-DragMultiSelectRecyclerView 按下时激活多选模式，记录此时的位置，与方案二相比，这里增加了按下时对该位置进行一次选择的调用：
+
+DragMultiSelect 按下时激活多选模式，记录此时的位置，与方案三相比，这里增加了按下时对该位置进行一次选择的调用：
 
 ```Java
 public void activeDragSelect(int position) {
@@ -354,7 +243,7 @@ public void activeDragSelect(int position) {
        if (mSelectListener instanceof OnAdvancedDragSelectListener) {
            ((OnAdvancedDragSelectListener) mSelectListener).onSelectionStarted(position);
        }
-       // 增加一次主动调用，方案二中 onSelectionStarted 要对第一条目进行处理，
+       // 增加一次主动调用，方案三中 onSelectionStarted 要对第一条目进行处理，
        // 实际上第一条目的处理与其他条目处理是一致的
        mSelectListener.onSelectChange(position, true);
    }
@@ -380,7 +269,8 @@ if (y > mTopRegionFrom && y < mTopRegionTo && y < mActionDownY) {
 }
 ```
 
-选择范围的更新同样是在 `notifySelectRangeChange()` 中，其中具体的更新在原来方案二的实现中为：
+选择范围的更新同样是在 `notifySelectRangeChange()` 中，其中具体的更新在原来方案三的实现中为：
+
 ```Java
 private void notifySelectRangeChange() {
    // 省略代码……
@@ -437,6 +327,7 @@ public interface OnAdvancedDragSelectListener extends OnDragSelectListener {
 ```
 
 ### DragSelectionProcessor
+
 在 OnItemTouchListener 中进行修改之后，实际上 DragSelectionProcessor 的实现也显得更简洁一些：
 
 ```Java
@@ -467,7 +358,7 @@ public void onSelectionFinished(int end) {
 @Override
 public void onSelectChange(int position, boolean newState) {
    // 省略代码……
-   // 此处的实现与方案二几乎一致，具体可以查看代码
+   // 此处的实现与方案三几乎一致，具体可以查看代码
 }
 
 private void checkedUpdateSelection(int position, boolean newState) {
@@ -483,6 +374,7 @@ private void checkedUpdateSelection(int position, boolean newState) {
 ```
 
 也就是说对应的 `ISelectionHandler` 只修改了一下 `updateSelection()` 方法的参数。
+
 ```Java
 public interface ISelectionHandler {
    Set<Integer> getSelection();
@@ -493,6 +385,6 @@ public interface ISelectionHandler {
 
 到此为此，一个使用 OnItemTouchListener 实现 RecyclerView 拖动/滑动多选的功能的库就完成了。使用时按需要直接复制一个或两个类就好了，我就不搞什么 compile 之类的了，因为这个库能直接复制使用、定制修改，没必要搞复杂。最终，在这里放一个实现后的效果图吧，主要是看看拖动模式与滑动模式。
 
-![DragMultiSelectRecyclerView](http://upload-images.jianshu.io/upload_images/2946447-8be11829176d07ec.gif?imageMogr2/auto-orient/strip)
+![DragMultiSelect](http://upload-images.jianshu.io/upload_images/2946447-8be11829176d07ec.gif?imageMogr2/auto-orient/strip)
 
-正如前文所说，网格布局下由于长按拖动之后是要进行上下滚动的，所以在网格布局下就不要开启滑动选择模式了。具体的代码与使用方法请直接查看 [Mupceet/DragMultiSelectRecyclerView](https://github.com/Mupceet/DragMultiSelectRecyclerView) 吧。
+正如前文所说，网格布局下由于长按拖动之后是要进行上下滚动的，所以在网格布局下就不要开启滑动选择模式了。具体的代码与使用方法请直接查看 [Mupceet/DragMultiSelect](https://github.com/Mupceet/DragMultiSelect) 吧。
